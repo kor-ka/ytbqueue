@@ -1,0 +1,6 @@
+{
+  "name": "ytbqueue",
+  "description": "ytbqueue",
+  "repository": "https://github.com/kor-ka/ytbqueue",
+  "image": "heroku/nodejs"
+}
