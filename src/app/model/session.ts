@@ -65,12 +65,6 @@ export class QueueSession {
 
     }
 
-    handleRemove = async (event: Playing) => {
-        this.queue.delete(event.content.queueId);
-        this.notifyQueue();
-    }
-
-
     handlePlaying = async (event: Playing) => {
         this.playing = event.content;
         this.notifyPlaying();
