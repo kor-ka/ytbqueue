@@ -25,7 +25,13 @@ app
     .use(bodyParser.json())
     .use(cookieParser())
     .get('/', (req, res) => __awaiter(this, void 0, void 0, function* () {
-    res.redirect('/' + session_1.pickSession());
+    let target = session_1.pickSession();
+    for (let k of Object.keys(req.cookies || {})) {
+        if (k.startsWith('ytb_queue_token_')) {
+            target = k.replace('ytb_queue_token_', '');
+        }
+    }
+    res.redirect('/' + target);
 }))
     .use(express.static(path.resolve(__dirname + '/../../public')))
     .use("/build", express.static(__dirname + '/../../public/build'))

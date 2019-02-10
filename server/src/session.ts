@@ -1,7 +1,7 @@
 import { redisGet, transaction, redisSet, rediszadd, redishset, redishsetobj, redisztop, redishgetall, rediszrange, rediszrem } from "./redisUtil";
 import { hashCode } from "./utils";
 import { Server } from "socket.io";
-import { Message, Next, Add, Init } from "./model/message";
+import { Message, Next, Add, Init, Vote } from "./model/message";
 import { IoWrapper, InitQueue } from "./model/event";
 import { QueueContent, QueueContentStored, Content } from "./model/entity";
 
@@ -46,6 +46,8 @@ export let handleMessage = async (io: IoWrapper, message: Message, host: boolean
         await handleNext(io, message, host);
     } else if (message.type === 'init') {
         await handleInit(io, message, host);
+    } else if (message.type === 'vote') {
+        await handleVote(io, message, host);
     }
 }
 
@@ -69,6 +71,11 @@ let checkQueue = async (io: IoWrapper, sessionId: string) => {
             io.emit({ type: 'RemoveQueueContent', queueId: playing }, true)
         }
     }
+}
+
+
+let handleVote = async (io: IoWrapper, message: Vote, host: boolean) => {
+
 }
 
 let handleInit = async (io: IoWrapper, message: Init, host: boolean) => {

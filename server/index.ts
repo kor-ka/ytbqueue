@@ -19,7 +19,13 @@ app
   .use(cookieParser())
 
   .get('/', async (req, res) => {
-    res.redirect('/' + pickSession())
+    let target = pickSession();
+    for (let k of Object.keys(req.cookies || {})) {
+      if (k.startsWith('ytb_queue_token_')) {
+        target = k.replace('ytb_queue_token_', '');
+      }
+    }
+    res.redirect('/' + target)
   })
 
   .use(express.static(path.resolve(__dirname + '/../../public')))
