@@ -52,7 +52,7 @@ export class QueuePage extends React.PureComponent<{ playing?: QueueContent, que
     render() {
         return (
             <FlexLayout style={{ flexDirection: 'column', alignItems: 'stretch', marginTop: 0, height: '100%', width: '100%', overflowX: 'hidden', backgroundColor: 'rgba(249,249,249,1)' }}>
-                {this.props.playing && <Player height={200} id={this.props.playing.id} autoplay={true} mute={true} />}
+                {this.props.playing && <Player height={200} id={this.props.playing.id} />}
                 {!this.props.playing && (
                     <FlexLayout style={{ backgroundColor: '#000', height: 200, alignSelf: 'stretch', color: '#fff', fontWeight: 900, alignItems: 'center', justifyContent: 'center', textAlign: 'center' }} >
                         No music to play 🤷‍♂️
@@ -147,7 +147,7 @@ class ContentItem extends React.PureComponent<{ content: Content, subtitle?: str
     render() {
         return (
             <FlexLayout style={{ flexDirection: 'row', marginLeft: 10, marginRight: 10, height: 70 }}>
-                <Player id={this.props.content.id} width={100} height={70} autoplay={false} mute={true} />
+                <Player id={this.props.content.id} width={100} height={70} />
                 <FlexLayout style={{ flexDirection: 'column', wordWrap: 'break-word', maxWidth: 200 }}>
                     <span style={{ fontWeight: 500, width: '100%' }}>{(this.props.content.title).substr(0, 40)}</span>
                     <FlexLayout style={{ flexGrow: 1, justifyContent: 'flex-end' }}>
