@@ -75,7 +75,7 @@ export class Player extends React.PureComponent<{ id: string, width?: number, he
                             controls: 0,
                             mute: this.props.mute ? 1 : 0,
                             autoplay: this.props.autoplay ? 1 : 0,
-                        },
+                        } as any,
                     }}
                     onEnd={this.onEnd}
                 />
