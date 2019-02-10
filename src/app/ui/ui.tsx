@@ -43,7 +43,6 @@ export const Portrait = Glamorous.div({
 });
 
 const ButtonInner = Glamorous.div<{ type?: 'danger' }>((props) => ({
-    height: 28,
     minWidth: 28,
     color: 'black',
     whiteSpace: 'pre-wrap',
@@ -52,6 +51,9 @@ const ButtonInner = Glamorous.div<{ type?: 'danger' }>((props) => ({
     padding: 10,
     paddingTop: 11,
     paddingBottom: 9,
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
     borderRadius: 10,
     cursor: 'pointer',
     textAlign: 'center',

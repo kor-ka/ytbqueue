@@ -64,6 +64,9 @@ let checkQueue = async (io: IoWrapper, sessionId: string) => {
             // todo: better get from redis - check fields, resolve fields that amy changed eg user
             let queueEntry = await resolveQueueEntry(playing);
             await io.emit({ type: 'Playing', content: queueEntry }, true);
+
+            await rediszrem('queue-' + sessionId, playing);
+            io.emit({ type: 'RemoveQueueContent', queueId: playing }, true)
         }
     }
 }

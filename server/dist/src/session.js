@@ -64,6 +64,8 @@ let checkQueue = (io, sessionId) => __awaiter(this, void 0, void 0, function* ()
             // todo: better get from redis - check fields, resolve fields that amy changed eg user
             let queueEntry = yield resolveQueueEntry(playing);
             yield io.emit({ type: 'Playing', content: queueEntry }, true);
+            yield redisUtil_1.rediszrem('queue-' + sessionId, playing);
+            io.emit({ type: 'RemoveQueueContent', queueId: playing }, true);
         }
     }
 });

@@ -5,8 +5,8 @@ export interface User {
 
 export interface Content {
     id: string;
-    url: string;
     title: string;
+    subtitle?: string;
 }
 export interface QueueContent extends Content {
     user: User;
