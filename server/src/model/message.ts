@@ -31,7 +31,6 @@ export interface Vote extends IMessage {
 export interface Skip extends IMessage {
     type: 'skip';
     queueId: string;
-    up: boolean;
 }
 
 export interface Promote extends IMessage {

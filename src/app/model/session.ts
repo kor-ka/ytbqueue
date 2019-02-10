@@ -3,7 +3,7 @@ import * as socketIo from 'socket.io-client';
 export const endpoint = window.location.hostname.indexOf('localhost') >= 0 ? 'http://localhost:5000' : '';
 
 import { QueueContent, Content } from './../../../server/src/model/entity'
-import { Event, InitQueue, AddQueueContent, RemoveQueueContent, Playing } from './../../../server/src/model/event'
+import { Event, InitQueue, AddQueueContent, RemoveQueueContent, Playing, UpdateQueueContent } from './../../../server/src/model/event'
 import { Message } from './../../../server/src/model/message'
 
 class Emitter {
@@ -26,6 +26,7 @@ export class QueueSession {
     playing?: QueueContent;
     queue = new Map<string, QueueContent>();
     io: Emitter;
+    inited = false;
 
     constructor(id: string, token: string | undefined, clientId: string | undefined) {
         let socket = socketIo(endpoint);
@@ -47,11 +48,19 @@ export class QueueSession {
         await this.io.emit({ type: 'next', queueId: qid });
     }
 
+    vote = async (qid: string, up: boolean) => {
+        await this.io.emit({ type: 'vote', queueId: qid, up: up });
+    }
+
+    skip = async (qid: string) => {
+        await this.io.emit({ type: 'skip', queueId: qid });
+    }
+
     //
     // Input
     //
     handleEvent = async (e: string) => {
-        let event = JSON.parse(e);
+        let event = JSON.parse(e) as Event;
         console.warn('onEvent', event)
         if (event.type === 'InitQueue') {
             await this.handleInit(event);
@@ -61,6 +70,8 @@ export class QueueSession {
             await this.handleRemove(event);
         } else if (event.type === 'Playing') {
             await this.handlePlaying(event);
+        } else if (event.type === 'UpdateQueueContent') {
+            await this.handleUpdate(event);
         }
 
     }
@@ -80,11 +91,18 @@ export class QueueSession {
         this.notifyQueue();
     }
 
+    handleUpdate = async (event: UpdateQueueContent) => {
+        let trget = this.queue.get(event.queueId);
+        this.queue.set(event.queueId, { ...trget, ...event.content })
+        this.notifyQueue();
+    }
+
     handleInit = async (event: InitQueue) => {
         for (let c of event.content) {
             this.queue.set(c.queueId, c);
         }
         this.playing = event.playing;
+        this.inited = true;
         this.notifyAll();
     }
 
@@ -93,16 +111,16 @@ export class QueueSession {
     // Subscriptoins
     //
     playingListeners = new Set<(playing?: QueueContent) => void>()
-    queueListeners = new Set<(queue: QueueContent[]) => void>()
+    queueListeners = new Set<(data: { queue: QueueContent[], inited: boolean }) => void>()
 
     onPlayingChange = (callback: (playing: QueueContent) => void) => {
         this.playingListeners.add(callback);
         callback(this.playing);
     }
 
-    onQueueChange = (callback: (queue: QueueContent[]) => void) => {
+    onQueueChange = (callback: (data: { queue: QueueContent[], inited: boolean }) => void) => {
         this.queueListeners.add(callback);
-        callback([...this.queue.values()].sort((a, b) => b.score - a.score));
+        callback({ queue: [...this.queue.values()].sort((a, b) => b.score - a.score), inited: this.inited });
     }
 
     notifyPlaying = () => {
@@ -113,12 +131,11 @@ export class QueueSession {
 
     notifyQueue = () => {
         for (let l of this.queueListeners) {
-            l([...this.queue.values()].sort((a, b) => b.score - a.score));
+            l({ queue: [...this.queue.values()].sort((a, b) => b.score - a.score), inited: this.inited });
         }
     }
     notifyAll = async () => {
         this.notifyPlaying();
         this.notifyQueue();
-
     }
 }

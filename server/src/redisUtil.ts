@@ -25,6 +25,17 @@ export let redishset = (key: string, field: string, value: string, tsx?: redis.R
     })
 }
 
+export let redishdel = (key: string, field: string, tsx?: redis.RedisClient) => {
+    return new Promise<boolean>(async (resolve, error) => {
+        try {
+            console.log('redishdel', key, field);
+            await (tsx || client).hdel(key, field, () => resolve(true));
+        } catch (e) {
+            error(e);
+        }
+    })
+}
+
 export let redishsetobj = (key: string, obj: any, tsx?: redis.RedisClient) => {
     return new Promise<boolean>(async (resolve, error) => {
         try {
@@ -39,11 +50,25 @@ export let redishsetobj = (key: string, obj: any, tsx?: redis.RedisClient) => {
     })
 }
 
+export let redishget = (key: string, field: string, tsx?: redis.RedisClient) => {
+    return new Promise<string | undefined>(async (resolve, error) => {
+        try {
+            console.log('redishget', key);
+            await (tsx || client).hget(key, field, (e, s) => {
+                console.warn('redishget', key, field, s);
+                resolve((s !== 'undefined' && s !== 'null') ? s : undefined)
+            });
+        } catch (e) {
+            error(e);
+        }
+    })
+}
+
 export let redishgetall = (key: string, tsx?: redis.RedisClient) => {
     return new Promise<{ [key: string]: string }>(async (resolve, error) => {
         try {
             console.log('redishgetall', key);
-            await (tsx || client).hgetall(key, (e, res) => resolve(res));
+            await (tsx || client).hgetall(key, (e, res) => resolve(res || {}));
         } catch (e) {
             error(e);
         }
@@ -55,7 +80,7 @@ export let redisGet = (key: string, tsx?: redis.RedisClient) => {
         try {
             console.log('redisGet', key)
             // await client.get(key, (res, s) => resolve(s));
-            await (tsx || client).get(key, (e, s) => resolve(s !== 'undefined' ? s : undefined));
+            await (tsx || client).get(key, (e, s) => resolve((s !== 'undefined' && s !== 'null') ? s : undefined));
         } catch (e) {
             error(e);
         }
@@ -84,11 +109,22 @@ export let rediszrem = (key: string, val: string, tsx?: redis.RedisClient) => {
     })
 }
 
-export let rediszinct = (key: string, val: string, score: number, tsx?: redis.RedisClient) => {
-    return new Promise<boolean>(async (resolve, error) => {
+export let rediszincr = (key: string, val: string, score: number, tsx?: redis.RedisClient) => {
+    return new Promise<number>(async (resolve, error) => {
         try {
             console.log('rediszinct', key)
-            await (tsx || client).zincrby(key, score, val, (res, s) => resolve(true));
+            await (tsx || client).zincrby(key, score, val, (res, s) => resolve(Number.parseFloat(s)));
+        } catch (e) {
+            error(e);
+        }
+    })
+}
+
+export let rediszscore = (key: string, val: string, tsx?: redis.RedisClient) => {
+    return new Promise<number>(async (resolve, error) => {
+        try {
+            console.log('rediszscore', key)
+            await (tsx || client).zscore(key, val, (res, s) => resolve(Number.parseFloat(s)));
         } catch (e) {
             error(e);
         }
@@ -104,7 +140,7 @@ export let rediszrange = (key: string, tsx?: redis.RedisClient) => {
                     if (i % 2 === 0) {
                         prev.push({ key: current, score: 0 })
                     } else {
-                        prev[prev.length - 1].score = Number.parseInt(current);
+                        prev[prev.length - 1].score = Number.parseFloat(current);
                     }
                     return prev;
                 }, [] as { key: string, score: number }[]))

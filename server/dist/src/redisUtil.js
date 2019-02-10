@@ -32,6 +32,17 @@ exports.redishset = (key, field, value, tsx) => {
         }
     }));
 };
+exports.redishdel = (key, field, tsx) => {
+    return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
+        try {
+            console.log('redishdel', key, field);
+            yield (tsx || client).hdel(key, field, () => resolve(true));
+        }
+        catch (e) {
+            error(e);
+        }
+    }));
+};
 exports.redishsetobj = (key, obj, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
@@ -46,11 +57,25 @@ exports.redishsetobj = (key, obj, tsx) => {
         }
     }));
 };
+exports.redishget = (key, field, tsx) => {
+    return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
+        try {
+            console.log('redishget', key);
+            yield (tsx || client).hget(key, field, (e, s) => {
+                console.warn('redishget', key, field, s);
+                resolve((s !== 'undefined' && s !== 'null') ? s : undefined);
+            });
+        }
+        catch (e) {
+            error(e);
+        }
+    }));
+};
 exports.redishgetall = (key, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
             console.log('redishgetall', key);
-            yield (tsx || client).hgetall(key, (e, res) => resolve(res));
+            yield (tsx || client).hgetall(key, (e, res) => resolve(res || {}));
         }
         catch (e) {
             error(e);
@@ -62,7 +87,7 @@ exports.redisGet = (key, tsx) => {
         try {
             console.log('redisGet', key);
             // await client.get(key, (res, s) => resolve(s));
-            yield (tsx || client).get(key, (e, s) => resolve(s !== 'undefined' ? s : undefined));
+            yield (tsx || client).get(key, (e, s) => resolve((s !== 'undefined' && s !== 'null') ? s : undefined));
         }
         catch (e) {
             error(e);
@@ -91,11 +116,22 @@ exports.rediszrem = (key, val, tsx) => {
         }
     }));
 };
-exports.rediszinct = (key, val, score, tsx) => {
+exports.rediszincr = (key, val, score, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
             console.log('rediszinct', key);
-            yield (tsx || client).zincrby(key, score, val, (res, s) => resolve(true));
+            yield (tsx || client).zincrby(key, score, val, (res, s) => resolve(Number.parseFloat(s)));
+        }
+        catch (e) {
+            error(e);
+        }
+    }));
+};
+exports.rediszscore = (key, val, tsx) => {
+    return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
+        try {
+            console.log('rediszscore', key);
+            yield (tsx || client).zscore(key, val, (res, s) => resolve(Number.parseFloat(s)));
         }
         catch (e) {
             error(e);
@@ -112,7 +148,7 @@ exports.rediszrange = (key, tsx) => {
                         prev.push({ key: current, score: 0 });
                     }
                     else {
-                        prev[prev.length - 1].score = Number.parseInt(current);
+                        prev[prev.length - 1].score = Number.parseFloat(current);
                     }
                     return prev;
                 }, []));

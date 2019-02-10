@@ -6,10 +6,11 @@ import { FlexLayout, Input, Button } from "./ui/ui";
 import * as youtubeSearch from "youtube-search";
 import { Player } from "./Host";
 
+let clientId = Cookie.get('ytb_queue_client');
 
 export const endpoint = window.location.hostname.indexOf('localhost') >= 0 ? 'http://localhost:5000' : '';
 
-export class Client extends React.PureComponent<{}, { playing?: QueueContent, queue: QueueContent[], mode: 'queue' | 'search' }> {
+export class Client extends React.PureComponent<{}, { playing?: QueueContent, queue: QueueContent[], inited: boolean, mode: 'queue' | 'search' }> {
     id = window.location.pathname.split('/').filter(s => s.length)[0];
     token = Cookie.get('ytb_queue_token_' + (this.id ? this.id.toUpperCase() : ''));
     clientId = Cookie.get('ytb_queue_client');
@@ -17,7 +18,7 @@ export class Client extends React.PureComponent<{}, { playing?: QueueContent, qu
 
     constructor(props: any) {
         super(props);
-        this.state = { queue: [], mode: 'queue' };
+        this.state = { queue: [], mode: 'queue', inited: false };
 
         if (this.id) {
             this.id = this.id.toUpperCase();
@@ -34,7 +35,7 @@ export class Client extends React.PureComponent<{}, { playing?: QueueContent, qu
 
     componentDidMount() {
         this.session.onPlayingChange(p => this.setState({ playing: p }))
-        this.session.onQueueChange(q => this.setState({ queue: q }))
+        this.session.onQueueChange(q => this.setState({ queue: q.queue, inited: q.inited }))
         // fetch(endpoint + '/next/' + this.id, { method: 'POST' }).then();
     }
 
@@ -50,7 +51,8 @@ export class Client extends React.PureComponent<{}, { playing?: QueueContent, qu
         return (
             <>
                 <div style={{ display: this.state.mode === 'queue' ? undefined : 'none' }}>
-                    <QueuePage toSearch={this.toSearch} playing={this.state.playing} queue={this.state.queue} session={this.session} />
+                    {this.state.inited && <QueuePage toSearch={this.toSearch} playing={this.state.playing} queue={this.state.queue} session={this.session} />}
+                    {!this.state.inited && <FlexLayout style={{ fontWeight: 900, fontSize: 30, width: '100%', height: '100%', color: '#fff', justifyContent: 'center', textAlign: 'center' }}>Connecting... 🙌</FlexLayout>}
                 </div>
                 {this.state.mode === 'search' && <Searcher toQueue={this.toQueue} session={this.session} />}
             </>
@@ -65,7 +67,7 @@ export class QueuePage extends React.PureComponent<{ playing?: QueueContent, que
 
     render() {
         return (
-            <FlexLayout style={{ flexDirection: 'column', alignItems: 'stretch', marginTop: 0, height: '100%', width: '100%', overflowX: 'hidden', backgroundColor: 'rgba(249,249,249,1)' }}>
+            <FlexLayout style={{ flexDirection: 'column', paddingBottom: 100, alignItems: 'stretch', marginTop: 0, height: '100%', width: '100%', overflowX: 'hidden', backgroundColor: 'rgba(249,249,249,1)' }}>
                 {this.props.playing && <Player height={200} id={this.props.playing.id} />}
                 {!this.props.playing && (
                     <FlexLayout style={{ backgroundColor: '#000', height: 200, alignSelf: 'stretch', color: '#fff', fontWeight: 900, alignItems: 'center', justifyContent: 'center', textAlign: 'center' }} >
@@ -73,27 +75,58 @@ export class QueuePage extends React.PureComponent<{ playing?: QueueContent, que
                     <Button onClick={this.toSearch} style={{ border: '5px solid #fff', marginTop: 15, fontSize: 30, fontWeight: 900, color: "#fff", backgroundColor: '#000' }}>Start party 🎉</Button>
                     </FlexLayout>
                 )}
-                <Queue queue={this.props.queue} />
+                <Queue queue={this.props.queue} session={this.props.session} />
 
-                <Button onClick={this.toSearch} style={{ borderRadius: 0, backgroundColor: '#000', alignSelf: 'stretch', fontSize: 30, fontWeight: 900, color: "#fff" }}>Add something cool 😎</Button>
+                <Button onClick={this.toSearch} style={{ position: 'fixed', zIndex: 300, bottom: 0, left: 0, right: 0, borderRadius: 0, backgroundColor: '#000', alignSelf: 'stretch', fontSize: 30, fontWeight: 900, color: "#fff" }}>Add something cool 😎</Button>
             </FlexLayout>
         );
     }
 }
 
-export class Queue extends React.PureComponent<{ queue: QueueContent[] }> {
+export class Queue extends React.PureComponent<{ queue: QueueContent[], session: QueueSession }> {
     render() {
         return (
             <FlexLayout style={{ flexGrow: 1, flexDirection: 'column' }}>
-                {this.props.queue.map(c => (
-                    <>
-                        <ContentItem content={c} subtitle={c.user.name} />
-                        {/* <FlexLayout style={{ flexDirection: 'column', width: 50, position: 'absolute', right: 0, marginTop: -10 }}>
-                            <Button style={{ backgroundColor: 'transparent', height: 20 }}>🤘</Button>
-                            <Button style={{ backgroundColor: 'transparent', height: 20 }}>👎</Button>
-                        </FlexLayout> */}
-                    </>
-                ))}
+                {this.props.queue.map(c => <QueueItem key={c.queueId} content={c} session={this.props.session} />)}
+            </FlexLayout>
+        );
+    }
+}
+
+class QueueItem extends React.PureComponent<{ content: QueueContent, session: QueueSession, }>{
+    onVoteUp = () => {
+        this.props.session.vote(this.props.content.queueId, true);
+    }
+    onVoteDown = () => {
+        this.props.session.vote(this.props.content.queueId, false);
+    }
+    onSkip = () => {
+        this.props.session.skip(this.props.content.queueId);
+    }
+    render() {
+        let ups = 0;
+        let downs = 0;
+        let meUp = false;
+        let meDown = false;
+        this.props.content.votes.map(v => {
+            if (v.up) {
+                ups++;
+                meUp = meUp || (v.user.id === clientId);
+            } else {
+                downs++;
+                meDown = meDown || (v.user.id === clientId);
+            }
+
+        });
+        console.warn(this.props.content.votes, clientId);
+        return (
+            <FlexLayout style={{ position: 'relative' }}>
+                <ContentItem content={this.props.content} subtitle={this.props.content.score + ''} />
+                <FlexLayout style={{ flexDirection: 'column', zIndex: 100, position: 'absolute', right: 0, marginTop: -10 }}>
+                    <Button onClick={this.onVoteUp} style={{ backgroundColor: 'transparent', height: 20, textAlign: 'right' }}><span style={{ color: meUp ? 'green' : 'black', marginTop: 1 }}>{ups ? ups : ''}</span>🤘</Button>
+                    {!this.props.content.canSkip && <Button onClick={this.onVoteDown} style={{ backgroundColor: 'transparent', height: 20, textAlign: 'right' }}><span style={{ color: meDown ? 'red' : 'black', marginTop: 1 }}>{downs ? downs : ''}</span>👎</Button>}
+                    {this.props.content.canSkip && <Button onClick={this.onSkip} style={{ backgroundColor: 'transparent', height: 20, textAlign: 'right' }}>⏭</Button>}
+                </FlexLayout>
             </FlexLayout>
         );
     }
@@ -116,8 +149,10 @@ export class Searcher extends React.PureComponent<{ session: QueueSession, toQue
             this.setState({ q })
             var opts: youtubeSearch.YouTubeSearchOptions = {
                 maxResults: 10,
-                key: "AIzaSyDD0svyIgbg6lrE1310ma1mpiw2g3vomnc"
+                // key: "AIzaSyDD0svyIgbg6lrE1310ma1mpiw2g3vomnc"
                 // key: "AIzaSyBW-5ayHQTRcrELnx5gKJcjJc16qn2wlfk"
+                key: "AIzaSyBFnDOcWBoMBCLGUjoC0znC0GwN2WlnD8Y"
+
             };
 
             let g = ++this.generation;

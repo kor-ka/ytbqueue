@@ -28,8 +28,7 @@ export interface RemoveQueueContent extends IEvent {
 export interface UpdateQueueContent extends IEvent {
     type: 'UpdateQueueContent';
     queueId: string;
-    content: Content;
-    score: number;
+    content: Partial<QueueContent>;
 }
 
 export interface InitQueue extends IEvent {

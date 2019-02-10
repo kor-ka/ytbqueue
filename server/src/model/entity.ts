@@ -13,6 +13,7 @@ export interface QueueContent extends Content {
     queueId: string;
     score: number;
     historical: boolean;
+    canSkip?: boolean;
     votes: { user: User, up: boolean }[]
 }
 
