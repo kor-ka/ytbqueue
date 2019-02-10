@@ -8,14 +8,31 @@ import { FlexLayout, Button } from "./ui/ui";
 export const endpoint = window.location.hostname.indexOf('localhost') >= 0 ? 'http://localhost:5000' : '';
 
 export class Host extends React.PureComponent<{}, { playing?: QueueContent }> {
-    constructor(props: any) {
-        super(props);
-        this.state = {};
-    }
     id = window.location.pathname.split('/').filter(s => s.length)[0];
-    token = Cookie.get('ytb_queue_token_' + this.id);
+    token = Cookie.get('ytb_queue_token_' + (this.id ? this.id.toUpperCase() : ''));
     clientId = Cookie.get('ytb_queue_client');
     session = new QueueSession(this.id, this.token, this.clientId);
+
+    constructor(props: any) {
+        super(props);
+
+        if (this.id) {
+            this.id = this.id.toUpperCase();
+        }
+
+        if (this.token) {
+            this.token = this.token.toUpperCase();
+        }
+
+        if (this.clientId) {
+            this.clientId = this.clientId.toUpperCase();
+        }
+
+        console.warn(this.id);
+
+        this.state = {};
+    }
+
 
     componentDidMount() {
         this.session.onPlayingChange(p => this.setState({ playing: p }))

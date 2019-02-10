@@ -10,14 +10,28 @@ import { Player } from "./Host";
 export const endpoint = window.location.hostname.indexOf('localhost') >= 0 ? 'http://localhost:5000' : '';
 
 export class Client extends React.PureComponent<{}, { playing?: QueueContent, queue: QueueContent[], mode: 'queue' | 'search' }> {
+    id = window.location.pathname.split('/').filter(s => s.length)[0];
+    token = Cookie.get('ytb_queue_token_' + (this.id ? this.id.toUpperCase() : ''));
+    clientId = Cookie.get('ytb_queue_client');
+    session = new QueueSession(this.id, this.token, this.clientId);
+
     constructor(props: any) {
         super(props);
         this.state = { queue: [], mode: 'queue' };
+
+        if (this.id) {
+            this.id = this.id.toUpperCase();
+        }
+
+        if (this.token) {
+            this.token = this.token.toUpperCase();
+        }
+
+        if (this.clientId) {
+            this.clientId = this.clientId.toUpperCase();
+        }
     }
-    id = window.location.pathname.split('/').filter(s => s.length)[0];
-    token = Cookie.get('ytb_queue_token_' + this.id);
-    clientId = Cookie.get('ytb_queue_client');
-    session = new QueueSession(this.id, this.token, this.clientId);
+
     componentDidMount() {
         this.session.onPlayingChange(p => this.setState({ playing: p }))
         this.session.onQueueChange(q => this.setState({ queue: q }))
@@ -70,7 +84,7 @@ export class QueuePage extends React.PureComponent<{ playing?: QueueContent, que
 export class Queue extends React.PureComponent<{ queue: QueueContent[] }> {
     render() {
         return (
-            <FlexLayout style={{ flexGrow: 1, flexDirection: 'row' }}>
+            <FlexLayout style={{ flexGrow: 1, flexDirection: 'column' }}>
                 {this.props.queue.map(c => (
                     <>
                         <ContentItem content={c} subtitle={c.user.name} />
@@ -149,9 +163,9 @@ class ContentItem extends React.PureComponent<{ content: Content, subtitle?: str
             <FlexLayout style={{ flexDirection: 'row', marginLeft: 10, marginRight: 10, height: 70 }}>
                 <Player id={this.props.content.id} width={100} height={70} />
                 <FlexLayout style={{ flexDirection: 'column', wordWrap: 'break-word', maxWidth: 200 }}>
-                    <span style={{ fontWeight: 500, width: '100%' }}>{(this.props.content.title).substr(0, 40)}</span>
+                    <span style={{ fontWeight: 500, width: '100%' }}>{(this.props.content.title).substr(0, 35)}</span>
                     <FlexLayout style={{ flexGrow: 1, justifyContent: 'flex-end' }}>
-                        {this.props.subtitle && <span style={{ fontWeight: 500, opacity: 0.5 }}>{this.props.subtitle.substr(0, 25)}</span>}
+                        {this.props.subtitle && <span style={{ fontWeight: 500, opacity: 0.5 }}>{this.props.subtitle.substr(0, 20)}</span>}
                     </FlexLayout>
                 </FlexLayout>
             </FlexLayout>
