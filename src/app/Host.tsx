@@ -37,7 +37,7 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent }> {
                         No music to play 🤷‍♂️
                         <br />
                         <Button style={{ border: '14px solid #fff', marginTop: 15, fontSize: 90, fontWeight: 900, color: "#fff", backgroundColor: '#000' }}>
-                            📱addmi.com/
+                            📱azaza.app/
                             <span style={{ color: '#7FDBFF' }}>{this.id + ' '}</span>
                         </Button>
                     </FlexLayout>
