@@ -154,7 +154,7 @@ export let rediszrange = (key: string, tsx?: redis.RedisClient) => {
 export let redisztop = (key: string, tsx?: redis.RedisClient) => {
     return new Promise<string | undefined>(async (resolve, error) => {
         try {
-            await (tsx || client).zrangebyscore(key, -1, 100, (res, s) => {
+            await (tsx || client).zrangebyscore(key, -1, Number.MAX_SAFE_INTEGER, (res, s) => {
                 console.warn('top', s);
                 resolve(s.length > 0 ? s[0] : undefined)
             });

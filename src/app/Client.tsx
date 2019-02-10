@@ -68,7 +68,7 @@ export class QueuePage extends React.PureComponent<{ playing?: QueueContent, que
     render() {
         return (
             <FlexLayout style={{ flexDirection: 'column', paddingBottom: 100, alignItems: 'stretch', marginTop: 0, height: '100%', width: '100%', overflowX: 'hidden', backgroundColor: 'rgba(249,249,249,1)' }}>
-                {this.props.playing && <Player height={200} id={this.props.playing.id} />}
+                {this.props.playing && <PlayingContent session={this.props.session} playing={this.props.playing} />}
                 {!this.props.playing && (
                     <FlexLayout style={{ backgroundColor: '#000', height: 200, alignSelf: 'stretch', color: '#fff', fontWeight: 900, alignItems: 'center', justifyContent: 'center', textAlign: 'center' }} >
                         No music to play 🤷‍♂️
@@ -78,6 +78,44 @@ export class QueuePage extends React.PureComponent<{ playing?: QueueContent, que
                 <Queue queue={this.props.queue} session={this.props.session} />
 
                 <Button onClick={this.toSearch} style={{ position: 'fixed', zIndex: 300, bottom: 0, left: 0, right: 0, borderRadius: 0, backgroundColor: '#000', alignSelf: 'stretch', fontSize: 30, fontWeight: 900, color: "#fff" }}>Add something cool 😎</Button>
+            </FlexLayout>
+        );
+    }
+}
+
+class PlayingContent extends React.PureComponent<{ session: QueueSession, playing: QueueContent }>{
+    onVoteUp = () => {
+        this.props.session.vote(this.props.playing.queueId, true);
+    }
+    onVoteDown = () => {
+        this.props.session.vote(this.props.playing.queueId, false);
+    }
+    onSkip = () => {
+        this.props.session.skip(this.props.playing.queueId);
+    }
+    render() {
+        let ups = 0;
+        let downs = 0;
+        let meUp = false;
+        let meDown = false;
+        this.props.playing.votes.map(v => {
+            if (v.up) {
+                ups++;
+                meUp = meUp || (v.user.id === clientId);
+            } else {
+                downs++;
+                meDown = meDown || (v.user.id === clientId);
+            }
+
+        });
+        return (
+            <FlexLayout style={{ position: 'relative' }}>
+                <Player height={200} id={this.props.playing.id} />
+                <FlexLayout style={{ position: 'absolute', flexDirection: 'row', bottom: 20, backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 20 }}>
+                    <Button onClick={this.onVoteUp} style={{ backgroundColor: 'transparent', height: 20, textAlign: 'right' }}><span style={{ color: meUp ? 'green' : 'black', marginTop: 1 }}>{ups ? ups : ''}</span>🤘</Button>
+                    {!this.props.playing.canSkip && <Button onClick={this.onVoteDown} style={{ backgroundColor: 'transparent', height: 20, textAlign: 'right' }}><span style={{ color: meDown ? 'red' : 'black', marginTop: 1 }}>{downs ? downs : ''}</span>👎</Button>}
+                    {this.props.playing.canSkip && <Button onClick={this.onSkip} style={{ backgroundColor: 'transparent', height: 20, textAlign: 'right' }}>⏭</Button>}
+                </FlexLayout>
             </FlexLayout>
         );
     }
@@ -118,7 +156,6 @@ class QueueItem extends React.PureComponent<{ content: QueueContent, session: Qu
             }
 
         });
-        console.warn(this.props.content.votes, clientId);
         return (
             <FlexLayout style={{ position: 'relative' }}>
                 <ContentItem content={this.props.content} subtitle={this.props.content.score + ''} />

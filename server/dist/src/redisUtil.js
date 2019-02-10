@@ -162,7 +162,7 @@ exports.rediszrange = (key, tsx) => {
 exports.redisztop = (key, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
-            yield (tsx || client).zrangebyscore(key, -1, 100, (res, s) => {
+            yield (tsx || client).zrangebyscore(key, -1, Number.MAX_SAFE_INTEGER, (res, s) => {
                 console.warn('top', s);
                 resolve(s.length > 0 ? s[0] : undefined);
             });

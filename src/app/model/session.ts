@@ -78,7 +78,8 @@ export class QueueSession {
 
     handlePlaying = async (event: Playing) => {
         this.playing = event.content;
-        this.notifyPlaying();
+        this.queue.delete(event.content.queueId);
+        this.notifyAll();
     }
 
     handleAdd = async (event: AddQueueContent) => {
@@ -88,13 +89,22 @@ export class QueueSession {
 
     handleRemove = async (event: RemoveQueueContent) => {
         this.queue.delete(event.queueId);
-        this.notifyQueue();
+        if ((this.playing && this.playing.queueId) === event.queueId) {
+            this.playing = undefined;
+        }
+        this.notifyAll();
     }
 
     handleUpdate = async (event: UpdateQueueContent) => {
         let trget = this.queue.get(event.queueId);
-        this.queue.set(event.queueId, { ...trget, ...event.content })
-        this.notifyQueue();
+        if (trget) {
+            this.queue.set(event.queueId, { ...trget, ...event.content })
+            this.notifyQueue();
+        }
+        if (this.playing && this.playing.queueId === event.queueId) {
+            this.playing = { ...this.playing, ...event.content };
+            this.notifyPlaying();
+        }
     }
 
     handleInit = async (event: InitQueue) => {

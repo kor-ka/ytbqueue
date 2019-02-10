@@ -101,7 +101,6 @@ let checkQueue = (io, sessionId) => __awaiter(this, void 0, void 0, function* ()
             let queueEntry = yield resolveQueueEntry(playing, sessionId);
             yield io.emit({ type: 'Playing', content: queueEntry }, true);
             yield redisUtil_1.rediszrem('queue-' + sessionId, playing);
-            io.emit({ type: 'RemoveQueueContent', queueId: playing }, true);
         }
     }
 });
@@ -120,6 +119,11 @@ let handleVote = (io, message, host) => __awaiter(this, void 0, void 0, function
         console.warn('stored -x2', voteStored);
         // have saved vote and new is diffirent - x2 for reset and increment new
         increment *= 2;
+    }
+    // do not change score for playing - it fill return it to queue
+    let playingId = yield redisUtil_1.redisGet('queue-playing-' + message.session.id);
+    if (playingId !== message.queueId) {
+        yield redisUtil_1.rediszincr('queue-' + message.session.id, message.queueId, increment);
     }
     yield io.emit({ type: 'UpdateQueueContent', queueId: message.queueId, content: yield resolveQueueEntry(message.queueId, message.session.id) }, true);
 });

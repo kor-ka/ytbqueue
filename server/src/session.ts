@@ -106,7 +106,6 @@ let checkQueue = async (io: IoWrapper, sessionId: string) => {
             await io.emit({ type: 'Playing', content: queueEntry }, true);
 
             await rediszrem('queue-' + sessionId, playing);
-            io.emit({ type: 'RemoveQueueContent', queueId: playing }, true)
         }
     }
 }
@@ -131,6 +130,12 @@ let handleVote = async (io: IoWrapper, message: Vote, host: boolean) => {
         increment *= 2;
     }
 
+    // do not change score for playing - it fill return it to queue
+    let playingId = await redisGet('queue-playing-' + message.session.id);
+    if (playingId !== message.queueId) {
+        await rediszincr('queue-' + message.session.id, message.queueId, increment);
+
+    }
     await io.emit({ type: 'UpdateQueueContent', queueId: message.queueId, content: await resolveQueueEntry(message.queueId, message.session.id) }, true);
 }
 
