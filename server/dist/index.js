@@ -17,19 +17,6 @@ const PORT = process.env.PORT || 5000;
 const http_1 = require("http");
 const socketIo = require("socket.io");
 const event_1 = require("./src/model/event");
-let authorized = (req) => __awaiter(this, void 0, void 0, function* () {
-    let session = req.params.session;
-    if (session) {
-        let targetCookie = req.cookies['ytb_queue_token_' + session];
-        if (targetCookie) {
-            let validToken = (yield session_1.getTokenFroSession(session)).token;
-            console.warn(targetCookie, validToken);
-            return validToken === targetCookie;
-        }
-        return false;
-    }
-    return true;
-});
 //
 // Configure http
 //
@@ -44,25 +31,16 @@ app
     .use("/build", express.static(__dirname + '/../../public/build'))
     .get('/:id', (req, res) => __awaiter(this, void 0, void 0, function* () {
     // authorize first host session
-    let token = yield session_1.getTokenFroSession(req.params.id);
+    let sessionId = req.params.id.toUpperCase();
+    let token = yield session_1.getTokenFroSession(sessionId);
     if (token.new) {
-        res.cookie('ytb_queue_token_' + req.params.id, token.token);
+        res.cookie('ytb_queue_token_' + sessionId, token.token);
     }
     if (!req.cookies.ytb_queue_client) {
         res.cookie('ytb_queue_client', session_1.makeid());
     }
     res.sendFile(path.resolve(__dirname + '/../../public/index.html'));
-}))
-    .post('/api/:session/next', (req, res) => __awaiter(this, void 0, void 0, function* () {
-    if (yield authorized(req)) {
-        res.send('ok');
-        console.warn('okkk');
-    }
-    else {
-        console.warn('no auth');
-    }
 }));
-// app.listen(PORT, () => console.log(`lll on ${PORT}`))
 //
 // Configure ws
 //
@@ -77,6 +55,9 @@ io.on('connect', (socket) => {
             return;
         }
         let message = JSON.parse(m);
+        if (message.session && message.session.id) {
+            message.session.id = message.session.id.toUpperCase();
+        }
         wrapper.bindSession(message.session.id);
         // todo: validate message
         // check token
