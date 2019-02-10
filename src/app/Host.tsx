@@ -79,7 +79,7 @@ export class Player extends React.PureComponent<{ id: string, width?: number, he
     }
     render() {
         return (
-            <div style={{ width: this.props.width || window.innerWidth, height: this.props.height || window.innerHeight }}>
+            <div key={this.props.id} style={{ width: this.props.width || window.innerWidth, height: this.props.height || window.innerHeight }}>
                 <YouTube
                     onReady={this._onReady}
                     videoId={this.props.id}

@@ -184,20 +184,31 @@ export class Searcher extends React.PureComponent<{ session: QueueSession, toQue
         let q = event.currentTarget.value;
         if (q) {
             this.setState({ q })
-            var opts: youtubeSearch.YouTubeSearchOptions = {
-                maxResults: 10,
-                // key: "AIzaSyDD0svyIgbg6lrE1310ma1mpiw2g3vomnc"
-                // key: "AIzaSyBW-5ayHQTRcrELnx5gKJcjJc16qn2wlfk"
-                key: "AIzaSyBFnDOcWBoMBCLGUjoC0znC0GwN2WlnD8Y"
 
-            };
+            if (q.includes('youtu.be')) {
+                // direct link
+                let split = q.split('/');
+                let id = split[split.length - 1];
+                this.setState({ results: [{ title: 'direkt', id, subtitle: 'link' }] })
 
-            let g = ++this.generation;
-            youtubeSearch(q, opts, (err, results) => {
-                if (!err && g === this.generation) {
-                    this.setState({ results: results.map(r => ({ title: r.title, id: r.id, subtitle: r.description })) })
-                }
-            });
+            } else {
+                // search
+                var opts: youtubeSearch.YouTubeSearchOptions = {
+                    maxResults: 10,
+                    // key: "AIzaSyDD0svyIgbg6lrE1310ma1mpiw2g3vomnc"
+                    // key: "AIzaSyBW-5ayHQTRcrELnx5gKJcjJc16qn2wlfk"
+                    key: "AIzaSyBFnDOcWBoMBCLGUjoC0znC0GwN2WlnD8Y"
+
+                };
+
+                let g = ++this.generation;
+                youtubeSearch(q, opts, (err, results) => {
+                    if (!err && g === this.generation) {
+                        this.setState({ results: results.map(r => ({ title: r.title, id: r.id, subtitle: r.description })) })
+                    }
+                });
+            }
+
         } else {
             this.setState({ q: '', results: [] })
         }

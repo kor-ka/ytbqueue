@@ -143,8 +143,14 @@ let handleSkip = async (io: IoWrapper, message: Skip, host: boolean) => {
     let votes = await getVotes(message.queueId);
     let upds = votes.filter(v => v.up).length;
     let downs = votes.filter(v => !v.up).length;
-    if (downs > Math.max(0, upds)) {
-        await (handleNext(io, { type: 'next', session: message.session, queueId: message.queueId }, true))
+    if (downs > Math.max(1, upds)) {
+        let playingId = await redisGet('queue-playing-' + message.session.id);
+        if (playingId === message.queueId) {
+            await (handleNext(io, { type: 'next', session: message.session, queueId: message.queueId }, true))
+        } else {
+            await rediszrem('queue-' + message.session.id, message.queueId);
+            io.emit({ type: 'RemoveQueueContent', queueId: message.queueId }, true)
+        }
     }
 }
 
@@ -184,7 +190,7 @@ let resolveQueueEntry = async (queueId: string, sessionId: string) => {
     let downs = votes.filter(v => !v.up).length;
 
     let score = await rediszscore('queue-' + sessionId, queueId)
-    let res: QueueContent = { ...content, user: { id: entry.queueId, name: 'anon' }, score: score - scoreShift, queueId, historical: false, canSkip: downs > Math.max(0, upds), votes }
+    let res: QueueContent = { ...content, user: { id: entry.queueId, name: 'anon' }, score: score - scoreShift, queueId, historical: false, canSkip: downs > Math.max(1, upds), votes }
     return res;
 }
 
