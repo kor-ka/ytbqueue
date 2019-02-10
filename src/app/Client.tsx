@@ -35,7 +35,9 @@ export class Client extends React.PureComponent<{}, { playing?: QueueContent, qu
     render() {
         return (
             <>
-                {this.state.mode === 'queue' && <QueuePage toSearch={this.toSearch} playing={this.state.playing} queue={this.state.queue} session={this.session} />}
+                <div style={{ display: this.state.mode === 'queue' ? undefined : 'none' }}>
+                    <QueuePage toSearch={this.toSearch} playing={this.state.playing} queue={this.state.queue} session={this.session} />
+                </div>
                 {this.state.mode === 'search' && <Searcher toQueue={this.toQueue} session={this.session} />}
             </>
         )
@@ -68,9 +70,15 @@ export class QueuePage extends React.PureComponent<{ playing?: QueueContent, que
 export class Queue extends React.PureComponent<{ queue: QueueContent[] }> {
     render() {
         return (
-            <FlexLayout style={{ flexGrow: 1 }}>
+            <FlexLayout style={{ flexGrow: 1, flexDirection: 'row' }}>
                 {this.props.queue.map(c => (
-                    <ContentItem content={c} subtitle={c.user.name} />
+                    <>
+                        <ContentItem content={c} subtitle={c.user.name} />
+                        {/* <FlexLayout style={{ flexDirection: 'column', width: 50, position: 'absolute', right: 0, marginTop: -10 }}>
+                            <Button style={{ backgroundColor: 'transparent', height: 20 }}>🤘</Button>
+                            <Button style={{ backgroundColor: 'transparent', height: 20 }}>👎</Button>
+                        </FlexLayout> */}
+                    </>
                 ))}
             </FlexLayout>
         );
@@ -138,13 +146,14 @@ export class Searcher extends React.PureComponent<{ session: QueueSession, toQue
 class ContentItem extends React.PureComponent<{ content: Content, subtitle?: string }>{
     render() {
         return (
-            <FlexLayout style={{ flexDirection: 'row', marginLeft: 10, marginRight: 10, height: 90 }}>
-                <Player id={this.props.content.id} width={100} height={70} autoplay={true} mute={true} />
-                <FlexLayout style={{ flexDirection: 'column', flexGrow: 1, wordWrap: 'break-word', width: 1 }}>
-                    <span style={{ fontWeight: 500 }}>{(this.props.content.title).substr(0, 50)}</span>
-                    {this.props.subtitle && <span style={{ fontWeight: 500, opacity: 0.5 }}>{this.props.subtitle.substr(0, 25)}</span>}
+            <FlexLayout style={{ flexDirection: 'row', marginLeft: 10, marginRight: 10, height: 70 }}>
+                <Player id={this.props.content.id} width={100} height={70} autoplay={false} mute={true} />
+                <FlexLayout style={{ flexDirection: 'column', wordWrap: 'break-word', maxWidth: 200 }}>
+                    <span style={{ fontWeight: 500, width: '100%' }}>{(this.props.content.title).substr(0, 40)}</span>
+                    <FlexLayout style={{ flexGrow: 1, justifyContent: 'flex-end' }}>
+                        {this.props.subtitle && <span style={{ fontWeight: 500, opacity: 0.5 }}>{this.props.subtitle.substr(0, 25)}</span>}
+                    </FlexLayout>
                 </FlexLayout>
-
             </FlexLayout>
         );
     }
