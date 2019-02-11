@@ -6,31 +6,14 @@ import { FlexLayout, Input, Button } from "./ui/ui";
 import * as youtubeSearch from "youtube-search";
 import { Player } from "./Host";
 
-let clientId = Cookie.get('ytb_queue_client');
-
 export const endpoint = window.location.hostname.indexOf('localhost') >= 0 ? 'http://localhost:5000' : '';
 
 export class Client extends React.PureComponent<{}, { playing?: QueueContent, queue: QueueContent[], inited: boolean, mode: 'queue' | 'search' }> {
-    id = window.location.pathname.split('/').filter(s => s.length)[0];
-    token = Cookie.get('ytb_queue_token_' + (this.id ? this.id.toUpperCase() : ''));
-    clientId = Cookie.get('ytb_queue_client');
-    session = new QueueSession(this.id, this.token, this.clientId);
+    session = new QueueSession();
 
     constructor(props: any) {
         super(props);
         this.state = { queue: [], mode: 'queue', inited: false };
-
-        if (this.id) {
-            this.id = this.id.toUpperCase();
-        }
-
-        if (this.token) {
-            this.token = this.token.toUpperCase();
-        }
-
-        if (this.clientId) {
-            this.clientId = this.clientId.toUpperCase();
-        }
     }
 
     componentDidMount() {
@@ -99,12 +82,13 @@ class PlayingContent extends React.PureComponent<{ session: QueueSession, playin
         let meUp = false;
         let meDown = false;
         this.props.playing.votes.map(v => {
+            console.warn(v.user, this.props.session.clientId);
             if (v.up) {
                 ups++;
-                meUp = meUp || (v.user.id === clientId);
+                meUp = meUp || (v.user.id === this.props.session.clientId);
             } else {
                 downs++;
-                meDown = meDown || (v.user.id === clientId);
+                meDown = meDown || (v.user.id === this.props.session.clientId);
             }
 
         });
@@ -149,20 +133,21 @@ class QueueItem extends React.PureComponent<{ content: QueueContent, session: Qu
         this.props.content.votes.map(v => {
             if (v.up) {
                 ups++;
-                meUp = meUp || (v.user.id === clientId);
+                meUp = meUp || (v.user.id === this.props.session.clientId);
             } else {
                 downs++;
-                meDown = meDown || (v.user.id === clientId);
+                meDown = meDown || (v.user.id === this.props.session.clientId);
             }
 
         });
+        console.warn('QueueItem', this.props.content.user.id, this.props.session.clientId);
         return (
             <FlexLayout style={{ position: 'relative' }}>
-                <ContentItem content={this.props.content} subtitle={this.props.content.score + ''} />
-                <FlexLayout style={{ flexDirection: 'column', zIndex: 100, position: 'absolute', right: 0, marginTop: -10 }}>
-                    <Button onClick={this.onVoteUp} style={{ backgroundColor: 'transparent', height: 20, textAlign: 'right' }}><span style={{ color: meUp ? 'green' : 'black', marginTop: 1 }}>{ups ? ups : ''}</span>🤘</Button>
-                    {!this.props.content.canSkip && <Button onClick={this.onVoteDown} style={{ backgroundColor: 'transparent', height: 20, textAlign: 'right' }}><span style={{ color: meDown ? 'red' : 'black', marginTop: 1 }}>{downs ? downs : ''}</span>👎</Button>}
-                    {this.props.content.canSkip && <Button onClick={this.onSkip} style={{ backgroundColor: 'transparent', height: 20, textAlign: 'right' }}>⏭</Button>}
+                <ContentItem content={this.props.content} subtitle={this.props.content.user.id === this.props.session.clientId ? 'You - set name ✏️' : this.props.content.user.name} />
+                <FlexLayout style={{ flexDirection: 'column', zIndex: 100, position: 'absolute', right: 0 }}>
+                    <Button onClick={this.onVoteUp} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><span style={{ color: meUp ? 'green' : 'black', marginTop: 1 }}>{ups ? ups : ''}</span>🤘</Button>
+                    {!this.props.content.canSkip && <Button onClick={this.onVoteDown} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><span style={{ color: meDown ? 'red' : 'black', marginTop: 1 }}>{downs ? downs : ''}</span>👎</Button>}
+                    {this.props.content.canSkip && <Button onClick={this.onSkip} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}>⏭</Button>}
                 </FlexLayout>
             </FlexLayout>
         );
@@ -240,7 +225,7 @@ export class Searcher extends React.PureComponent<{ session: QueueSession, toQue
     }
 }
 
-class ContentItem extends React.PureComponent<{ content: Content, subtitle?: string }>{
+class ContentItem extends React.PureComponent<{ content: Content, subtitle?: string, subtitleCallback?: () => void }>{
     render() {
         return (
             <FlexLayout style={{ flexDirection: 'row', marginLeft: 10, marginRight: 10, height: 70 }}>
@@ -248,7 +233,7 @@ class ContentItem extends React.PureComponent<{ content: Content, subtitle?: str
                 <FlexLayout style={{ flexDirection: 'column', wordWrap: 'break-word', maxWidth: 200 }}>
                     <span style={{ fontWeight: 500, width: '100%' }}>{(this.props.content.title).substr(0, 35)}</span>
                     <FlexLayout style={{ flexGrow: 1, justifyContent: 'flex-end' }}>
-                        {this.props.subtitle && <span style={{ fontWeight: 500, opacity: 0.5 }}>{this.props.subtitle.substr(0, 20)}</span>}
+                        {this.props.subtitle && <span onClick={this.props.subtitleCallback} style={{ fontWeight: 500, opacity: 0.5 }}>{this.props.subtitle.substr(0, 20)}</span>}
                     </FlexLayout>
                 </FlexLayout>
             </FlexLayout>

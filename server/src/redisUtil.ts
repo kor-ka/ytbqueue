@@ -120,6 +120,18 @@ export let rediszincr = (key: string, val: string, score: number, tsx?: redis.Re
     })
 }
 
+export let redisincr = (key: string, tsx?: redis.RedisClient) => {
+    return new Promise<number>(async (resolve, error) => {
+        try {
+            console.log('redisincr', key)
+            await (tsx || client).incr(key, (res, s) => resolve(s));
+        } catch (e) {
+            error(e);
+        }
+    })
+}
+
+
 export let rediszscore = (key: string, val: string, tsx?: redis.RedisClient) => {
     return new Promise<number>(async (resolve, error) => {
         try {

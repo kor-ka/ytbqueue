@@ -127,6 +127,17 @@ exports.rediszincr = (key, val, score, tsx) => {
         }
     }));
 };
+exports.redisincr = (key, tsx) => {
+    return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
+        try {
+            console.log('redisincr', key);
+            yield (tsx || client).incr(key, (res, s) => resolve(s));
+        }
+        catch (e) {
+            error(e);
+        }
+    }));
+};
 exports.rediszscore = (key, val, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {

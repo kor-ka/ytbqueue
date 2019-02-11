@@ -2,36 +2,49 @@
 import * as socketIo from 'socket.io-client';
 export const endpoint = window.location.hostname.indexOf('localhost') >= 0 ? 'http://localhost:5000' : '';
 
-import { QueueContent, Content } from './../../../server/src/model/entity'
+import { QueueContent, Content, UserCreds } from './../../../server/src/model/entity'
 import { Event, InitQueue, AddQueueContent, RemoveQueueContent, Playing, UpdateQueueContent } from './../../../server/src/model/event'
 import { Message } from './../../../server/src/model/message'
+import * as Cookie from 'js-cookie';
 
 class Emitter {
     io: SocketIOClient.Socket;
     session: { id: string, token: string };
+    user: { id: string, token: string };
     clientId: string;
-    constructor(io: SocketIOClient.Socket, session: { id: string, token: string }, clientId: string) {
+    constructor(io: SocketIOClient.Socket, session: { id: string, token: string }, user: UserCreds) {
         this.io = io;
         this.session = session;
-        this.clientId = clientId;
+        this.user = user;
     }
 
     emit = (message: Message) => {
         console.warn('emmiting', message);
-        this.io.emit('message', JSON.stringify({ ...message, session: this.session, clientId: this.clientId })).send();
+        this.io.emit('message', JSON.stringify({ ...message, session: this.session, creds: this.user })).send();
     }
 }
 
 export class QueueSession {
+    id: string;
+    clientId: string;
     playing?: QueueContent;
     queue = new Map<string, QueueContent>();
     io: Emitter;
     inited = false;
 
-    constructor(id: string, token: string | undefined, clientId: string | undefined) {
+    constructor() {
+        this.id = window.location.pathname.split('/').filter(s => s.length)[0];
+        let token = Cookie.get('azaza_app_host' + (this.id ? this.id.toUpperCase() : ''));
+
+        let client = Cookie.get('azaza_app_client');
+        this.clientId = client.split('-')[0];
+        let clientToken = client.split('-')[1];
+
+        this.id = this.id ? this.id.toUpperCase() : this.id;
+
         let socket = socketIo(endpoint);
         socket.on('event', this.handleEvent);
-        this.io = new Emitter(socket, { id, token }, clientId);
+        this.io = new Emitter(socket, { id: this.id, token }, { id: this.clientId, token: clientToken });
 
         this.io.emit({ type: 'init' });
     }

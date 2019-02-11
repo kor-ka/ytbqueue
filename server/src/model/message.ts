@@ -1,13 +1,18 @@
-import { Content } from "./entity";
+import { Content, UserCreds } from "./entity";
 
 interface IMessage {
     session?: { id: string, token: string };
-    clientId?: string;
+    creds?: UserCreds;
     type: string;
 }
 
-export type Message = Init | Next | Add | Vote | Skip | Promote;
+export type Message =
+    // session
+    Init | Next | Add | Vote | Skip | Promote
+    // user
+    | SetName;
 
+// session
 export interface Init extends IMessage {
     type: 'init';
 }
@@ -37,4 +42,11 @@ export interface Promote extends IMessage {
     type: 'promite';
     queueId: string;
     up: boolean;
+}
+
+//user
+export interface SetName extends IMessage {
+    type: 'setName';
+    id: string;
+    name: string;
 }

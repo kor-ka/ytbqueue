@@ -16,7 +16,8 @@ var path = require('path');
 const PORT = process.env.PORT || 5000;
 const http_1 = require("http");
 const socketIo = require("socket.io");
-const event_1 = require("./src/model/event");
+const SocketListener_1 = require("./src/model/transport/SocketListener");
+const user_1 = require("./src/user");
 //
 // Configure http
 //
@@ -27,8 +28,8 @@ app
     .get('/', (req, res) => __awaiter(this, void 0, void 0, function* () {
     let target = session_1.pickSession();
     for (let k of Object.keys(req.cookies || {})) {
-        if (k.startsWith('ytb_queue_token_')) {
-            target = k.replace('ytb_queue_token_', '');
+        if (k.startsWith('azaza_app_host')) {
+            target = k.replace('azaza_app_host', '');
         }
     }
     res.redirect('/' + target);
@@ -40,10 +41,12 @@ app
     let sessionId = req.params.id.toUpperCase();
     let token = yield session_1.getTokenFroSession(sessionId);
     if (token.new) {
-        res.cookie('ytb_queue_token_' + sessionId, token.token);
+        res.cookie('azaza_app_host' + sessionId, token.token);
     }
-    if (!req.cookies.ytb_queue_client) {
-        res.cookie('ytb_queue_client', session_1.makeid());
+    // authorize client if not
+    if (!req.cookies.azaza_app_client) {
+        let u = yield user_1.User.getNewUser();
+        res.cookie('azaza_app_client', u.id + '-' + u.token);
     }
     res.sendFile(path.resolve(__dirname + '/../../public/index.html'));
 }));
@@ -54,24 +57,9 @@ let server = http_1.createServer(app);
 let io = socketIo(server);
 io.on('connect', (socket) => {
     console.log('Connected client on port %s.', PORT);
-    let wrapper = new event_1.IoWrapper(socket);
-    socket.on('message', (m) => __awaiter(this, void 0, void 0, function* () {
-        console.log('[server](message): %s', m);
-        if (!m) {
-            return;
-        }
-        let message = JSON.parse(m);
-        if (message.session && message.session.id) {
-            message.session.id = message.session.id.toUpperCase();
-        }
-        wrapper.bindSession(message.session.id);
-        // todo: validate message
-        // check token
-        let validToken = (yield session_1.getTokenFroSession(message.session.id)).token;
-        yield session_1.handleMessage(wrapper, message, validToken === message.session.token);
-    }));
+    let listener = new SocketListener_1.SocketListener(socket);
     socket.on('disconnect', () => {
-        console.log('Client disconnected');
+        listener.dispose();
     });
 });
 server.listen(PORT, () => console.log(`lll on ${PORT}`));

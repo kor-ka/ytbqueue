@@ -8,27 +8,10 @@ import { FlexLayout, Button } from "./ui/ui";
 export const endpoint = window.location.hostname.indexOf('localhost') >= 0 ? 'http://localhost:5000' : '';
 
 export class Host extends React.PureComponent<{}, { playing?: QueueContent }> {
-    id = window.location.pathname.split('/').filter(s => s.length)[0];
-    token = Cookie.get('ytb_queue_token_' + (this.id ? this.id.toUpperCase() : ''));
-    clientId = Cookie.get('ytb_queue_client');
-    session = new QueueSession(this.id, this.token, this.clientId);
+    session = new QueueSession();
 
     constructor(props: any) {
         super(props);
-
-        if (this.id) {
-            this.id = this.id.toUpperCase();
-        }
-
-        if (this.token) {
-            this.token = this.token.toUpperCase();
-        }
-
-        if (this.clientId) {
-            this.clientId = this.clientId.toUpperCase();
-        }
-
-        console.warn(this.id);
 
         this.state = {};
     }
@@ -55,7 +38,7 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent }> {
                         <br />
                         <Button style={{ border: '14px solid #fff', marginTop: 15, fontSize: 90, fontWeight: 900, color: "#fff", backgroundColor: '#000' }}>
                             📱azaza.app/
-                            <span style={{ color: '#7FDBFF' }}>{this.id + ' '}</span>
+                            <span style={{ color: '#7FDBFF' }}>{this.session.id + ' '}</span>
                         </Button>
                     </FlexLayout>
                 )}

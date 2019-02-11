@@ -9,24 +9,11 @@ export const isChromium = (window as any).chrome;
 
 export class Root extends React.PureComponent {
     id = window.location.pathname.split('/').filter(s => s.length)[0];
-    token = Cookie.get('ytb_queue_token_' + (this.id ? this.id.toUpperCase() : ''));
-    clientId = Cookie.get('ytb_queue_client');
+    token = Cookie.get('azaza_app_host' + (this.id ? this.id.toUpperCase() : ''));
+    clientId = Cookie.get('azaza_app_client');
 
     constructor(props: any) {
         super(props);
-
-        if (this.id) {
-            this.id = this.id.toUpperCase();
-        }
-
-        if (this.token) {
-            this.token = this.token.toUpperCase();
-        }
-
-        if (this.clientId) {
-            this.clientId = this.clientId.toUpperCase();
-        }
-
         console.warn(this.id);
 
     }

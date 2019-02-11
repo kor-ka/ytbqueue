@@ -3,7 +3,8 @@ import { hashCode } from "./utils";
 import { Server } from "socket.io";
 import { Message, Next, Add, Init, Vote, Skip } from "./model/message";
 import { IoWrapper, InitQueue } from "./model/event";
-import { QueueContent, QueueContentStored, Content, User } from "./model/entity";
+import { QueueContent, QueueContentStored, Content, User as IUser } from "./model/entity";
+import { User } from "./user";
 
 let scoreShift = 4000000000000000;
 export let pickSession = () => {
@@ -40,17 +41,19 @@ export let getTokenFroSession = (id: string) => {
     });
 }
 
-export let handleMessage = async (io: IoWrapper, message: Message, host: boolean) => {
+export let handleMessage = async (io: IoWrapper, message: Message) => {
+    let validToken = (await getTokenFroSession(message.session.id)).token;
+    let isHost = message.session.token === validToken;
     if (message.type === 'add') {
-        await handleAdd(io, message, host);
+        await handleAdd(io, message, isHost);
     } else if (message.type === 'next') {
-        await handleNext(io, message, host);
+        await handleNext(io, message, isHost);
     } else if (message.type === 'init') {
-        await handleInit(io, message, host);
+        await handleInit(io, message, isHost);
     } else if (message.type === 'vote') {
-        await handleVote(io, message, host);
+        await handleVote(io, message, isHost);
     } else if (message.type === 'skip') {
-        await handleSkip(io, message, host);
+        await handleSkip(io, message, isHost);
     }
 }
 
@@ -79,11 +82,11 @@ let handleAdd = async (io: IoWrapper, message: Add, host: boolean) => {
     await redishsetobj('content-' + message.content.id, message.content);
     // create queue entry
     let queueId = makeid();
-    let entry: QueueContentStored = { queueId, contentId: message.content.id, userId: message.clientId };
+    let entry: QueueContentStored = { queueId, contentId: message.content.id, userId: message.creds.id };
     await redishsetobj('queue-entry-' + queueId, entry);
     await rediszadd('queue-' + message.session.id, queueId, scoreShift);
     // notify clients
-    let res: QueueContent = { ...message.content, user: { id: message.clientId, name: 'anon' }, score: 0, queueId, historical: false, votes: [] }
+    let res: QueueContent = { ...message.content, user: await User.getUser(message.creds.id), score: 0, queueId, historical: false, votes: [] }
     io.emit({ type: 'AddQueueContent', content: res }, true)
     await checkQueue(io, message.session.id);
 }
@@ -116,13 +119,13 @@ let handleVote = async (io: IoWrapper, message: Vote, host: boolean) => {
     let increment = vote === 'up' ? 1 : vote === 'down' ? -1 : 0;
 
     // get old vote
-    let voteStored = await redishget('queue-entry-vote-' + message.queueId, message.clientId);
+    let voteStored = await redishget('queue-entry-vote-' + message.queueId, message.creds.id);
     // save new vote
-    await redishset('queue-entry-vote-' + message.queueId, message.clientId, vote);
+    await redishset('queue-entry-vote-' + message.queueId, message.creds.id, vote);
 
     if (voteStored === vote) {
         increment *= -1;
-        await redishdel('queue-entry-vote-' + message.queueId, message.clientId);
+        await redishdel('queue-entry-vote-' + message.queueId, message.creds.id);
 
     } else if (voteStored) {
         console.warn('stored -x2', voteStored);
@@ -146,7 +149,7 @@ let handleSkip = async (io: IoWrapper, message: Skip, host: boolean) => {
     if (downs > Math.max(1, upds)) {
         let playingId = await redisGet('queue-playing-' + message.session.id);
         if (playingId === message.queueId) {
-            await (handleNext(io, { type: 'next', session: message.session, queueId: message.queueId }, true))
+            await (handleNext(io, { type: 'next', session: message.session, queueId: message.queueId, creds: message.creds }, true))
         } else {
             await rediszrem('queue-' + message.session.id, message.queueId);
             io.emit({ type: 'RemoveQueueContent', queueId: message.queueId }, true)
@@ -172,10 +175,10 @@ let handleNext = async (io: IoWrapper, message: Next, host: boolean) => {
 
 let getVotes = async (queueId: string) => {
     let allVotes = await redishgetall('queue-entry-vote-' + queueId);
-    let allVotesRes: { user: User, up: boolean }[] = [];
+    let allVotesRes: { user: IUser, up: boolean }[] = [];
     for (let uid of Object.keys(allVotes)) {
         let vote = allVotes[uid];
-        allVotesRes.push({ user: { id: uid, name: 'anon' }, up: vote === 'up' });
+        allVotesRes.push({ user: await User.getUser(uid), up: vote === 'up' });
     }
     return allVotesRes;
 }
@@ -190,7 +193,7 @@ let resolveQueueEntry = async (queueId: string, sessionId: string) => {
     let downs = votes.filter(v => !v.up).length;
 
     let score = await rediszscore('queue-' + sessionId, queueId)
-    let res: QueueContent = { ...content, user: { id: entry.queueId, name: 'anon' }, score: score - scoreShift, queueId, historical: false, canSkip: downs > Math.max(1, upds), votes }
+    let res: QueueContent = { ...content, user: await User.getUser(entry.userId), score: score - scoreShift, queueId, historical: false, canSkip: downs > Math.max(1, upds), votes }
     return res;
 }
 

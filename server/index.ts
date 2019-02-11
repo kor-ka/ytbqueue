@@ -9,6 +9,8 @@ import { createServer, Server } from 'http';
 import * as socketIo from 'socket.io';
 import { Message } from './src/model/message';
 import { IoWrapper } from './src/model/event';
+import { SocketListener } from './src/model/transport/SocketListener';
+import { User } from './src/user';
 
 //
 // Configure http
@@ -21,8 +23,8 @@ app
   .get('/', async (req, res) => {
     let target = pickSession();
     for (let k of Object.keys(req.cookies || {})) {
-      if (k.startsWith('ytb_queue_token_')) {
-        target = k.replace('ytb_queue_token_', '');
+      if (k.startsWith('azaza_app_host')) {
+        target = k.replace('azaza_app_host', '');
       }
     }
     res.redirect('/' + target)
@@ -35,10 +37,12 @@ app
     let sessionId = req.params.id.toUpperCase();
     let token = await getTokenFroSession(sessionId);
     if (token.new) {
-      res.cookie('ytb_queue_token_' + sessionId, token.token);
+      res.cookie('azaza_app_host' + sessionId, token.token);
     }
-    if (!req.cookies.ytb_queue_client) {
-      res.cookie('ytb_queue_client', makeid());
+    // authorize client if not
+    if (!req.cookies.azaza_app_client) {
+      let u = await User.getNewUser();
+      res.cookie('azaza_app_client', u.id + '-' + u.token);
     }
 
     res.sendFile(path.resolve(__dirname + '/../../public/index.html'));
@@ -52,25 +56,10 @@ let io = socketIo(server);
 
 io.on('connect', (socket) => {
   console.log('Connected client on port %s.', PORT);
-  let wrapper = new IoWrapper(socket);
-  socket.on('message', async (m: string) => {
-    console.log('[server](message): %s', m);
-    if (!m) {
-      return;
-    }
-    let message = JSON.parse(m) as Message
-    if (message.session && message.session.id) {
-      message.session.id = message.session.id.toUpperCase()
-    }
-    wrapper.bindSession(message.session.id);
-    // todo: validate message
-    // check token
-    let validToken = (await getTokenFroSession(message.session.id)).token;
-    await handleMessage(wrapper, message, validToken === message.session.token);
-  });
+  let listener = new SocketListener(socket);
 
   socket.on('disconnect', () => {
-    console.log('Client disconnected');
+    listener.dispose();
   });
 });
 
