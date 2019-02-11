@@ -111,9 +111,9 @@ class PlayingContent extends React.PureComponent<{ session: QueueSession, playin
         return (
             <FlexLayout style={{ position: 'relative' }}>
                 <Player height={200} id={this.props.playing.id} />
-                <FlexLayout style={{ position: 'absolute', flexDirection: 'row', bottom: 20, backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 20 }}>
-                    <Button onClick={this.onVoteUp} style={{ backgroundColor: 'transparent', height: 20, textAlign: 'right' }}><span style={{ color: meUp ? 'green' : 'black', marginTop: 1 }}>{ups ? ups : ''}</span>🤘</Button>
-                    {!this.props.playing.canSkip && <Button onClick={this.onVoteDown} style={{ backgroundColor: 'transparent', height: 20, textAlign: 'right' }}><span style={{ color: meDown ? 'red' : 'black', marginTop: 1 }}>{downs ? downs : ''}</span>👎</Button>}
+                <FlexLayout style={{ position: 'absolute', flexDirection: 'row', left: 20, bottom: 20, backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 20 }}>
+                    <Button onClick={this.onVoteUp} style={{ backgroundColor: 'transparent', height: 20, textAlign: 'right' }}><span style={{ color: meUp ? 'green' : 'black', marginTop: 1 }}>{ups}</span>🤘</Button>
+                    {!this.props.playing.canSkip && <Button onClick={this.onVoteDown} style={{ backgroundColor: 'transparent', height: 20, textAlign: 'right' }}><span style={{ color: meDown ? 'red' : 'black', marginTop: 1 }}>{downs}</span>👎</Button>}
                     {this.props.playing.canSkip && <Button onClick={this.onSkip} style={{ backgroundColor: 'transparent', height: 20, textAlign: 'right' }}>⏭</Button>}
                 </FlexLayout>
             </FlexLayout>
