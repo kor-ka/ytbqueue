@@ -95,6 +95,7 @@ export class Player extends React.PureComponent<{ id: string, width?: number, he
                         } as any,
                     }}
                     onEnd={this.onEnd}
+                    onError={this.onEnd}
                 />
             </div>
         );
