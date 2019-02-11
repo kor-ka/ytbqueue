@@ -66,7 +66,7 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent }> {
 }
 
 export class Player extends React.PureComponent<{ id: string, width?: number, height?: number, onEnd?: () => void, autoplay?: boolean, mute?: boolean }>{
-    _onReady(event) {
+    _onReady = (event) => {
         // access to player in all event handlers via event.target
         if (this.props.autoplay) {
             event.target.playVideo();
