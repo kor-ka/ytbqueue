@@ -9,7 +9,7 @@ export const isChromium = (window as any).chrome;
 
 export class Root extends React.PureComponent {
     id = window.location.pathname.split('/').filter(s => s.length)[0];
-    token = Cookie.get('azaza_app_host' + (this.id ? this.id.toUpperCase() : ''));
+    token = Cookie.get('azaza_app_host_' + (this.id ? this.id.toUpperCase() : ''));
     clientId = Cookie.get('azaza_app_client');
 
     constructor(props: any) {

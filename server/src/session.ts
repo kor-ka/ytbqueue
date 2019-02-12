@@ -25,10 +25,10 @@ export let getTokenFroSession = (id: string) => {
     return new Promise<{ token: string, new: boolean }>(async (res, error) => {
         try {
             await transaction(async tsx => {
-                let token = await redisGet('session_token_' + id, tsx);
+                let token = await redisGet('session_host_token_' + id, tsx);
                 if (!token) {
                     token = makeid()
-                    await redisSet('session_token_' + id, token, tsx);
+                    await redisSet('session_host_token_' + id, token, tsx);
                     res({ token, new: true });
                 } else {
                     res({ token, new: false })

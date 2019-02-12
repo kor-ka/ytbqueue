@@ -18,6 +18,7 @@ const http_1 = require("http");
 const socketIo = require("socket.io");
 const SocketListener_1 = require("./src/model/transport/SocketListener");
 const user_1 = require("./src/user");
+const notSoSoon = new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365 * 1000);
 //
 // Configure http
 //
@@ -28,8 +29,8 @@ app
     .get('/', (req, res) => __awaiter(this, void 0, void 0, function* () {
     let target = session_1.pickSession();
     for (let k of Object.keys(req.cookies || {})) {
-        if (k.startsWith('azaza_app_host')) {
-            target = k.replace('azaza_app_host', '');
+        if (k.startsWith('azaza_app_host_')) {
+            target = k.replace('azaza_app_host_', '');
         }
     }
     res.redirect('/' + target);
@@ -41,12 +42,12 @@ app
     let sessionId = req.params.id.toUpperCase();
     let token = yield session_1.getTokenFroSession(sessionId);
     if (token.new) {
-        res.cookie('azaza_app_host' + sessionId, token.token);
+        res.cookie('azaza_app_host_' + sessionId, token.token, { expires: notSoSoon });
     }
     // authorize client if not
     if (!req.cookies.azaza_app_client) {
         let u = yield user_1.User.getNewUser();
-        res.cookie('azaza_app_client', u.id + '-' + u.token);
+        res.cookie('azaza_app_client', u.id + '-' + u.token, { expires: notSoSoon });
     }
     res.sendFile(path.resolve(__dirname + '/../../public/index.html'));
 }));

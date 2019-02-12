@@ -12,6 +12,7 @@ import { IoWrapper } from './src/model/event';
 import { SocketListener } from './src/model/transport/SocketListener';
 import { User } from './src/user';
 
+const notSoSoon = new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365 * 1000);
 //
 // Configure http
 //
@@ -23,8 +24,8 @@ app
   .get('/', async (req, res) => {
     let target = pickSession();
     for (let k of Object.keys(req.cookies || {})) {
-      if (k.startsWith('azaza_app_host')) {
-        target = k.replace('azaza_app_host', '');
+      if (k.startsWith('azaza_app_host_')) {
+        target = k.replace('azaza_app_host_', '');
       }
     }
     res.redirect('/' + target)
@@ -37,12 +38,12 @@ app
     let sessionId = req.params.id.toUpperCase();
     let token = await getTokenFroSession(sessionId);
     if (token.new) {
-      res.cookie('azaza_app_host' + sessionId, token.token);
+      res.cookie('azaza_app_host_' + sessionId, token.token, { expires: notSoSoon });
     }
     // authorize client if not
     if (!req.cookies.azaza_app_client) {
       let u = await User.getNewUser();
-      res.cookie('azaza_app_client', u.id + '-' + u.token);
+      res.cookie('azaza_app_client', u.id + '-' + u.token, { expires: notSoSoon });
     }
 
     res.sendFile(path.resolve(__dirname + '/../../public/index.html'));

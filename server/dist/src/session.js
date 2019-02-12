@@ -25,10 +25,10 @@ exports.getTokenFroSession = (id) => {
     return new Promise((res, error) => __awaiter(this, void 0, void 0, function* () {
         try {
             yield redisUtil_1.transaction((tsx) => __awaiter(this, void 0, void 0, function* () {
-                let token = yield redisUtil_1.redisGet('session_token_' + id, tsx);
+                let token = yield redisUtil_1.redisGet('session_host_token_' + id, tsx);
                 if (!token) {
                     token = exports.makeid();
-                    yield redisUtil_1.redisSet('session_token_' + id, token, tsx);
+                    yield redisUtil_1.redisSet('session_host_token_' + id, token, tsx);
                     res({ token, new: true });
                 }
                 else {

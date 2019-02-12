@@ -34,7 +34,7 @@ export class QueueSession {
 
     constructor() {
         this.id = window.location.pathname.split('/').filter(s => s.length)[0];
-        let token = Cookie.get('azaza_app_host' + (this.id ? this.id.toUpperCase() : ''));
+        let token = Cookie.get('azaza_app_host_' + (this.id ? this.id.toUpperCase() : ''));
 
         let client = Cookie.get('azaza_app_client');
         this.clientId = client.split('-')[0];
