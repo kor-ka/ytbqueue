@@ -149,6 +149,17 @@ exports.rediszscore = (key, val, tsx) => {
         }
     }));
 };
+exports.rediszcard = (key, tsx) => {
+    return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
+        try {
+            console.log('rediszscore', key);
+            yield (tsx || client).zcard(key, (res, s) => resolve(s));
+        }
+        catch (e) {
+            error(e);
+        }
+    }));
+};
 exports.rediszrange = (key, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
@@ -170,12 +181,25 @@ exports.rediszrange = (key, tsx) => {
         }
     }));
 };
+exports.rediszrangebyscore = (key, count, tsx) => {
+    return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield (tsx || client).zrevrangebyscore(key, Number.MAX_SAFE_INTEGER, 0, 'LIMIT', 0, count, (res, s) => {
+                console.warn('rediszrangebyscore', s);
+                resolve(s);
+            });
+        }
+        catch (e) {
+            error(e);
+        }
+    }));
+};
 exports.redisztop = (key, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
-            yield (tsx || client).zrangebyscore(key, -1, Number.MAX_SAFE_INTEGER, (res, s) => {
+            yield (tsx || client).zrevrangebyscore(key, Number.MAX_SAFE_INTEGER, 0, 'LIMIT', 0, 1, (res, s) => {
                 console.warn('top', s);
-                resolve(s.length > 0 ? s[0] : undefined);
+                resolve(s[0]);
             });
         }
         catch (e) {

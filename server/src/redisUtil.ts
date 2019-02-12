@@ -143,6 +143,17 @@ export let rediszscore = (key: string, val: string, tsx?: redis.RedisClient) => 
     })
 }
 
+export let rediszcard = (key: string, tsx?: redis.RedisClient) => {
+    return new Promise<number>(async (resolve, error) => {
+        try {
+            console.log('rediszscore', key)
+            await (tsx || client).zcard(key, (res, s) => resolve(s));
+        } catch (e) {
+            error(e);
+        }
+    })
+}
+
 export let rediszrange = (key: string, tsx?: redis.RedisClient) => {
     return new Promise<{ key: string, score: number }[]>(async (resolve, error) => {
         try {
@@ -163,12 +174,25 @@ export let rediszrange = (key: string, tsx?: redis.RedisClient) => {
     })
 }
 
+export let rediszrangebyscore = (key: string, count: number, tsx?: redis.RedisClient) => {
+    return new Promise<string[]>(async (resolve, error) => {
+        try {
+            await (tsx || client).zrevrangebyscore(key, Number.MAX_SAFE_INTEGER, 0, 'LIMIT', 0, count, (res, s) => {
+                console.warn('rediszrangebyscore', s);
+                resolve(s)
+            });
+        } catch (e) {
+            error(e);
+        }
+    })
+}
+
 export let redisztop = (key: string, tsx?: redis.RedisClient) => {
     return new Promise<string | undefined>(async (resolve, error) => {
         try {
-            await (tsx || client).zrangebyscore(key, -1, Number.MAX_SAFE_INTEGER, (res, s) => {
+            await (tsx || client).zrevrangebyscore(key, Number.MAX_SAFE_INTEGER, 0, 'LIMIT', 0, 1, (res, s) => {
                 console.warn('top', s);
-                resolve(s.length > 0 ? s[0] : undefined)
+                resolve(s[0])
             });
         } catch (e) {
             error(e);

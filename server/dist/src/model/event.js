@@ -14,13 +14,16 @@ class IoWrapper {
             sessions.add(this);
         };
         this.emit = (event, global) => {
+            let m = JSON.stringify(Object.assign({}, event, { session: this.session }));
             if (global) {
                 for (let e of sessionEmitters.get(this.session).values()) {
-                    e.io.emit('event', JSON.stringify(Object.assign({}, event, { session: this.session })));
+                    console.warn('emiting[g] to ', this.io.id, m);
+                    e.io.emit('event', m);
                 }
             }
             else {
-                this.io.emit('event', JSON.stringify(Object.assign({}, event, { session: this.session })));
+                console.warn('emiting to ', this.io.id, m);
+                this.io.emit('event', m);
             }
         };
         this.io = io;

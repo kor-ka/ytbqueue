@@ -8,7 +8,7 @@ import { default as Twemoji } from 'react-twemoji';
 
 export const endpoint = window.location.hostname.indexOf('localhost') >= 0 ? 'http://localhost:5000' : '';
 
-export class Host extends React.PureComponent<{}, { playing?: QueueContent }> {
+export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: { queue: QueueContent[], inited: boolean } }> {
     session = new QueueSession();
 
     constructor(props: any) {
@@ -20,6 +20,7 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent }> {
 
     componentDidMount() {
         this.session.onPlayingChange(p => this.setState({ playing: p }))
+        this.session.onQueueChange(q => this.setState({ q: q }))
         // fetch(endpoint + '/next/' + this.id, { method: 'POST' }).then();
     }
 
@@ -35,14 +36,15 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent }> {
                 {this.state.playing && <Player onEnd={this.onEnd} id={this.state.playing.id} autoplay={true} />}
                 {!this.state.playing && (
                     <FlexLayout style={{ backgroundColor: '#000', height: '100%', flex: 1, fontSize: 90, alignSelf: 'stretch', color: '#fff', fontWeight: 900, alignItems: 'center', justifyContent: 'center', textAlign: 'center' }} >
-                        <Twemoji>No music to play 🤷‍♂️</Twemoji>
+                        < Twemoji >{(this.state.q && this.state.q.inited) ? 'No music to play 🤷‍♂️' : 'Connecting... 🙌'}</Twemoji>
                         <br />
                         <Button style={{ border: '14px solid #fff', marginTop: 15, fontSize: 90, fontWeight: 900, color: "#fff", backgroundColor: '#000' }}>
                             <Twemoji>📱azaza.app/<span style={{ color: '#7FDBFF' }}>{this.session.id + ' '}</span></Twemoji>
 
                         </Button>
                     </FlexLayout>
-                )}
+                )
+                }
             </>
         );
 
@@ -73,7 +75,7 @@ export class Player extends React.PureComponent<{ id: string, width?: number, he
                         playerVars: {
                             showinfo: 0,
                             rel: 0,
-                            controls: 0,
+                            controls: 1,
                             mute: this.props.mute ? 1 : 0,
                             autoplay: this.props.autoplay ? 1 : 0,
                         } as any,
