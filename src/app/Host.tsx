@@ -4,6 +4,7 @@ import { QueueSession } from "./model/session";
 import { QueueContent } from "../../server/src/model/entity";
 import YouTube from "react-youtube";
 import { FlexLayout, Button } from "./ui/ui";
+import { default as Twemoji } from 'react-twemoji';
 
 export const endpoint = window.location.hostname.indexOf('localhost') >= 0 ? 'http://localhost:5000' : '';
 
@@ -34,11 +35,11 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent }> {
                 {this.state.playing && <Player onEnd={this.onEnd} id={this.state.playing.id} autoplay={true} />}
                 {!this.state.playing && (
                     <FlexLayout style={{ backgroundColor: '#000', height: '100%', flex: 1, fontSize: 90, alignSelf: 'stretch', color: '#fff', fontWeight: 900, alignItems: 'center', justifyContent: 'center', textAlign: 'center' }} >
-                        No music to play 🤷‍♂️
+                        <Twemoji>No music to play 🤷‍♂️</Twemoji>
                         <br />
                         <Button style={{ border: '14px solid #fff', marginTop: 15, fontSize: 90, fontWeight: 900, color: "#fff", backgroundColor: '#000' }}>
-                            📱azaza.app/
-                            <span style={{ color: '#7FDBFF' }}>{this.session.id + ' '}</span>
+                            <Twemoji>📱azaza.app/<span style={{ color: '#7FDBFF' }}>{this.session.id + ' '}</span></Twemoji>
+
                         </Button>
                     </FlexLayout>
                 )}
