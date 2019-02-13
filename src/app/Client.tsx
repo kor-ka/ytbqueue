@@ -180,9 +180,9 @@ export class Searcher extends React.PureComponent<{ session: QueueSession, toQue
                 // search
                 var opts: youtubeSearch.YouTubeSearchOptions = {
                     maxResults: 10,
-                    // key: "AIzaSyDD0svyIgbg6lrE1310ma1mpiw2g3vomnc"
+                    key: "AIzaSyDD0svyIgbg6lrE1310ma1mpiw2g3vomnc"
                     // key: "AIzaSyBW-5ayHQTRcrELnx5gKJcjJc16qn2wlfk"
-                    key: "AIzaSyBFnDOcWBoMBCLGUjoC0znC0GwN2WlnD8Y"
+                    // key: "AIzaSyBFnDOcWBoMBCLGUjoC0znC0GwN2WlnD8Y"
 
                 };
 
