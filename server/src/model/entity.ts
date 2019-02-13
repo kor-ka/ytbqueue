@@ -12,6 +12,7 @@ export interface UserCreds {
 export interface Content {
     id: string;
     title: string;
+    thumb?: { url: string, width: number, height: number };
     subtitle?: string;
 }
 export interface QueueContent extends Content {

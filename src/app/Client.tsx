@@ -184,12 +184,13 @@ export class Searcher extends React.PureComponent<{ session: QueueSession, toQue
                     key: "AIzaSyBW-5ayHQTRcrELnx5gKJcjJc16qn2wlfk"
                     // key: "AIzaSyBFnDOcWBoMBCLGUjoC0znC0GwN2WlnD8Y"
 
+
                 };
 
                 let g = ++this.generation;
                 youtubeSearch(q, opts, (err, results) => {
                     if (!err && g === this.generation) {
-                        this.setState({ results: results.map(r => ({ title: r.title, id: r.id, subtitle: r.description })) })
+                        this.setState({ results: results.map(r => ({ title: r.title, id: r.id, subtitle: r.description, thumb: r.thumbnails.medium })) })
                     }
                 });
             }
@@ -215,7 +216,7 @@ export class Searcher extends React.PureComponent<{ session: QueueSession, toQue
                 <FlexLayout style={{ flexDirection: 'column', overflowY: 'scroll', flexGrow: 1, height: 1, marginTop: -80, paddingTop: 80 }}>
                     {this.state.q && this.state.results.map(r => (
                         <FlexLayout onClick={() => this.onSelect(r)}>
-                            <ContentItem content={{ id: r.id, title: r.title }} subtitle={r.subtitle} />
+                            <ContentItem content={{ id: r.id, title: r.title, thumb: r.thumb }} subtitle={r.subtitle} />
                         </FlexLayout>
                     ))}
                 </FlexLayout>
@@ -227,9 +228,25 @@ export class Searcher extends React.PureComponent<{ session: QueueSession, toQue
 
 class ContentItem extends React.PureComponent<{ content: Content, subtitle?: string, subtitleCallback?: () => void }>{
     render() {
+        let scale = 1;
+        let width = 100;
+        let height = 70;
+        if (this.props.content.thumb) {
+            console.warn(this.props.content.thumb);
+            let th = this.props.content.thumb.height || 240;
+            let tw = this.props.content.thumb.width || 240;
+
+            scale = th > tw ? width / tw : height / th;
+            width = tw * scale;
+            height = th * scale;
+
+
+            console.warn(scale, width, height);
+        }
         return (
             <FlexLayout style={{ flexDirection: 'row', marginLeft: 10, marginRight: 10, height: 70 }}>
-                <Player id={this.props.content.id} width={100} height={70} />
+                {/* <Player id={this.props.content.id} width={100} height={70} /> */}
+                {this.props.content.thumb && <img src={this.props.content.thumb.url} width={width} height={height} />}
                 <FlexLayout style={{ flexDirection: 'column', wordWrap: 'break-word', maxWidth: 200 }}>
                     <span style={{ fontWeight: 500, width: '100%' }}>{(this.props.content.title).substr(0, 35)}</span>
                     <FlexLayout style={{ flexGrow: 1, justifyContent: 'flex-end' }}>
