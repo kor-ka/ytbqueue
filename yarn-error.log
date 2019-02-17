@@ -1,5 +1,5 @@
 Arguments: 
-  /usr/local/Cellar/node@10/10.14.1/bin/node /usr/local/Cellar/yarn/1.12.3/libexec/bin/yarn.js add @types/react-twemoji
+  /usr/local/Cellar/node@10/10.14.1/bin/node /usr/local/Cellar/yarn/1.12.3/libexec/bin/yarn.js add @types/react-flip-toolkit
 
 PATH: 
   /usr/local/opt/node@10/bin:/usr/local/opt/icu4c/sbin:/usr/local/opt/icu4c/bin:/usr/local/opt/node@8/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Users/kor_ka/Library/Android/sdk/tools:/Users/kor_ka/Library/Android/sdk/platform-tools
@@ -14,7 +14,7 @@ Platform:
   darwin x64
 
 Trace: 
-  Error: https://registry.yarnpkg.com/@types%2freact-twemoji: Not found
+  Error: https://registry.yarnpkg.com/@types%2freact-flip-toolkit: Not found
       at Request.params.callback [as _callback] (/usr/local/Cellar/yarn/1.12.3/libexec/lib/cli.js:65894:18)
       at Request.self.callback (/usr/local/Cellar/yarn/1.12.3/libexec/lib/cli.js:129018:22)
       at Request.emit (events.js:182:13)
@@ -67,6 +67,7 @@ npm manifest:
       "js-cookie": "^2.2.0",
       "react": "16.4.1",
       "react-dom": "16.4.1",
+      "react-flip-toolkit": "^6.5.5",
       "react-router-dom": "^4.3.1",
       "react-twemoji": "^0.1.0",
       "react-youtube": "^7.9.0",
@@ -5343,6 +5344,14 @@ Lockfile:
       object-assign "^4.1.1"
       prop-types "^15.6.0"
   
+  react-flip-toolkit@^6.5.5:
+    version "6.5.5"
+    resolved "https://registry.yarnpkg.com/react-flip-toolkit/-/react-flip-toolkit-6.5.5.tgz#4651d901e1f0a0356092b9ef3cd48b2a2a1409b8"
+    integrity sha512-QftsZt1dQGply8njp3aVcgn1GvDeolm1qAp2oKowygIl8H7BOpSgcFF+4Kv+cqFNbKfXx6hkVx/ya4dauk7Dxg==
+    dependencies:
+      prop-types "^15.6.2"
+      rematrix "0.2.2"
+  
   react-html-attributes@^1.4.2:
     version "1.4.3"
     resolved "https://registry.yarnpkg.com/react-html-attributes/-/react-html-attributes-1.4.3.tgz#8c36c35fce6b750938d286af428ed1da7625186e"
@@ -5598,6 +5607,11 @@ Lockfile:
     integrity sha1-fuj4Tcb6eS0/0K4ijSS9lJ6tIFw=
     dependencies:
       jsesc "~0.5.0"
+  
+  rematrix@0.2.2:
+    version "0.2.2"
+    resolved "https://registry.yarnpkg.com/rematrix/-/rematrix-0.2.2.tgz#c96a050260782db9908904885991256e23beda5d"
+    integrity sha512-agFFS3RzrLXJl5LY5xg/xYyXvUuVAnkhgKO7RaO9J1Ssth6yvbO+PIiV67V59MB5NCdAK2flvGvNT4mdKVniFA==
   
   remove-trailing-separator@^1.0.1:
     version "1.1.0"

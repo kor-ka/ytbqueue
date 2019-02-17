@@ -5,6 +5,7 @@ import { QueueContent, Content } from "../../server/src/model/entity";
 import { FlexLayout, Input, Button } from "./ui/ui";
 import * as youtubeSearch from "youtube-search";
 import { Player } from "./Host";
+import FlipMove from "react-flip-move";
 
 export const endpoint = window.location.hostname.indexOf('localhost') >= 0 ? 'http://localhost:5000' : '';
 
@@ -109,7 +110,10 @@ export class Queue extends React.PureComponent<{ queue: QueueContent[], session:
     render() {
         return (
             <FlexLayout style={{ flexGrow: 1, flexDirection: 'column' }}>
-                {this.props.queue.map(c => <QueueItem key={c.queueId} content={c} session={this.props.session} />)}
+                <FlipMove>
+                    {this.props.queue.map(c => <QueueItem key={c.queueId} content={c} session={this.props.session} />)}
+                </FlipMove>
+
             </FlexLayout>
         );
     }
@@ -142,9 +146,9 @@ class QueueItem extends React.PureComponent<{ content: QueueContent, session: Qu
         });
         console.warn('QueueItem', this.props.content.user.id, this.props.session.clientId);
         return (
-            <FlexLayout style={{ position: 'relative' }}>
+            <FlexLayout style={{ position: 'relative', flexDirection: 'row', marginBottom: 16 }}>
                 <ContentItem content={this.props.content} subtitle={this.props.content.user.id === this.props.session.clientId ? 'You - set name ✏️' : this.props.content.user.name} />
-                <FlexLayout style={{ flexDirection: 'column', zIndex: 100, position: 'absolute', right: 0 }}>
+                <FlexLayout style={{ flexDirection: 'column', zIndex: 100, position: 'absolute', top: -7, right: 0 }} divider={4}>
                     <Button onClick={this.onVoteUp} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><span style={{ color: meUp ? 'green' : 'black', marginTop: 1 }}>{ups ? ups : ''}</span>🤘</Button>
                     {!this.props.content.canSkip && <Button onClick={this.onVoteDown} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><span style={{ color: meDown ? 'red' : 'black', marginTop: 1 }}>{downs ? downs : ''}</span>👎</Button>}
                     {this.props.content.canSkip && <Button onClick={this.onSkip} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}>⏭</Button>}
@@ -229,28 +233,29 @@ export class Searcher extends React.PureComponent<{ session: QueueSession, toQue
 class ContentItem extends React.PureComponent<{ content: Content, subtitle?: string, subtitleCallback?: () => void }>{
     render() {
         let scale = 1;
-        let width = 100;
-        let height = 70;
+        let width = 80;
+        let initialWidth = width;
+        let height = 55;
+        let initialHeight = height;
         if (this.props.content.thumb) {
-            console.warn(this.props.content.thumb);
             let th = this.props.content.thumb.height || 240;
             let tw = this.props.content.thumb.width || 240;
 
-            scale = th > tw ? width / tw : height / th;
+            scale = tw > th ? width / tw : height / th;
             width = tw * scale;
             height = th * scale;
 
-
-            console.warn(scale, width, height);
         }
         return (
-            <FlexLayout style={{ flexDirection: 'row', marginLeft: 10, marginRight: 10, height: 70 }}>
+            <FlexLayout style={{ flexDirection: 'row', marginLeft: 20, marginRight: 20, height: 80, maxWidth: 'calc(100% - 160px)' }}>
                 {/* <Player id={this.props.content.id} width={100} height={70} /> */}
-                {this.props.content.thumb && <img src={this.props.content.thumb.url} width={width} height={height} />}
-                <FlexLayout style={{ flexDirection: 'column', wordWrap: 'break-word', maxWidth: 200 }}>
-                    <span style={{ fontWeight: 500, width: '100%' }}>{(this.props.content.title).substr(0, 35)}</span>
+                <FlexLayout style={{ justifyContent: 'center', alignItems: 'center', width: initialWidth, height: initialHeight }}>
+                    {this.props.content.thumb && <img src={this.props.content.thumb.url} width={width} height={height} />}
+                </FlexLayout>
+                <FlexLayout style={{ flexGrow: 1, maxWidth: '100%', flexDirection: 'column' }} divider={0}>
+                    <span style={{ fontWeight: 500, WebkitLineClamp: 3, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', lineClamp: 3 }}>{this.props.content.title}{this.props.content.title}{this.props.content.title}{this.props.content.title}</span>
                     <FlexLayout style={{ flexGrow: 1, justifyContent: 'flex-end' }}>
-                        {this.props.subtitle && <span onClick={this.props.subtitleCallback} style={{ fontWeight: 500, opacity: 0.5 }}>{this.props.subtitle.substr(0, 20)}</span>}
+                        {this.props.subtitle && <span onClick={this.props.subtitleCallback} style={{ fontWeight: 500, opacity: 0.5, WebkitLineClamp: 1, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', lineClamp: 1 }}>{this.props.subtitle}</span>}
                     </FlexLayout>
                 </FlexLayout>
             </FlexLayout>

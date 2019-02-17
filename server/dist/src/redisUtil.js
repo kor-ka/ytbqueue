@@ -48,7 +48,12 @@ exports.redishsetobj = (key, obj, tsx) => {
         try {
             console.log('redishsetobj', key);
             for (let k of Object.keys(obj)) {
-                yield (tsx || client).hset(key, k, obj[k], () => true);
+                let val = obj[k];
+                if (typeof val === 'object') {
+                    val = JSON.stringify(val);
+                    yield (tsx || client).hset(key, k + '-is-object', 'true', () => true);
+                }
+                yield (tsx || client).hset(key, k, val, () => true);
             }
             resolve(true);
         }
@@ -75,7 +80,26 @@ exports.redishgetall = (key, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
             console.log('redishgetall', key);
-            yield (tsx || client).hgetall(key, (e, res) => resolve(res || {}));
+            yield (tsx || client).hgetall(key, (e, val) => {
+                let res = {};
+                if (!val) {
+                    resolve(res || {});
+                    return;
+                }
+                for (let k of Object.keys(val)) {
+                    if (k.includes('-is-object')) {
+                        // skip meta
+                        continue;
+                    }
+                    if (val[k + '-is-object'] === 'true') {
+                        res[k] = JSON.parse(val[k]);
+                    }
+                    else {
+                        res[k] = val[k];
+                    }
+                }
+                resolve(res || {});
+            });
         }
         catch (e) {
             error(e);
