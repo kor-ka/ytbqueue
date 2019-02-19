@@ -118,11 +118,16 @@ exports.redisGet = (key, tsx) => {
         }
     }));
 };
-exports.rediszadd = (key, val, score, tsx) => {
+exports.rediszadd = (key, val, score, mode, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
             console.log('rediszadd', key, val, score);
-            yield (tsx || client).zadd(key, score, val, (res, s) => resolve(true));
+            if (mode) {
+                yield (tsx || client).zadd(key, mode, score, val, (res, s) => resolve(true));
+            }
+            else {
+                yield (tsx || client).zadd(key, score, val, (res, s) => resolve(true));
+            }
         }
         catch (e) {
             error(e);

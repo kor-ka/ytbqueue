@@ -110,11 +110,15 @@ export let redisGet = (key: string, tsx?: redis.RedisClient) => {
     })
 }
 
-export let rediszadd = (key: string, val: string, score: number, tsx?: redis.RedisClient) => {
+export let rediszadd = (key: string, val: string, score: number, mode?: 'NX' | 'XX', tsx?: redis.RedisClient) => {
     return new Promise<boolean>(async (resolve, error) => {
         try {
             console.log('rediszadd', key, val, score)
-            await (tsx || client).zadd(key, score, val, (res, s) => resolve(true));
+            if (mode) {
+                await (tsx || client).zadd(key, mode, score, val, (res, s) => resolve(true));
+            } else {
+                await (tsx || client).zadd(key, score, val, (res, s) => resolve(true));
+            }
         } catch (e) {
             error(e);
         }

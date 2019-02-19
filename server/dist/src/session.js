@@ -74,7 +74,7 @@ let sendInit = (io, message, host, forceGlobal) => __awaiter(this, void 0, void 
     let qids = yield redisUtil_1.rediszrange('queue-' + message.session.id);
     for (let qid of qids) {
         let c = yield resolveQueueEntry(qid.key, message.session.id);
-        content.push(Object.assign({}, c, { score: qid.score - scoreShift }));
+        content.push(c);
     }
     io.emit({ type: 'InitQueue', content, playing }, forceGlobal);
 });
@@ -102,8 +102,7 @@ let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
         // mb reduce history score here? - prevent repeat same content too often
         console.warn('checkQueue add ', histroyTop);
         for (let t of histroyTop) {
-            // todo: skip already in queue
-            yield redisUtil_1.rediszadd('queue-' + source.session.id, t, scoreShift - new Date().getTime());
+            yield redisUtil_1.rediszadd('queue-' + source.session.id, t, scoreShift - new Date().getTime(), 'NX');
         }
         yield sendInit(io, { type: 'init', session: source.session }, true, true);
     }

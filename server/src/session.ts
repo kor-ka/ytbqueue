@@ -107,8 +107,7 @@ let checkQueue = async (io: IoWrapper, source: Message) => {
         // mb reduce history score here? - prevent repeat same content too often
         console.warn('checkQueue add ', histroyTop);
         for (let t of histroyTop) {
-            // todo: skip already in queue
-            await rediszadd('queue-' + source.session.id, t, scoreShift - new Date().getTime());
+            await rediszadd('queue-' + source.session.id, t, scoreShift - new Date().getTime(), 'NX');
         }
         await sendInit(io, { type: 'init', session: source.session }, true, true);
     }
