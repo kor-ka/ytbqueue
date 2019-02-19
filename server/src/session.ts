@@ -73,7 +73,7 @@ let sendInit = async (io: IoWrapper, message: Init, host: boolean, forceGlobal?:
     let qids = await rediszrange('queue-' + message.session.id);
     for (let qid of qids) {
         let c = await resolveQueueEntry(qid.key, message.session.id);
-        content.push({ ...c, score: qid.score - scoreShift });
+        content.push(c);
     }
     io.emit({ type: 'InitQueue', content, playing }, forceGlobal)
 }
