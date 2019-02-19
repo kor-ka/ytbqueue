@@ -161,10 +161,12 @@ let handleVote = async (io: IoWrapper, message: Vote, host: boolean) => {
 }
 
 let handleSkip = async (io: IoWrapper, message: Skip, host: boolean) => {
+    let historical = (await redisGet('queue-history-played-session' + message.session.id + '-q-' + message.queueId)) === 'true';
     let votes = await getVotes(message.queueId);
     let upds = votes.filter(v => v.up).length;
     let downs = votes.filter(v => !v.up).length;
-    if (downs > Math.max(1, upds) || true) {
+    let score = await rediszscore('queue-' + message.session.id, message.queueId)
+    if (downs > Math.max(1, upds) || historical || score < 1000) {
         let playingId = await redisGet('queue-playing-' + message.session.id);
         if (playingId === message.queueId) {
             await (handleNext(io, { type: 'next', session: message.session, queueId: message.queueId, creds: message.creds }, true))
@@ -178,6 +180,11 @@ let handleSkip = async (io: IoWrapper, message: Skip, host: boolean) => {
 
 let handleNext = async (io: IoWrapper, message: Next, host: boolean) => {
     if (host) {
+        let playing = await redisGet('queue-playing-' + message.session.id);
+        if (playing) {
+            await redisSet('queue-history-played-session' + message.session.id + '-q-' + message.queueId, 'true');
+        }
+
         await redisSet('queue-playing-' + message.session.id, null);
         await rediszrem('queue-' + message.session.id, message.queueId);
         io.emit({ type: 'RemoveQueueContent', queueId: message.queueId }, true)
@@ -204,6 +211,7 @@ let getVotes = async (queueId: string) => {
 
 let resolveQueueEntry = async (queueId: string, sessionId: string) => {
     console.warn('resolveQueueEntry')
+    let historical = (await redisGet('queue-history-played-session' + sessionId + '-q-' + queueId)) === 'true';
     let entry: QueueContentStored = await redishgetall('queue-entry-' + queueId) as any;
     let content: Content = await redishgetall('content-' + entry.contentId) as any;
 
@@ -212,7 +220,7 @@ let resolveQueueEntry = async (queueId: string, sessionId: string) => {
     let downs = votes.filter(v => !v.up).length;
 
     let score = await rediszscore('queue-' + sessionId, queueId)
-    let res: QueueContent = { ...content, user: await User.getUser(entry.userId), score: score - scoreShift, queueId, historical: false, canSkip: downs > Math.max(1, upds) || true, votes }
+    let res: QueueContent = { ...content, user: await User.getUser(entry.userId), score: score - scoreShift, queueId, historical, canSkip: downs > Math.max(1, upds) || historical || score < 1000, votes }
     return res;
 }
 

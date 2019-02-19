@@ -90,7 +90,7 @@ export let redishgetall = (key: string, tsx?: redis.RedisClient) => {
                         res[k] = val[k]
                     }
                 }
-                resolve(res || {});
+                resolve(res);
             });
         } catch (e) {
             error(e);

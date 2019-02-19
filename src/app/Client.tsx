@@ -54,10 +54,12 @@ export class QueuePage extends React.PureComponent<{ playing?: QueueContent, que
             <FlexLayout style={{ flexDirection: 'column', paddingBottom: 100, alignItems: 'stretch', marginTop: 0, height: '100%', width: '100%', overflowX: 'hidden', backgroundColor: 'rgba(249,249,249,1)' }}>
                 {this.props.playing && <PlayingContent session={this.props.session} playing={this.props.playing} />}
                 {!this.props.playing && (
-                    <FlexLayout style={{ backgroundColor: '#000', height: 200, alignSelf: 'stretch', color: '#fff', fontWeight: 900, alignItems: 'center', justifyContent: 'center', textAlign: 'center' }} >
-                        No music to play 🤷‍♂️
-                    <Button onClick={this.toSearch} style={{ border: '5px solid #fff', marginTop: 15, fontSize: 30, fontWeight: 900, color: "#fff", backgroundColor: '#000' }}>Start party 🎉</Button>
-                    </FlexLayout>
+                    <>
+                        <FlexLayout style={{ backgroundColor: '#000', height: 200, alignSelf: 'stretch', color: '#fff', fontWeight: 900, alignItems: 'center', justifyContent: 'center', textAlign: 'center' }} >
+                            {this.props.queue.length === 0 && 'No music to play 🤷‍♂️'}
+                            {this.props.queue.length === 0 && <Button onClick={this.toSearch} style={{ border: '5px solid #fff', marginTop: 15, fontSize: 30, fontWeight: 900, color: "#fff", backgroundColor: '#000' }}>Start party 🎉</Button>}
+                        </FlexLayout>
+                    </>
                 )}
                 <Queue queue={this.props.queue} session={this.props.session} />
 
@@ -253,8 +255,10 @@ class ContentItem extends React.PureComponent<{ content: Content, subtitle?: str
                     {this.props.content.thumb && <img src={this.props.content.thumb.url} width={width} height={height} />}
                 </FlexLayout>
                 <FlexLayout style={{ flexGrow: 1, maxWidth: '100%', flexDirection: 'column' }} divider={0}>
-                    <span style={{ fontWeight: 500, WebkitLineClamp: 3, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', lineClamp: 3 }}>{this.props.content.title}{this.props.content.title}{this.props.content.title}{this.props.content.title}</span>
-                    <FlexLayout style={{ flexGrow: 1, justifyContent: 'flex-end' }}>
+                    <FlexLayout style={{ minHeight: 35 }}>
+                        <span style={{ fontWeight: 500, WebkitLineClamp: 3, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', lineClamp: 3 }}>{this.props.content.title}{this.props.content.title}{this.props.content.title}{this.props.content.title}</span>
+                    </FlexLayout>
+                    <FlexLayout style={{ justifyContent: 'flex-end' }}>
                         {this.props.subtitle && <span onClick={this.props.subtitleCallback} style={{ fontWeight: 500, opacity: 0.5, WebkitLineClamp: 1, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', lineClamp: 1 }}>{this.props.subtitle}</span>}
                     </FlexLayout>
                 </FlexLayout>

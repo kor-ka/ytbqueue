@@ -98,7 +98,7 @@ exports.redishgetall = (key, tsx) => {
                         res[k] = val[k];
                     }
                 }
-                resolve(res || {});
+                resolve(res);
             });
         }
         catch (e) {
