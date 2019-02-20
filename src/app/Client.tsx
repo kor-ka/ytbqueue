@@ -171,6 +171,7 @@ export class Searcher extends React.PureComponent<{ session: QueueSession, toQue
         this.props.toQueue();
     }
 
+
     onInputChange = (event: React.FormEvent<HTMLInputElement>) => {
         let q = event.currentTarget.value;
         if (q) {
@@ -185,7 +186,9 @@ export class Searcher extends React.PureComponent<{ session: QueueSession, toQue
             } else {
                 // search
                 var opts: youtubeSearch.YouTubeSearchOptions = {
-                    maxResults: 10,
+                    maxResults: 20,
+                    type: 'video',
+                    videoEmbeddable: 'true',
                     // key: "AIzaSyDD0svyIgbg6lrE1310ma1mpiw2g3vomnc"
                     key: "AIzaSyBW-5ayHQTRcrELnx5gKJcjJc16qn2wlfk"
                     // key: "AIzaSyBFnDOcWBoMBCLGUjoC0znC0GwN2WlnD8Y"
@@ -194,11 +197,16 @@ export class Searcher extends React.PureComponent<{ session: QueueSession, toQue
                 };
 
                 let g = ++this.generation;
-                youtubeSearch(q, opts, (err, results) => {
-                    if (!err && g === this.generation) {
-                        this.setState({ results: results.map(r => ({ title: r.title, id: r.id, subtitle: r.description, thumb: r.thumbnails.medium })) })
+                setTimeout(() => {
+                    if (g !== this.generation) {
+                        return;
                     }
-                });
+                    youtubeSearch(q, opts, (err, results) => {
+                        if (!err && g === this.generation) {
+                            this.setState({ results: results.map(r => ({ title: r.title, id: r.id, subtitle: r.description, thumb: r.thumbnails.medium })) })
+                        }
+                    });
+                }, 300)
             }
 
         } else {
