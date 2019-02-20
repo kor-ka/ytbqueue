@@ -63,7 +63,7 @@ export class QueuePage extends React.PureComponent<{ playing?: QueueContent, que
                 )}
                 <Queue queue={this.props.queue} session={this.props.session} />
 
-                <Button onClick={this.toSearch} style={{ position: 'fixed', zIndex: 300, bottom: 0, left: 0, right: 0, borderRadius: 0, backgroundColor: '#000', alignSelf: 'stretch', fontSize: 30, fontWeight: 900, color: "#fff" }}>Add something cool 😎</Button>
+                <Button onClick={this.toSearch} style={{ WebkitOverflowScrolling: 'touch', position: 'fixed', zIndex: 1000, bottom: 0, left: 0, right: 0, borderRadius: 0, backgroundColor: '#000', alignSelf: 'stretch', fontSize: 30, fontWeight: 900, color: "#fff" }}>Add something cool 😎</Button>
             </FlexLayout>
         );
     }
@@ -149,7 +149,7 @@ class QueueItem extends React.PureComponent<{ content: QueueContent, session: Qu
         console.warn('QueueItem', this.props.content.user.id, this.props.session.clientId);
         return (
             <FlexLayout style={{ position: 'relative', flexDirection: 'row', marginBottom: 16 }}>
-                <ContentItem content={this.props.content} subtitle={this.props.content.user.id === this.props.session.clientId ? 'You - set name ✏️' : this.props.content.user.name} />
+                <ContentItem content={this.props.content} subtitle={this.props.content.user.id === this.props.session.clientId ? 'You' : this.props.content.user.name} />
                 <FlexLayout style={{ flexDirection: 'column', zIndex: 100, position: 'absolute', top: -7, right: 0 }} divider={4}>
                     <Button onClick={this.onVoteUp} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><span style={{ color: meUp ? 'green' : 'black', marginTop: 1 }}>{ups ? ups : ''}</span>🤘</Button>
                     {!this.props.content.canSkip && <Button onClick={this.onVoteDown} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><span style={{ color: meDown ? 'red' : 'black', marginTop: 1 }}>{downs ? downs : ''}</span>👎</Button>}
@@ -264,7 +264,7 @@ class ContentItem extends React.PureComponent<{ content: Content, subtitle?: str
                 </FlexLayout>
                 <FlexLayout style={{ flexGrow: 1, maxWidth: '100%', flexDirection: 'column' }} divider={0}>
                     <FlexLayout style={{ minHeight: 35 }}>
-                        <span style={{ fontWeight: 500, WebkitLineClamp: 3, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', lineClamp: 3 }}>{this.props.content.title}{this.props.content.title}{this.props.content.title}{this.props.content.title}</span>
+                        <span style={{ fontWeight: 500, WebkitLineClamp: 3, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', lineClamp: 3 }}>{this.props.content.title}</span>
                     </FlexLayout>
                     <FlexLayout style={{ justifyContent: 'flex-end' }}>
                         {this.props.subtitle && <span onClick={this.props.subtitleCallback} style={{ fontWeight: 500, opacity: 0.5, WebkitLineClamp: 1, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', lineClamp: 1 }}>{this.props.subtitle}</span>}
