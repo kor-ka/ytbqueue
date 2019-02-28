@@ -6,6 +6,7 @@ import { FlexLayout, Input, Button } from "./ui/ui";
 import * as youtubeSearch from "youtube-search";
 import { Player } from "./Host";
 import FlipMove from "react-flip-move";
+import { Prompt } from "./Prompt";
 
 export const endpoint = window.location.hostname.indexOf('localhost') >= 0 ? 'http://localhost:5000' : '';
 
@@ -55,6 +56,9 @@ export class QueuePage extends React.PureComponent<{ playing?: QueueContent, que
                 <Button onClick={this.toSearch} style={{ position: 'fixed', zIndex: 300, bottom: 0, left: 0, right: 0, borderRadius: 0, backgroundColor: '#000', alignSelf: 'stretch', fontSize: 30, fontWeight: 900, color: "#fff" }}>Add something cool 😎</Button>
 
                 <FlexLayout style={{ flexDirection: 'column', paddingBottom: 100, alignItems: 'stretch', marginTop: 0, height: '100%', width: '100%', overflowX: 'hidden', backgroundColor: 'rgba(249,249,249,1)' }}>
+                    <div style={{ marginBottom: -5 }}>
+                        <Prompt />
+                    </div>
                     {this.props.playing && <PlayingContent session={this.props.session} playing={this.props.playing} />}
                     {!this.props.playing && (
                         <>
@@ -100,6 +104,7 @@ class PlayingContent extends React.PureComponent<{ session: QueueSession, playin
         });
         return (
             <FlexLayout style={{ position: 'relative' }}>
+
                 <Player height={200} id={this.props.playing.id} />
                 <FlexLayout style={{ position: 'absolute', flexDirection: 'row', left: 20, bottom: 20, backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 20 }}>
                     <Button onClick={this.onVoteUp} style={{ backgroundColor: 'transparent', height: 20, textAlign: 'right' }}><span style={{ color: meUp ? 'green' : 'black', marginTop: 1 }}>{ups}</span>🤘</Button>

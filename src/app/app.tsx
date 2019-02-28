@@ -4,6 +4,7 @@ import { Host as Hab } from "./Host";
 import { Route } from "react-router";
 import * as Cookie from 'js-cookie';
 import { Client } from "./Client";
+import { Prompt } from "./Prompt";
 
 export const isChromium = (window as any).chrome;
 

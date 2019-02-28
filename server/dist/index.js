@@ -26,6 +26,15 @@ let app = express();
 app
     .use(bodyParser.json())
     .use(cookieParser())
+    .get('/legal/terms-and-conditions', (req, res) => __awaiter(this, void 0, void 0, function* () {
+    res.sendFile(path.resolve(__dirname + '/../../public/terms.html'));
+}))
+    .get('/legal/privacy-policy', (req, res) => __awaiter(this, void 0, void 0, function* () {
+    res.sendFile(path.resolve(__dirname + '/../../public/privacy-policy.html'));
+}))
+    .get('/legal/cookie-policy', (req, res) => __awaiter(this, void 0, void 0, function* () {
+    res.sendFile(path.resolve(__dirname + '/../../public/cookie-policy.html'));
+}))
     .get('/', (req, res) => __awaiter(this, void 0, void 0, function* () {
     let target = session_1.pickSession();
     for (let k of Object.keys(req.cookies || {})) {

@@ -21,6 +21,15 @@ app
   .use(bodyParser.json())
   .use(cookieParser())
 
+  .get('/legal/terms-and-conditions', async (req, res) => {
+    res.sendFile(path.resolve(__dirname + '/../../public/terms.html'));
+  })
+  .get('/legal/privacy-policy', async (req, res) => {
+    res.sendFile(path.resolve(__dirname + '/../../public/privacy-policy.html'));
+  })
+  .get('/legal/cookie-policy', async (req, res) => {
+    res.sendFile(path.resolve(__dirname + '/../../public/cookie-policy.html'));
+  })
   .get('/', async (req, res) => {
     let target = pickSession();
     for (let k of Object.keys(req.cookies || {})) {

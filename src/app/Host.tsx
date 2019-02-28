@@ -5,6 +5,7 @@ import { QueueContent } from "../../server/src/model/entity";
 import YouTube from "react-youtube";
 import { FlexLayout, Button } from "./ui/ui";
 import { default as Twemoji } from 'react-twemoji';
+import { Prompt } from "./Prompt";
 
 export const endpoint = window.location.hostname.indexOf('localhost') >= 0 ? 'http://localhost:5000' : '';
 
@@ -40,7 +41,8 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
 
 
         return (
-            <div style={{ background: 'black' }}>
+            <>
+                <Prompt />
 
 
                 {!this.state.playing && (
@@ -75,7 +77,7 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
                     </FlexLayout>
                 )}
 
-            </div>
+            </>
         );
 
     }
