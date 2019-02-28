@@ -40,7 +40,7 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
 
 
         return (
-            <>
+            <div style={{background: 'black'}}>
 
 
                 {!this.state.playing && (
@@ -75,7 +75,7 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
                     </FlexLayout>
                 )}
 
-            </>
+            <div/>
         );
 
     }
