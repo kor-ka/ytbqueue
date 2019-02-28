@@ -45,7 +45,7 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
 
                 {!this.state.playing && (
                     // 
-                    <div style={{ position: 'fixed', opacity: 0.4, zIndex: -1, top: 0, left: 0, width: '100%', height: '100%', filter: `blur(${b})`, transform: 'translate3d(0,0,0)' }}>
+                    <div className="desktop" style={{ position: 'fixed', opacity: 0.4, zIndex: -1, top: 0, left: 0, width: '100%', height: '100%', filter: `blur(${b})`, transform: 'translate3d(0,0,0)' }}>
                         <div className="hue" style={{ position: 'absolute', background: '#0074D9', top: '-' + o, left: '-' + o, width: s, height: s, borderRadius: s }} />
                         <div className="hue" style={{ position: 'absolute', background: '#7FDBFF', bottom: '-' + o, right: '-' + o, width: s, height: s, borderRadius: s }} />
 

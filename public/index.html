@@ -41,10 +41,18 @@
     vertical-align: -0.1em;
   }
 
+  .desktop {
+    display: none
+  }
+
   @media(min-width: 1240px) {
-    .hue {
-      animation: hue 30s infinite linear;
+    .desktop {
+      display: initial
     }
+  }
+
+  .hue {
+    animation: hue 30s infinite linear;
   }
 
   @keyframes hue {
