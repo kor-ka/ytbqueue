@@ -51,20 +51,23 @@ export class QueuePage extends React.PureComponent<{ playing?: QueueContent, que
 
     render() {
         return (
-            <FlexLayout style={{ flexDirection: 'column', paddingBottom: 100, alignItems: 'stretch', marginTop: 0, height: '100%', width: '100%', overflowX: 'hidden', backgroundColor: 'rgba(249,249,249,1)' }}>
-                {this.props.playing && <PlayingContent session={this.props.session} playing={this.props.playing} />}
-                {!this.props.playing && (
-                    <>
-                        <FlexLayout style={{ backgroundColor: '#000', height: 200, alignSelf: 'stretch', color: '#fff', fontWeight: 900, alignItems: 'center', justifyContent: 'center', textAlign: 'center' }} >
-                            {this.props.queue.length === 0 && 'No music to play 🤷‍♂️'}
-                            {this.props.queue.length === 0 && <Button onClick={this.toSearch} style={{ border: '5px solid #fff', marginTop: 15, fontSize: 30, fontWeight: 900, color: "#fff", backgroundColor: '#000' }}>Start party 🎉</Button>}
-                        </FlexLayout>
-                    </>
-                )}
-                <Queue queue={this.props.queue} session={this.props.session} />
+            <>
+                <Button onClick={this.toSearch} style={{ position: 'fixed', zIndex: 300, bottom: 0, left: 0, right: 0, borderRadius: 0, backgroundColor: '#000', alignSelf: 'stretch', fontSize: 30, fontWeight: 900, color: "#fff" }}>Add something cool 😎</Button>
 
-                <Button onClick={this.toSearch} style={{ WebkitOverflowScrolling: 'touch', position: 'fixed', zIndex: 1000, bottom: 0, left: 0, right: 0, borderRadius: 0, backgroundColor: '#000', alignSelf: 'stretch', fontSize: 30, fontWeight: 900, color: "#fff" }}>Add something cool 😎</Button>
-            </FlexLayout>
+                <FlexLayout style={{ flexDirection: 'column', paddingBottom: 100, alignItems: 'stretch', marginTop: 0, height: '100%', width: '100%', overflowX: 'hidden', backgroundColor: 'rgba(249,249,249,1)' }}>
+                    {this.props.playing && <PlayingContent session={this.props.session} playing={this.props.playing} />}
+                    {!this.props.playing && (
+                        <>
+                            <FlexLayout style={{ backgroundColor: '#000', height: 200, alignSelf: 'stretch', color: '#fff', fontWeight: 900, alignItems: 'center', justifyContent: 'center', textAlign: 'center' }} >
+                                {this.props.queue.length === 0 && 'No music to play 🤷‍♂️'}
+                                {this.props.queue.length === 0 && <Button onClick={this.toSearch} style={{ border: '5px solid #fff', marginTop: 15, fontSize: 30, fontWeight: 900, color: "#fff", backgroundColor: '#000' }}>Start party 🎉</Button>}
+                            </FlexLayout>
+                        </>
+                    )}
+                    <Queue queue={this.props.queue} session={this.props.session} />
+
+                </FlexLayout>
+            </>
         );
     }
 }
