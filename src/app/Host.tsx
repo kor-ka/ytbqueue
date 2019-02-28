@@ -30,25 +30,49 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
         }
     }
     render() {
+        let size = 100;
+        let offset = size / 2;
+        let blur = size - 50;
+
+        let s = size + 'vmax';
+        let o = offset + 'vmax';
+        let b = blur + 'vmax';
+
 
         return (
             <>
+
+
+
                 {this.state.playing && <Player onEnd={this.onEnd} id={this.state.playing.id} autoplay={true} />}
                 {!this.state.playing && (
-                    <FlexLayout style={{ backgroundColor: '#000', height: '100%', flex: 1, fontSize: '8vmin', alignSelf: 'stretch', color: '#fff', fontWeight: 900, alignItems: 'center', justifyContent: 'center', textAlign: 'center' }} >
+                    <FlexLayout style={{ height: '100%', flex: 1, fontSize: '8vmin', alignSelf: 'stretch', opacity: 0.8, color: '#fff', fontWeight: 900, alignItems: 'center', justifyContent: 'center', textAlign: 'center' }} >
                         < Twemoji >{(this.state.q && this.state.q.inited) ? (this.state.q.queue.length === 0 ? 'No music to play 🤷‍♂️' : '') : 'Connecting... 🙌'}</Twemoji>
                         <br />
-                        {this.state.q && this.state.q.queue.length === 0 && <Button style={{ border: '2vmin solid #fff', marginTop: 15, fontSize: '8vmin', fontWeight: 900, color: "#fff", backgroundColor: '#000' }}>
-                            <Twemoji>📱azaza.app/<span style={{ color: '#7FDBFF' }}>{this.session.id + ' '}</span></Twemoji>
-                        </Button>}
+                        {this.state.q && this.state.q.queue.length === 0 &&
+                            <FlexLayout style={{ border: '1.5vmin solid #fff', borderRadius: '1vmin', padding: '1vmin', paddingLeft: '1vmin', paddingRight: '1vmin', marginTop: 15, fontSize: '8vmin', fontWeight: 900, color: "#fff", }}>
+                                <Twemoji>📱azaza.app/<span style={{ color: '#7FDBFF' }}>{this.session.id + ' '}</span></Twemoji>
+                            </FlexLayout>}
                     </FlexLayout>
                 )
                 }
-                {!this.state.playing && (
+                {this.state.playing && (
                     <FlexLayout style={{ position: 'absolute', bottom: 20, left: 20, opacity: 0.4 }}>
                         <Button style={{ fontWeight: 900, color: "#fff", backgroundColor: '#000', fontSize: '4vmin' }}>
                             <Twemoji >📱azaza.app/<span style={{ color: '#7FDBFF' }}>{this.session.id + ' '}</span></Twemoji>
                         </Button>
+                    </FlexLayout>
+                )}
+
+                {!this.state.playing && (
+                    // 
+                    <FlexLayout style={{ position: 'fixed', opacity: 0.4, zIndex: -1, top: 0, left: 0, width: '100%', height: '100%', filter: `blur(${b})`, transform: 'translate3d(0,0,0)' }}>
+                        <div className="hue" style={{ background: '#0074D9', position: 'fixed', top: '-' + o, left: '-' + o, width: s, height: s, borderRadius: s }} />
+                        <div className="hue" style={{ background: '#7FDBFF', position: 'fixed', bottom: '-' + o, right: '-' + o, width: s, height: s, borderRadius: s }} />
+
+                        <div className="hue" style={{ background: '#FFDC00', position: 'fixed', top: '-' + o, right: '-' + o, width: s, height: s, borderRadius: s }} />
+                        <div className="hue" style={{ background: '#01FF70', position: 'fixed', bottom: '-' + o, left: '-' + o, width: s, height: s, borderRadius: s }} />
+
                     </FlexLayout>
                 )}
             </>

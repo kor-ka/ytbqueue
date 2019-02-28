@@ -41,6 +41,20 @@
     vertical-align: -0.1em;
   }
 
+  .hue {
+    animation: hue 60s infinite linear;
+  }
+
+  @keyframes hue {
+    from {
+      filter: hue-rotate(0deg);
+    }
+
+    to {
+      filter: hue-rotate(360deg);
+    }
+  }
+
   .material-icons {
     font-family: "Material Icons";
     font-weight: normal;
