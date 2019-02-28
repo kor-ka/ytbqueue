@@ -45,7 +45,7 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
 
                 {!this.state.playing && (
                     // 
-                    <div style={{ position: 'absolute', overflow: 'hidden', opacity: 1, zIndex: -1, top: 0, left: 0, width: '100%', height: '100%', filter: `blur(${b})`, transform: 'translate3d(0, 0, 0) translateZ(0)', willChange: 'transform' }}>
+                    <div style={{ position: 'fixed', opacity: 0.4, zIndex: -1, top: 0, left: 0, width: '100%', height: '100%', filter: `blur(${b})`, transform: 'translate3d(0,0,0)' }}>
                         <div className="hue" style={{ position: 'absolute', background: '#0074D9', top: '-' + o, left: '-' + o, width: s, height: s, borderRadius: s }} />
                         <div className="hue" style={{ position: 'absolute', background: '#7FDBFF', bottom: '-' + o, right: '-' + o, width: s, height: s, borderRadius: s }} />
 
@@ -58,7 +58,7 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
                 {this.state.playing && <Player onEnd={this.onEnd} id={this.state.playing.id} autoplay={true} />}
                 {!this.state.playing && (
                     <FlexLayout style={{ height: '100%', flex: 1, fontSize: '8vmin', alignSelf: 'stretch', opacity: 0.8, color: '#fff', fontWeight: 900, alignItems: 'center', justifyContent: 'center', textAlign: 'center' }} >
-                        < Twemoji >{(this.state.q && this.state.q.inited) ? (this.state.q.queue.length === 0 ? 'No music to play 🤷‍♂️' : '') : 'Connecting... 🙌'}</Twemoji>
+                        < Twemoji >{(this.state.q && this.state.q.inited) ? (this.state.q.queue.length === 0 ? 'Open this 👇 link on your phone' : '') : 'Connecting... 🙌'}</Twemoji>
                         <br />
                         {this.state.q && this.state.q.queue.length === 0 &&
                             <FlexLayout style={{ border: '1.5vmin solid #fff', borderRadius: '1vmin', padding: '1vmin', paddingLeft: '1vmin', paddingRight: '1vmin', marginTop: 15, fontSize: '8vmin', fontWeight: 900, color: "#fff", }}>
