@@ -43,6 +43,17 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
             <>
 
 
+                {!this.state.playing && (
+                    // 
+                    <div style={{ position: 'absolute', overflow: 'hidden', opacity: 1, zIndex: -1, top: 0, left: 0, width: '100%', height: '100%', filter: `blur(${b})`, transform: 'translate3d(0, 0, 0) translateZ(0)', willChange: 'transform' }}>
+                        <div className="hue" style={{ position: 'absolute', background: '#0074D9', top: '-' + o, left: '-' + o, width: s, height: s, borderRadius: s }} />
+                        <div className="hue" style={{ position: 'absolute', background: '#7FDBFF', bottom: '-' + o, right: '-' + o, width: s, height: s, borderRadius: s }} />
+
+                        <div className="hue" style={{ position: 'absolute', background: '#FFDC00', top: '-' + o, right: '-' + o, width: s, height: s, borderRadius: s }} />
+                        <div className="hue" style={{ position: 'absolute', background: '#01FF70', bottom: '-' + o, left: '-' + o, width: s, height: s, borderRadius: s }} />
+
+                    </div>
+                )}
 
                 {this.state.playing && <Player onEnd={this.onEnd} id={this.state.playing.id} autoplay={true} />}
                 {!this.state.playing && (
@@ -64,17 +75,6 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
                     </FlexLayout>
                 )}
 
-                {!this.state.playing && (
-                    // 
-                    <FlexLayout style={{ position: 'fixed', opacity: 0.4, zIndex: -1, top: 0, left: 0, width: '100%', height: '100%', filter: `blur(${b})`, transform: 'translate3d(0, 0, 0) translateZ(0)', willChange: 'transform' }}>
-                        <div className="hue" style={{ background: '#0074D9', position: 'fixed', top: '-' + o, left: '-' + o, width: s, height: s, borderRadius: s }} />
-                        <div className="hue" style={{ background: '#7FDBFF', position: 'fixed', bottom: '-' + o, right: '-' + o, width: s, height: s, borderRadius: s }} />
-
-                        <div className="hue" style={{ background: '#FFDC00', position: 'fixed', top: '-' + o, right: '-' + o, width: s, height: s, borderRadius: s }} />
-                        <div className="hue" style={{ background: '#01FF70', position: 'fixed', bottom: '-' + o, left: '-' + o, width: s, height: s, borderRadius: s }} />
-
-                    </FlexLayout>
-                )}
             </>
         );
 
