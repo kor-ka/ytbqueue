@@ -39,20 +39,28 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
         let o = offset + 'vmax';
         let b = blur + 'vmax';
 
-
         return (
             <>
-                <Prompt />
+                <div style={{ position: 'fixed', width: '100%', zIndex: 100 }}>
+                    <Prompt />
+                </div>
 
 
                 {!this.state.playing && (
-                    // 
-                    <div className="desktop" style={{ position: 'fixed', opacity: 0.4, zIndex: -1, top: 0, left: 0, width: '100%', height: '100%', filter: `blur(${b})`, transform: 'translate3d(0,0,0)' }}>
-                        <div className="hue" style={{ position: 'absolute', background: '#0074D9', top: '-' + o, left: '-' + o, width: s, height: s, borderRadius: s }} />
-                        <div className="hue" style={{ position: 'absolute', background: '#7FDBFF', bottom: '-' + o, right: '-' + o, width: s, height: s, borderRadius: s }} />
-
-                        <div className="hue" style={{ position: 'absolute', background: '#FFDC00', top: '-' + o, right: '-' + o, width: s, height: s, borderRadius: s }} />
-                        <div className="hue" style={{ position: 'absolute', background: '#01FF70', bottom: '-' + o, left: '-' + o, width: s, height: s, borderRadius: s }} />
+                    <div style={{ position: 'fixed', opacity: 0.4, zIndex: -1, top: 0, left: 0, width: '100%', height: '100%' }}>
+                        <svg className="hue" height="100%" width="100%">
+                            <defs>
+                                <filter id="f1" x="10%" y="10%">
+                                    <feGaussianBlur in="SourceGraphic" stdDeviation="300" />
+                                </filter>
+                            </defs>
+                            <g filter="url(#f1)" height="100%" width="100%">
+                                <circle cx="0" cy="0" r="75%" fill="#0074D9" />
+                                <circle cx="0%" cy="100%" r="75%" fill="#FFDC00" />
+                                <circle cx="100%" cy="100%" r="75%" fill="#7FDBFF" />
+                                <circle cx="100%" cy="0%" r="75%" fill="#01FF70" />
+                            </g>
+                        </svg>
 
                     </div>
                 )}
