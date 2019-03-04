@@ -13,8 +13,14 @@ class IoWrapper {
             }
             sessions.add(this);
         };
+        this.batch = () => {
+            return new IoBatch(this);
+        };
         this.emit = (event, global) => {
-            let m = JSON.stringify(Object.assign({}, event, { session: this.session }));
+            if (!Array.isArray(event)) {
+                event = [event];
+            }
+            let m = JSON.stringify({ events: event, session: this.session });
             if (global) {
                 for (let e of sessionEmitters.get(this.session).values()) {
                     console.warn('emiting[g] to ', this.io.id, m);
@@ -30,3 +36,17 @@ class IoWrapper {
     }
 }
 exports.IoWrapper = IoWrapper;
+class IoBatch {
+    constructor(io) {
+        this.events = [];
+        this.emit = (event, global) => {
+            this.events.push({ event, global });
+        };
+        this.commit = () => {
+            this.io.emit(this.events.filter(e => e.global).map(e => e.event), true);
+            this.io.emit(this.events.filter(e => !e.global).map(e => e.event), false);
+        };
+        this.io = io;
+    }
+}
+exports.IoBatch = IoBatch;

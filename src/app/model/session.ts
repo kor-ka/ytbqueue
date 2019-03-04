@@ -24,11 +24,12 @@ class Emitter {
     }
 }
 
+export type QueueContentLocal = QueueContent & { playing?: boolean };
 export class QueueSession {
     id: string;
     clientId: string;
-    playing?: QueueContent;
-    queue = new Map<string, QueueContent>();
+    playing?: QueueContentLocal;
+    queue = new Map<string, QueueContentLocal>();
     io: Emitter;
     inited = false;
 
@@ -44,9 +45,10 @@ export class QueueSession {
 
         let socket = socketIo(endpoint);
         socket.on('event', this.handleEvent);
-        this.io = new Emitter(socket, { id: this.id, token }, { id: this.clientId, token: clientToken });
 
-        this.io.emit({ type: 'init' });
+        this.io = new Emitter(socket, { id: this.id, token }, { id: this.clientId, token: clientToken });
+        socket.on('connect', () => this.io.emit({ type: 'init' }));
+
     }
 
     //
@@ -73,31 +75,31 @@ export class QueueSession {
     // Input
     //
     handleEvent = async (e: string) => {
-        let event = JSON.parse(e) as Event;
-        console.warn('onEvent', event)
-        if (event.type === 'InitQueue') {
-            await this.handleInit(event);
-        } else if (event.type === 'AddQueueContent') {
-            await this.handleAdd(event);
-        } else if (event.type === 'RemoveQueueContent') {
-            await this.handleRemove(event);
-        } else if (event.type === 'Playing') {
-            await this.handlePlaying(event);
-        } else if (event.type === 'UpdateQueueContent') {
-            await this.handleUpdate(event);
+        let events = JSON.parse(e) as { events: Event[] };
+        for (let event of events.events) {
+            console.warn('onEvent', event)
+            if (event.type === 'InitQueue') {
+                await this.handleInit(event);
+            } else if (event.type === 'AddQueueContent') {
+                await this.handleAdd(event);
+            } else if (event.type === 'RemoveQueueContent') {
+                await this.handleRemove(event);
+            } else if (event.type === 'Playing') {
+                await this.handlePlaying(event);
+            } else if (event.type === 'UpdateQueueContent') {
+                await this.handleUpdate(event);
+            }
         }
-
+        this.notifyAll();
     }
 
     handlePlaying = async (event: Playing) => {
         this.playing = event.content;
         this.queue.delete(event.content.queueId);
-        this.notifyAll();
     }
 
     handleAdd = async (event: AddQueueContent) => {
         this.queue.set(event.content.queueId, event.content);
-        this.notifyQueue();
     }
 
     handleRemove = async (event: RemoveQueueContent) => {
@@ -105,18 +107,15 @@ export class QueueSession {
         if ((this.playing && this.playing.queueId) === event.queueId) {
             this.playing = undefined;
         }
-        this.notifyAll();
     }
 
     handleUpdate = async (event: UpdateQueueContent) => {
         let trget = this.queue.get(event.queueId);
         if (trget) {
             this.queue.set(event.queueId, { ...trget, ...event.content })
-            this.notifyQueue();
         }
         if (this.playing && this.playing.queueId === event.queueId) {
             this.playing = { ...this.playing, ...event.content };
-            this.notifyPlaying();
         }
     }
 
@@ -126,7 +125,6 @@ export class QueueSession {
         }
         this.playing = event.playing;
         this.inited = true;
-        this.notifyAll();
     }
 
 
@@ -153,8 +151,12 @@ export class QueueSession {
     }
 
     notifyQueue = () => {
+        let queue = [...this.queue.values()].sort((a, b) => b.score - a.score);
+        // if (this.playing) {
+        //     queue.unshift({ ...this.playing, playing: true })
+        // }
         for (let l of this.queueListeners) {
-            l({ queue: [...this.queue.values()].sort((a, b) => b.score - a.score), inited: this.inited });
+            l({ queue, inited: this.inited });
         }
     }
     notifyAll = async () => {

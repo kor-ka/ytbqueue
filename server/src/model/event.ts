@@ -63,8 +63,15 @@ export class IoWrapper {
         sessions.add(this);
     }
 
-    emit = (event: Event, global?: boolean) => {
-        let m = JSON.stringify({ ...event, session: this.session });
+    batch = () => {
+        return new IoBatch(this);
+    }
+
+    emit = (event: Event[] | Event, global?: boolean) => {
+        if (!Array.isArray(event)) {
+            event = [event];
+        }
+        let m = JSON.stringify({ events: event, session: this.session });
         if (global) {
             for (let e of sessionEmitters.get(this.session).values()) {
                 console.warn('emiting[g] to ', this.io.id, m);
@@ -75,4 +82,23 @@ export class IoWrapper {
             this.io.emit('event', m)
         }
     }
+}
+
+export class IoBatch {
+    io: IoWrapper;
+    events: { event: Event, global?: boolean }[] = [];
+
+    constructor(io: IoWrapper) {
+        this.io = io;
+    }
+
+    emit = (event: Event, global?: boolean) => {
+        this.events.push({ event, global });
+    }
+
+    commit = () => {
+        this.io.emit(this.events.filter(e => e.global).map(e => e.event), true);
+        this.io.emit(this.events.filter(e => !e.global).map(e => e.event), false);
+    }
+
 }

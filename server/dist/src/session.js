@@ -44,25 +44,29 @@ exports.getTokenFroSession = (id) => {
 exports.handleMessage = (io, message) => __awaiter(this, void 0, void 0, function* () {
     let validToken = (yield exports.getTokenFroSession(message.session.id)).token;
     let isHost = message.session.token === validToken;
+    let batch = io.batch();
     if (message.type === 'add') {
-        yield handleAdd(io, message, isHost);
+        yield handleAdd(batch, message, isHost);
     }
     else if (message.type === 'next') {
-        yield handleNext(io, message, isHost);
+        yield handleNext(batch, message, isHost);
     }
     else if (message.type === 'init') {
-        yield handleInit(io, message, isHost);
+        yield handleInit(batch, message, isHost);
     }
     else if (message.type === 'vote') {
-        yield handleVote(io, message, isHost);
+        yield handleVote(batch, message, isHost);
     }
     else if (message.type === 'skip') {
-        yield handleSkip(io, message, isHost);
+        yield handleSkip(batch, message, isHost);
     }
+    batch.commit();
 });
 let handleInit = (io, message, host) => __awaiter(this, void 0, void 0, function* () {
-    yield checkQueue(io, message);
-    yield sendInit(io, message, host);
+    let initSent = yield checkQueue(io, message);
+    if (!initSent) {
+        yield sendInit(io, message, host);
+    }
 });
 let sendInit = (io, message, host, forceGlobal) => __awaiter(this, void 0, void 0, function* () {
     let playingId = yield redisUtil_1.redisGet('queue-playing-' + message.session.id);
@@ -85,15 +89,17 @@ let handleAdd = (io, message, host) => __awaiter(this, void 0, void 0, function*
     let queueId = exports.makeid();
     let entry = { queueId, contentId: message.content.id, userId: message.creds.id };
     yield redisUtil_1.redishsetobj('queue-entry-' + queueId, entry);
-    yield redisUtil_1.rediszadd('queue-' + message.session.id, queueId, scoreShift);
-    yield redisUtil_1.rediszadd('queue-history-' + message.session.id, queueId, scoreShift);
+    let score = scoreShift - new Date().getTime();
+    yield redisUtil_1.rediszadd('queue-' + message.session.id, queueId, score);
+    yield redisUtil_1.rediszadd('queue-history-' + message.session.id, queueId, score);
     // notify clients
-    let res = Object.assign({}, message.content, { user: yield user_1.User.getUser(message.creds.id), score: 0, queueId, historical: false, votes: [] });
+    let res = Object.assign({}, message.content, { user: yield user_1.User.getUser(message.creds.id), score: score - scoreShift, queueId, historical: false, votes: [] });
     io.emit({ type: 'AddQueueContent', content: res }, true);
     yield checkQueue(io, message);
 });
 let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
     console.warn('checkQueue');
+    let initSent = false;
     // add top from history if nothing to play
     let size = yield redisUtil_1.rediszcard('queue-' + source.session.id);
     console.warn('checkQueue current size ', size);
@@ -105,6 +111,7 @@ let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
             yield redisUtil_1.rediszadd('queue-' + source.session.id, t, scoreShift - new Date().getTime(), 'NX');
         }
         yield sendInit(io, { type: 'init', session: source.session }, true, true);
+        initSent = true;
     }
     let playing = yield redisUtil_1.redisGet('queue-playing-' + source.session.id);
     if (!playing) {
@@ -120,6 +127,7 @@ let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
             yield redisUtil_1.rediszrem('queue-' + source.session.id, playing);
         }
     }
+    return initSent;
 });
 let handleVote = (io, message, host) => __awaiter(this, void 0, void 0, function* () {
     let vote = message.up ? 'up' : 'down';
@@ -162,7 +170,7 @@ let handleSkip = (io, message, host) => __awaiter(this, void 0, void 0, function
             io.emit({ type: 'RemoveQueueContent', queueId: message.queueId }, true);
         }
     }
-    yield checkQueue(io, this.message.sessionId);
+    yield checkQueue(io, message);
 });
 let handleNext = (io, message, host) => __awaiter(this, void 0, void 0, function* () {
     if (host) {

@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as Cookie from 'js-cookie';
-import { QueueSession } from "./model/session";
+import { QueueSession, QueueContentLocal } from "./model/session";
 import { QueueContent, Content } from "../../server/src/model/entity";
 import { FlexLayout, Input, Button } from "./ui/ui";
 import * as youtubeSearch from "youtube-search";
@@ -129,7 +129,7 @@ export class Queue extends React.PureComponent<{ queue: QueueContent[], session:
     }
 }
 
-class QueueItem extends React.PureComponent<{ content: QueueContent, session: QueueSession, }>{
+class QueueItem extends React.PureComponent<{ content: QueueContentLocal, session: QueueSession, }>{
     onVoteUp = () => {
         this.props.session.vote(this.props.content.queueId, true);
     }
