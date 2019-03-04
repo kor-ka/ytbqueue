@@ -31,22 +31,10 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
         }
     }
     render() {
-        let size = 100;
-        let offset = size / 2;
-        let blur = size - 50;
-
-        let s = size + 'vmax';
-        let o = offset + 'vmax';
-        let b = blur + 'vmax';
-
         return (
             <>
-                <div style={{ position: 'fixed', width: '100%', zIndex: 100 }}>
-                    <Prompt />
-                </div>
 
-
-                {!this.state.playing && (
+                {!this.state.playing && ((window as any).chrome || navigator.userAgent.toLowerCase().includes('safari')) && (
                     <div style={{ position: 'fixed', opacity: 0.4, zIndex: -1, top: 0, left: 0, width: '100%', height: '100%' }}>
                         <svg className="hue" height="100%" width="100%">
                             <defs>
