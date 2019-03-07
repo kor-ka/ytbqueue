@@ -7,6 +7,7 @@ import { QueueContent, QueueContentStored, Content, User as IUser } from "./mode
 import { User } from "./user";
 
 let scoreShift = 4000000000000000;
+let likeSift =   3000000000;
 export let pickSession = () => {
     return (makeid());
 }
@@ -140,6 +141,7 @@ let checkQueue = async (io: IoBatch, source: Message) => {
 let handleVote = async (io: IoBatch, message: Vote, host: boolean) => {
     let vote = message.up ? 'up' : 'down';
     let increment = vote === 'up' ? 1 : vote === 'down' ? -1 : 0;
+    increment *= likeShift;
 
     // get old vote
     let voteStored = await redishget('queue-entry-vote-' + message.queueId, message.creds.id);
