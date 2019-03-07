@@ -47,7 +47,7 @@ exports.handleMessage = (io, message) => __awaiter(this, void 0, void 0, functio
     let isHost = message.session.token === validToken;
     let batch = io.batch();
     if (message.type === 'add') {
-        yield handleAdd(batch, message, isHost);
+        yield handleAdd(batch, message);
     }
     else if (message.type === 'next') {
         yield handleNext(batch, message, isHost);
@@ -83,7 +83,7 @@ let sendInit = (io, message, host, forceGlobal) => __awaiter(this, void 0, void 
     }
     io.emit({ type: 'InitQueue', content, playing }, forceGlobal);
 });
-let handleAdd = (io, message, host) => __awaiter(this, void 0, void 0, function* () {
+let handleAdd = (io, message) => __awaiter(this, void 0, void 0, function* () {
     // save content
     yield redisUtil_1.redishsetobj('content-' + message.content.id, message.content);
     // create queue entry
@@ -98,6 +98,17 @@ let handleAdd = (io, message, host) => __awaiter(this, void 0, void 0, function*
     io.emit({ type: 'AddQueueContent', content: res }, true);
     yield checkQueue(io, message);
 });
+let handleAddHistorical = (io, sessionId, source) => __awaiter(this, void 0, void 0, function* () {
+    // create queue entry
+    let queueId = exports.makeid() + '-h';
+    let entry = { queueId, contentId: source.id, userId: source.user.id };
+    yield redisUtil_1.redishsetobj('queue-entry-' + queueId, entry);
+    let score = scoreShift / 2 - new Date().getTime();
+    yield redisUtil_1.rediszadd('queue-' + sessionId, queueId, score);
+    // notify clients
+    let res = Object.assign({}, source, { score: score - scoreShift, queueId, historical: true, canSkip: true });
+    io.emit({ type: 'AddQueueContent', content: res }, true);
+});
 let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
     console.warn('checkQueue');
     let initSent = false;
@@ -109,9 +120,8 @@ let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
         // mb reduce history score here? - prevent repeat same content too often
         console.warn('checkQueue add ', histroyTop);
         for (let t of histroyTop) {
-            yield redisUtil_1.rediszadd('queue-' + source.session.id, t + '-h', scoreShift / 2 - new Date().getTime(), 'NX');
+            yield handleAddHistorical(io, source.session.id, yield resolveQueueEntry(t, source.session.id));
         }
-        yield sendInit(io, { type: 'init', session: source.session }, true, true);
         initSent = true;
     }
     let playing = yield redisUtil_1.redisGet('queue-playing-' + source.session.id);
@@ -203,8 +213,7 @@ let getVotes = (queueId) => __awaiter(this, void 0, void 0, function* () {
 let resolveQueueEntry = (queueId, sessionId) => __awaiter(this, void 0, void 0, function* () {
     console.warn('resolveQueueEntry');
     let historical = queueId.endsWith('-h');
-    let sourceQId = queueId.replace('-h', '');
-    let entry = yield redisUtil_1.redishgetall('queue-entry-' + sourceQId);
+    let entry = yield redisUtil_1.redishgetall('queue-entry-' + queueId);
     let content = yield redisUtil_1.redishgetall('content-' + entry.contentId);
     let votes = yield getVotes(queueId);
     let upds = votes.filter(v => v.up).length;

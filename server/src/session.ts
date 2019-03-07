@@ -47,7 +47,7 @@ export let handleMessage = async (io: IoWrapper, message: Message) => {
     let isHost = message.session.token === validToken;
     let batch = io.batch();
     if (message.type === 'add') {
-        await handleAdd(batch, message, isHost);
+        await handleAdd(batch, message);
     } else if (message.type === 'next') {
         await handleNext(batch, message, isHost);
     } else if (message.type === 'init') {
@@ -84,7 +84,7 @@ let sendInit = async (io: IoBatch, message: Init, host: boolean, forceGlobal?: b
 }
 
 
-let handleAdd = async (io: IoBatch, message: Add, host: boolean) => {
+let handleAdd = async (io: IoBatch, message: Add) => {
     // save content
     await redishsetobj('content-' + message.content.id, message.content);
     // create queue entry
@@ -100,6 +100,17 @@ let handleAdd = async (io: IoBatch, message: Add, host: boolean) => {
     await checkQueue(io, message);
 }
 
+let handleAddHistorical = async (io: IoBatch, sessionId: string, source: QueueContent) => {
+    // create queue entry
+    let queueId = makeid() + '-h';
+    let entry: QueueContentStored = { queueId, contentId: source.id, userId: source.user.id };
+    await redishsetobj('queue-entry-' + queueId, entry);
+    let score = scoreShift / 2 - new Date().getTime();
+    await rediszadd('queue-' + sessionId, queueId, score);
+    // notify clients
+    let res: QueueContent = { ...source, score: score - scoreShift, queueId, historical: true, canSkip: true }
+    io.emit({ type: 'AddQueueContent', content: res }, true)
+}
 
 
 let checkQueue = async (io: IoBatch, source: Message) => {
@@ -113,10 +124,8 @@ let checkQueue = async (io: IoBatch, source: Message) => {
         // mb reduce history score here? - prevent repeat same content too often
         console.warn('checkQueue add ', histroyTop);
         for (let t of histroyTop) {
-            await rediszadd('queue-' + source.session.id, t + '-h', scoreShift / 2 - new Date().getTime(), 'NX');
+            await handleAddHistorical(io, source.session.id, await resolveQueueEntry(t, source.session.id));
         }
-        // TODO: send separate updates
-        await sendInit(io, { type: 'init', session: source.session }, true, true);
         initSent = true;
     }
 
@@ -220,9 +229,8 @@ let getVotes = async (queueId: string) => {
 let resolveQueueEntry = async (queueId: string, sessionId: string) => {
     console.warn('resolveQueueEntry')
     let historical = queueId.endsWith('-h');
-    let sourceQId = queueId.replace('-h', '');
 
-    let entry: QueueContentStored = await redishgetall('queue-entry-' + sourceQId) as any;
+    let entry: QueueContentStored = await redishgetall('queue-entry-' + queueId) as any;
     let content: Content = await redishgetall('content-' + entry.contentId) as any;
 
     let votes = await getVotes(queueId);
