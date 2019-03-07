@@ -7,7 +7,7 @@ import { QueueContent, QueueContentStored, Content, User as IUser } from "./mode
 import { User } from "./user";
 
 let scoreShift = 4000000000000000;
-let likeSift =   3000000000;
+let likeShift = 3000000000;
 export let pickSession = () => {
     return (makeid());
 }

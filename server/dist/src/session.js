@@ -11,6 +11,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const redisUtil_1 = require("./redisUtil");
 const user_1 = require("./user");
 let scoreShift = 4000000000000000;
+let likeShift = 3000000000;
 exports.pickSession = () => {
     return (exports.makeid());
 };
@@ -108,7 +109,7 @@ let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
         // mb reduce history score here? - prevent repeat same content too often
         console.warn('checkQueue add ', histroyTop);
         for (let t of histroyTop) {
-            yield redisUtil_1.rediszadd('queue-' + source.session.id, t, scoreShift - new Date().getTime(), 'NX');
+            yield redisUtil_1.rediszadd('queue-' + source.session.id, t, scoreShift / 2 - new Date().getTime(), 'NX');
         }
         yield sendInit(io, { type: 'init', session: source.session }, true, true);
         initSent = true;
@@ -132,6 +133,7 @@ let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
 let handleVote = (io, message, host) => __awaiter(this, void 0, void 0, function* () {
     let vote = message.up ? 'up' : 'down';
     let increment = vote === 'up' ? 1 : vote === 'down' ? -1 : 0;
+    increment *= likeShift;
     // get old vote
     let voteStored = yield redisUtil_1.redishget('queue-entry-vote-' + message.queueId, message.creds.id);
     // save new vote
