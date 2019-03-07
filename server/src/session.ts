@@ -113,7 +113,7 @@ let checkQueue = async (io: IoBatch, source: Message) => {
         // mb reduce history score here? - prevent repeat same content too often
         console.warn('checkQueue add ', histroyTop);
         for (let t of histroyTop) {
-            await rediszadd('queue-' + source.session.id, t, scoreShift / 2 - new Date().getTime(), 'NX');
+            await rediszadd('queue-' + source.session.id, t + '-h', scoreShift / 2 - new Date().getTime(), 'NX');
         }
         await sendInit(io, { type: 'init', session: source.session }, true, true);
         initSent = true;
@@ -139,6 +139,9 @@ let checkQueue = async (io: IoBatch, source: Message) => {
 
 
 let handleVote = async (io: IoBatch, message: Vote, host: boolean) => {
+    if (message.queueId.endsWith('-h')) {
+        return;
+    }
     let vote = message.up ? 'up' : 'down';
     let increment = vote === 'up' ? 1 : vote === 'down' ? -1 : 0;
     increment *= likeShift;
@@ -170,7 +173,7 @@ let handleVote = async (io: IoBatch, message: Vote, host: boolean) => {
 }
 
 let handleSkip = async (io: IoBatch, message: Skip, host: boolean) => {
-    let historical = (await redisGet('queue-history-played-session' + message.session.id + '-q-' + message.queueId)) === 'true';
+    let historical = message.queueId.endsWith('-h');
     let votes = await getVotes(message.queueId);
     let upds = votes.filter(v => v.up).length;
     let downs = votes.filter(v => !v.up).length;
@@ -189,11 +192,6 @@ let handleSkip = async (io: IoBatch, message: Skip, host: boolean) => {
 
 let handleNext = async (io: IoBatch, message: Next, host: boolean) => {
     if (host) {
-        let playing = await redisGet('queue-playing-' + message.session.id);
-        if (playing) {
-            await redisSet('queue-history-played-session' + message.session.id + '-q-' + message.queueId, 'true');
-        }
-
         await redisSet('queue-playing-' + message.session.id, null);
         await rediszrem('queue-' + message.session.id, message.queueId);
         io.emit({ type: 'RemoveQueueContent', queueId: message.queueId }, true)
@@ -220,8 +218,10 @@ let getVotes = async (queueId: string) => {
 
 let resolveQueueEntry = async (queueId: string, sessionId: string) => {
     console.warn('resolveQueueEntry')
-    let historical = (await redisGet('queue-history-played-session' + sessionId + '-q-' + queueId)) === 'true';
-    let entry: QueueContentStored = await redishgetall('queue-entry-' + queueId) as any;
+    let historical = queueId.endsWith('-h');
+    let sourceQId = queueId.replace('-h', '');
+
+    let entry: QueueContentStored = await redishgetall('queue-entry-' + sourceQId) as any;
     let content: Content = await redishgetall('content-' + entry.contentId) as any;
 
     let votes = await getVotes(queueId);

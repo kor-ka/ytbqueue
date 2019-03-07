@@ -109,7 +109,7 @@ let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
         // mb reduce history score here? - prevent repeat same content too often
         console.warn('checkQueue add ', histroyTop);
         for (let t of histroyTop) {
-            yield redisUtil_1.rediszadd('queue-' + source.session.id, t, scoreShift / 2 - new Date().getTime(), 'NX');
+            yield redisUtil_1.rediszadd('queue-' + source.session.id, t + '-h', scoreShift / 2 - new Date().getTime(), 'NX');
         }
         yield sendInit(io, { type: 'init', session: source.session }, true, true);
         initSent = true;
@@ -131,6 +131,9 @@ let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
     return initSent;
 });
 let handleVote = (io, message, host) => __awaiter(this, void 0, void 0, function* () {
+    if (message.queueId.endsWith('-h')) {
+        return;
+    }
     let vote = message.up ? 'up' : 'down';
     let increment = vote === 'up' ? 1 : vote === 'down' ? -1 : 0;
     increment *= likeShift;
@@ -157,7 +160,7 @@ let handleVote = (io, message, host) => __awaiter(this, void 0, void 0, function
     yield io.emit({ type: 'UpdateQueueContent', queueId: message.queueId, content: yield resolveQueueEntry(message.queueId, message.session.id) }, true);
 });
 let handleSkip = (io, message, host) => __awaiter(this, void 0, void 0, function* () {
-    let historical = (yield redisUtil_1.redisGet('queue-history-played-session' + message.session.id + '-q-' + message.queueId)) === 'true';
+    let historical = message.queueId.endsWith('-h');
     let votes = yield getVotes(message.queueId);
     let upds = votes.filter(v => v.up).length;
     let downs = votes.filter(v => !v.up).length;
@@ -176,10 +179,6 @@ let handleSkip = (io, message, host) => __awaiter(this, void 0, void 0, function
 });
 let handleNext = (io, message, host) => __awaiter(this, void 0, void 0, function* () {
     if (host) {
-        let playing = yield redisUtil_1.redisGet('queue-playing-' + message.session.id);
-        if (playing) {
-            yield redisUtil_1.redisSet('queue-history-played-session' + message.session.id + '-q-' + message.queueId, 'true');
-        }
         yield redisUtil_1.redisSet('queue-playing-' + message.session.id, null);
         yield redisUtil_1.rediszrem('queue-' + message.session.id, message.queueId);
         io.emit({ type: 'RemoveQueueContent', queueId: message.queueId }, true);
@@ -203,8 +202,9 @@ let getVotes = (queueId) => __awaiter(this, void 0, void 0, function* () {
 });
 let resolveQueueEntry = (queueId, sessionId) => __awaiter(this, void 0, void 0, function* () {
     console.warn('resolveQueueEntry');
-    let historical = (yield redisUtil_1.redisGet('queue-history-played-session' + sessionId + '-q-' + queueId)) === 'true';
-    let entry = yield redisUtil_1.redishgetall('queue-entry-' + queueId);
+    let historical = queueId.endsWith('-h');
+    let sourceQId = queueId.replace('-h', '');
+    let entry = yield redisUtil_1.redishgetall('queue-entry-' + sourceQId);
     let content = yield redisUtil_1.redishgetall('content-' + entry.contentId);
     let votes = yield getVotes(queueId);
     let upds = votes.filter(v => v.up).length;
