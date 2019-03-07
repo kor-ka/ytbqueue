@@ -1,11 +1,9 @@
 import * as React from "react";
-import * as Cookie from 'js-cookie';
 import { QueueSession } from "./model/session";
 import { QueueContent } from "../../server/src/model/entity";
 import YouTube from "react-youtube";
 import { FlexLayout, Button } from "./ui/ui";
 import { default as Twemoji } from 'react-twemoji';
-import { Prompt } from "./Prompt";
 
 export const endpoint = window.location.hostname.indexOf('localhost') >= 0 ? 'http://localhost:5000' : '';
 
@@ -53,7 +51,7 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
                     </div>
                 )}
 
-                {this.state.playing && <Player onEnd={this.onEnd} id={this.state.playing.id} autoplay={true} />}
+                {this.state.playing && <Player key={this.state.playing.id} onEnd={this.onEnd} id={this.state.playing.id} autoplay={true} />}
                 {!this.state.playing && (
                     <FlexLayout style={{ height: '100%', flex: 1, fontSize: '8vmin', alignSelf: 'stretch', opacity: 0.8, color: '#fff', fontWeight: 900, alignItems: 'center', justifyContent: 'center', textAlign: 'center' }} >
                         < Twemoji >{(this.state.q && this.state.q.inited) ? (this.state.q.queue.length === 0 ? 'Open this 👇 link on your phone' : '') : 'Connecting... 🙌'}</Twemoji>
@@ -87,6 +85,7 @@ export class Player extends React.PureComponent<{ id: string, width?: number, he
     mounted = false;
     time = 0;
     playerInner?: any;
+    timeout?: any;
     updateDimensions = () => {
         this.setState({ width: window.innerWidth, height: window.innerHeight });
     }
@@ -114,7 +113,7 @@ export class Player extends React.PureComponent<{ id: string, width?: number, he
         this.checkTime();
     }
     checkTime = () => {
-        setTimeout(() => {
+        this.timeout = window.setTimeout(() => {
             if (!this.mounted) {
                 return;
             }
@@ -132,7 +131,7 @@ export class Player extends React.PureComponent<{ id: string, width?: number, he
     }
     render() {
         return (
-            <div key={this.props.id} style={{ width: this.props.width || window.innerWidth, height: this.props.height || window.innerHeight }}>
+            <div style={{ width: this.props.width || window.innerWidth, height: this.props.height || window.innerHeight }}>
                 <YouTube
                     onReady={this._onReady}
                     videoId={this.props.id}
@@ -143,7 +142,7 @@ export class Player extends React.PureComponent<{ id: string, width?: number, he
                         playerVars: {
                             showinfo: 0,
                             rel: 0,
-                            controls: 0,
+                            controls: 1,
                             mute: this.props.mute ? 1 : 0,
                             autoplay: this.props.autoplay ? 1 : 0,
                         } as any,

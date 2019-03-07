@@ -115,6 +115,7 @@ let checkQueue = async (io: IoBatch, source: Message) => {
         for (let t of histroyTop) {
             await rediszadd('queue-' + source.session.id, t + '-h', scoreShift / 2 - new Date().getTime(), 'NX');
         }
+        // TODO: send separate updates
         await sendInit(io, { type: 'init', session: source.session }, true, true);
         initSent = true;
     }
