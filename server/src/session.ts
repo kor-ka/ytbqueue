@@ -68,10 +68,8 @@ export let handleMessage = async (io: IoWrapper, message: Message) => {
 
 
 let handleInit = async (io: IoBatch, message: Init, host: boolean) => {
-    let initSent = await checkQueue(io, message);
-    if (!initSent) {
-        await sendInit(io, message, host);
-    }
+    await checkQueue(io, message);
+    await sendInit(io, message, host);
 }
 
 let sendInit = async (io: IoBatch, message: Init, host: boolean, forceGlobal?: boolean) => {
@@ -121,7 +119,6 @@ let handleAddHistorical = async (io: IoBatch, sessionId: string, source: QueueCo
 
 let checkQueue = async (io: IoBatch, source: Message) => {
     console.warn('checkQueue')
-    let initSent = false;
     // add top from history if nothing to play
     let size = await rediszcard('queue-' + source.session.id);
     console.warn('checkQueue current size ', size);
@@ -132,7 +129,6 @@ let checkQueue = async (io: IoBatch, source: Message) => {
         for (let t of histroyTop) {
             await handleAddHistorical(io, source.session.id, await resolveQueueEntry(t, source.session.id));
         }
-        initSent = true;
     }
 
     let playing = await redisGet('queue-playing-' + source.session.id);
@@ -150,7 +146,6 @@ let checkQueue = async (io: IoBatch, source: Message) => {
             await rediszrem('queue-' + source.session.id, playing);
         }
     }
-    return initSent;
 }
 
 
