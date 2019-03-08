@@ -46,18 +46,24 @@ export let handleMessage = async (io: IoWrapper, message: Message) => {
     let validToken = (await getTokenFroSession(message.session.id)).token;
     let isHost = message.session.token === validToken;
     let batch = io.batch();
-    if (message.type === 'add') {
-        await handleAdd(batch, message);
-    } else if (message.type === 'next') {
-        await handleNext(batch, message, isHost);
-    } else if (message.type === 'init') {
-        await handleInit(batch, message, isHost);
-    } else if (message.type === 'vote') {
-        await handleVote(batch, message, isHost);
-    } else if (message.type === 'skip') {
-        await handleSkip(batch, message, isHost);
+    try {
+        if (message.type === 'add') {
+            await handleAdd(batch, message);
+        } else if (message.type === 'next') {
+            await handleNext(batch, message, isHost);
+        } else if (message.type === 'init') {
+            await handleInit(batch, message, isHost);
+        } else if (message.type === 'vote') {
+            await handleVote(batch, message, isHost);
+        } else if (message.type === 'skip') {
+            await handleSkip(batch, message, isHost);
+        }
+        batch.commit();
+
+    } catch (e) {
+        io.emit({ type: 'error', message: e.message, source: message });
     }
-    batch.commit();
+
 }
 
 
