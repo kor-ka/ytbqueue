@@ -46,28 +46,31 @@ exports.handleMessage = (io, message) => __awaiter(this, void 0, void 0, functio
     let validToken = (yield exports.getTokenFroSession(message.session.id)).token;
     let isHost = message.session.token === validToken;
     let batch = io.batch();
-    if (message.type === 'add') {
-        yield handleAdd(batch, message);
+    try {
+        if (message.type === 'add') {
+            yield handleAdd(batch, message);
+        }
+        else if (message.type === 'next') {
+            yield handleNext(batch, message, isHost);
+        }
+        else if (message.type === 'init') {
+            yield handleInit(batch, message, isHost);
+        }
+        else if (message.type === 'vote') {
+            yield handleVote(batch, message, isHost);
+        }
+        else if (message.type === 'skip') {
+            yield handleSkip(batch, message, isHost);
+        }
+        batch.commit();
     }
-    else if (message.type === 'next') {
-        yield handleNext(batch, message, isHost);
+    catch (e) {
+        io.emit({ type: 'error', message: e.message, source: message });
     }
-    else if (message.type === 'init') {
-        yield handleInit(batch, message, isHost);
-    }
-    else if (message.type === 'vote') {
-        yield handleVote(batch, message, isHost);
-    }
-    else if (message.type === 'skip') {
-        yield handleSkip(batch, message, isHost);
-    }
-    batch.commit();
 });
 let handleInit = (io, message, host) => __awaiter(this, void 0, void 0, function* () {
-    let initSent = yield checkQueue(io, message);
-    if (!initSent) {
-        yield sendInit(io, message, host);
-    }
+    yield checkQueue(io, message);
+    yield sendInit(io, message, host);
 });
 let sendInit = (io, message, host, forceGlobal) => __awaiter(this, void 0, void 0, function* () {
     let playingId = yield redisUtil_1.redisGet('queue-playing-' + message.session.id);
@@ -111,7 +114,6 @@ let handleAddHistorical = (io, sessionId, source) => __awaiter(this, void 0, voi
 });
 let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
     console.warn('checkQueue');
-    let initSent = false;
     // add top from history if nothing to play
     let size = yield redisUtil_1.rediszcard('queue-' + source.session.id);
     console.warn('checkQueue current size ', size);
@@ -122,7 +124,6 @@ let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
         for (let t of histroyTop) {
             yield handleAddHistorical(io, source.session.id, yield resolveQueueEntry(t, source.session.id));
         }
-        initSent = true;
     }
     let playing = yield redisUtil_1.redisGet('queue-playing-' + source.session.id);
     if (!playing) {
@@ -138,7 +139,6 @@ let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
             yield redisUtil_1.rediszrem('queue-' + source.session.id, playing);
         }
     }
-    return initSent;
 });
 let handleVote = (io, message, host) => __awaiter(this, void 0, void 0, function* () {
     if (message.queueId.endsWith('-h')) {
