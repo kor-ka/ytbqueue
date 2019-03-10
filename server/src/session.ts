@@ -122,12 +122,19 @@ let checkQueue = async (io: IoBatch, source: Message) => {
     // add top from history if nothing to play
     let size = await rediszcard('queue-' + source.session.id);
     console.warn('checkQueue current size ', size);
-    if (size < 3) {
-        let histroyTop = await rediszrangebyscore('queue-history-' + source.session.id, 10);
-        // mb reduce history score here? - prevent repeat same content too often
+    if (size < 5) {
+        let histroyTop = await rediszrangebyscore('queue-history-' + source.session.id, 100000);
         console.warn('checkQueue add ', histroyTop);
+        let count = 5 - size;
         for (let t of histroyTop) {
+            if (Math.random() >= 0.5) {
+                continue;
+            }
+            await rediszincr('queue-history-' + source.session.id, t, -60000);
             await handleAddHistorical(io, source.session.id, await resolveQueueEntry(t, source.session.id));
+            if (!--count) {
+                break;
+            }
         }
     }
 
