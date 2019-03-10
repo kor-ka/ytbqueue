@@ -120,6 +120,8 @@ export class QueueSession {
     }
 
     handleInit = async (event: InitQueue) => {
+        this.queue.clear();
+        this.playing = undefined;
         for (let c of event.content) {
             this.queue.set(c.queueId, c);
         }
@@ -151,8 +153,9 @@ export class QueueSession {
     }
 
     notifyQueue = () => {
-        let queue = [...this.queue.values()].sort((a, b) => b.score - a.score);
+        let queue = [...this.queue.values()].sort((a, b) => b.score - a.score)
         if (this.playing) {
+            queue = queue.filter(c => c.id !== this.playing.id);
             queue.unshift({ ...this.playing, playing: true })
         }
         for (let l of this.queueListeners) {
