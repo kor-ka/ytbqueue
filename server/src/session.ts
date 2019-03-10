@@ -97,7 +97,7 @@ let handleAdd = async (io: IoBatch, message: Add) => {
     await redishsetobj('queue-entry-' + queueId, entry);
     let score = scoreShift - new Date().getTime();
     await rediszadd('queue-' + message.session.id, queueId, score);
-    await rediszadd('queue-history-' + message.session.id, queueId, scoreShift);
+    await rediszadd('queue-history-' + message.session.id, queueId, score);
     // notify clients
     let res: QueueContent = { ...message.content, user: await User.getUser(message.creds.id), score: score - scoreShift, queueId, historical: false, votes: [] }
     io.emit({ type: 'AddQueueContent', content: res }, true)
@@ -129,7 +129,7 @@ let checkQueue = async (io: IoBatch, source: Message) => {
         for (let t of histroyTop) {
             await handleAddHistorical(io, source.session.id, await resolveQueueEntry(t, source.session.id));
             // lower score to pick other content later
-            await rediszincr('queue-history-' + source.session.id, t, -1);
+            await rediszincr('queue-history-' + source.session.id, t, -likeShift);
             if (!--count) {
                 break;
             }
