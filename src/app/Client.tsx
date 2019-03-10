@@ -7,6 +7,7 @@ import * as youtubeSearch from "youtube-search";
 import { Player } from "./Host";
 import FlipMove from "react-flip-move";
 import { Prompt } from "./Prompt";
+import { hashCode } from "./utils/hashcode";
 
 export const endpoint = window.location.hostname.indexOf('localhost') >= 0 ? 'http://localhost:5000' : '';
 
@@ -130,6 +131,18 @@ export class Queue extends React.PureComponent<{ queue: QueueContentLocal[], ses
     }
 }
 
+let geners = ['Rock', 'Alternative', 'Classical', 'Jazz', 'Blues', 'Hip-Hop', 'Dance', 'Folk', 'Soul', 'Country', 'Pop', 'Grunge', 'Reggae', 'New Wave', 'Hardcore', 'Opera', 'House', 'Techno', 'Drum and Bass', 'Disco', 'Ambient',]
+let colors = [
+    { name: 'Blue', color: '#0074D9' },
+    { name: 'Green', color: '#2ECC40' },
+    { name: 'Lime', color: '#01FF70' },
+    { name: 'Orange', color: '#FF851B' },
+    { name: 'Red', color: '#FF4136' },
+    { name: 'Maroon', color: '#85144b' },
+    { name: 'Fuchsia', color: '#F012BE' },
+    { name: 'Yellow', color: '#FFDC00' },
+    { name: 'Olive', color: '#3D9970' },
+]
 class QueueItem extends React.PureComponent<{ content: QueueContentLocal, session: QueueSession, }>{
     onVoteUp = () => {
         this.props.session.vote(this.props.content.queueId, true);
@@ -155,10 +168,17 @@ class QueueItem extends React.PureComponent<{ content: QueueContentLocal, sessio
             }
 
         });
+        // let userId = this.props.content.user.id;
+        let userId = '12asda';
+        console.warn()
+        console.warn(hashCode(userId), colors.length, colors.length % hashCode(userId));
         console.warn('QueueItem', this.props.content.user.id, this.props.session.clientId);
+        let isYou = userId === this.props.session.clientId;
+        let color = colors[colors.length - hashCode(userId) % colors.length];
+        let name = color.name + ' ' + geners[geners.length - hashCode(userId) % geners.length] + (isYou ? ' (You)' : '');
         return (
             <FlexLayout style={{ position: 'relative', flexDirection: 'row', backgroundColor: this.props.content.playing ? 'black' : undefined, color: this.props.content.playing ? 'white' : undefined }}>
-                <ContentItem content={this.props.content} poster={!this.props.content.playing} subtitle={this.props.content.user.id === this.props.session.clientId ? 'You' : this.props.content.user.name} />
+                <ContentItem content={this.props.content} poster={!this.props.content.playing} subtitle={name} subtitleColor={color.color} />
                 <FlexLayout style={{ flexDirection: 'column', zIndex: 100, position: 'absolute', top: 4, right: 0 }} divider={4}>
                     {!this.props.content.historical && <Button onClick={this.onVoteUp} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><span style={{ color: meUp ? 'green' : 'black', marginTop: 1 }}>{ups ? ups : ''}</span>🤘</Button>}
                     {!this.props.content.canSkip && <Button onClick={this.onVoteDown} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><span style={{ color: meDown ? 'red' : 'black', marginTop: 1 }}>{downs ? downs : ''}</span>👎</Button>}
@@ -190,7 +210,7 @@ export class Searcher extends React.PureComponent<{ session: QueueSession, toQue
                 // direct link
                 let split = q.split('/');
                 let id = split[split.length - 1];
-                this.setState({ results: [{ title: 'direkt', id, subtitle: 'link' }] })
+                this.setState({ results: [{ title: 'direct', id, subtitle: 'link' }] })
 
             } else {
                 // search
@@ -239,7 +259,7 @@ export class Searcher extends React.PureComponent<{ session: QueueSession, toQue
                 <FlexLayout style={{ flexDirection: 'column', overflowY: 'scroll', flexGrow: 1, height: 1, marginTop: -80, paddingTop: 80 }}>
                     {this.state.q && this.state.results.map(r => (
                         <FlexLayout onClick={() => this.onSelect(r)}>
-                            <ContentItem content={{ id: r.id, title: r.title, thumb: r.thumb }} subtitle={r.subtitle} />
+                            <ContentItem content={{ id: r.id, title: r.title, thumb: r.thumb }} subtitle={r.subtitle} subtitleColor="dddddd" />
                         </FlexLayout>
                     ))}
                 </FlexLayout>
@@ -252,6 +272,7 @@ export class Searcher extends React.PureComponent<{ session: QueueSession, toQue
 class ContentItem extends React.PureComponent<{
     content: Content,
     subtitle?: string,
+    subtitleColor?: string,
     poster?: boolean,
     subtitleCallback?: () => void
 }>{
@@ -282,7 +303,7 @@ class ContentItem extends React.PureComponent<{
                         <span style={{ fontWeight: 500, WebkitLineClamp: 3, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', lineClamp: 3 }}>{this.props.content.title}</span>
                     </FlexLayout>
                     <FlexLayout style={{ justifyContent: 'flex-end' }}>
-                        {this.props.subtitle && <span onClick={this.props.subtitleCallback} style={{ fontWeight: 500, opacity: 0.5, WebkitLineClamp: 1, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', lineClamp: 1 }}>{this.props.subtitle}</span>}
+                        {this.props.subtitle && <span onClick={this.props.subtitleCallback} style={{ fontWeight: 500, color: this.props.subtitleColor, WebkitLineClamp: 1, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', lineClamp: 1 }}>{this.props.subtitle}</span>}
                     </FlexLayout>
                 </FlexLayout>
             </FlexLayout>
