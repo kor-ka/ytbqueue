@@ -117,12 +117,19 @@ let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
     // add top from history if nothing to play
     let size = yield redisUtil_1.rediszcard('queue-' + source.session.id);
     console.warn('checkQueue current size ', size);
-    if (size < 3) {
-        let histroyTop = yield redisUtil_1.rediszrangebyscore('queue-history-' + source.session.id, 10);
-        // mb reduce history score here? - prevent repeat same content too often
+    if (size < 5) {
+        let histroyTop = yield redisUtil_1.rediszrangebyscore('queue-history-' + source.session.id, 100000);
         console.warn('checkQueue add ', histroyTop);
+        let count = 5 - size;
         for (let t of histroyTop) {
+            if (Math.random() >= 0.5) {
+                continue;
+            }
+            yield redisUtil_1.rediszincr('queue-history-' + source.session.id, t, -60000);
             yield handleAddHistorical(io, source.session.id, yield resolveQueueEntry(t, source.session.id));
+            if (!--count) {
+                break;
+            }
         }
     }
     let playing = yield redisUtil_1.redisGet('queue-playing-' + source.session.id);
