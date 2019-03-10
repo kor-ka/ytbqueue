@@ -121,15 +121,12 @@ let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
         let histroyTop = yield redisUtil_1.rediszrangebyscore('queue-history-' + source.session.id, 100000);
         console.warn('checkQueue add ', histroyTop);
         let count = 6 - size;
-        while (count > 0) {
-            for (let t of histroyTop) {
-                if (Math.random() >= 0.5) {
-                    continue;
-                }
-                yield handleAddHistorical(io, source.session.id, yield resolveQueueEntry(t, source.session.id));
-                if (!--count) {
-                    break;
-                }
+        for (let t of histroyTop) {
+            yield handleAddHistorical(io, source.session.id, yield resolveQueueEntry(t, source.session.id));
+            // lower score to pick other content later
+            yield redisUtil_1.rediszincr('queue-history-' + source.session.id, t, -1);
+            if (!--count) {
+                break;
             }
         }
     }
