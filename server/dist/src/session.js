@@ -95,7 +95,7 @@ let handleAdd = (io, message) => __awaiter(this, void 0, void 0, function* () {
     yield redisUtil_1.redishsetobj('queue-entry-' + queueId, entry);
     let score = scoreShift - new Date().getTime();
     yield redisUtil_1.rediszadd('queue-' + message.session.id, queueId, score);
-    yield redisUtil_1.rediszadd('queue-history-' + message.session.id, queueId, score);
+    yield redisUtil_1.rediszadd('queue-history-' + message.session.id, queueId, scoreShift);
     // notify clients
     let res = Object.assign({}, message.content, { user: yield user_1.User.getUser(message.creds.id), score: score - scoreShift, queueId, historical: false, votes: [] });
     io.emit({ type: 'AddQueueContent', content: res }, true);
@@ -117,18 +117,19 @@ let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
     // add top from history if nothing to play
     let size = yield redisUtil_1.rediszcard('queue-' + source.session.id);
     console.warn('checkQueue current size ', size);
-    if (size < 5) {
+    if (size < 6) {
         let histroyTop = yield redisUtil_1.rediszrangebyscore('queue-history-' + source.session.id, 100000);
         console.warn('checkQueue add ', histroyTop);
-        let count = 5 - size;
-        for (let t of histroyTop) {
-            if (Math.random() >= 0.5) {
-                continue;
-            }
-            yield redisUtil_1.rediszincr('queue-history-' + source.session.id, t, -60000);
-            yield handleAddHistorical(io, source.session.id, yield resolveQueueEntry(t, source.session.id));
-            if (!--count) {
-                break;
+        let count = 6 - size;
+        while (count > 0) {
+            for (let t of histroyTop) {
+                if (Math.random() >= 0.5) {
+                    continue;
+                }
+                yield handleAddHistorical(io, source.session.id, yield resolveQueueEntry(t, source.session.id));
+                if (!--count) {
+                    break;
+                }
             }
         }
     }
@@ -182,7 +183,7 @@ let handleSkip = (io, message, host) => __awaiter(this, void 0, void 0, function
     let upds = votes.filter(v => v.up).length;
     let downs = votes.filter(v => !v.up).length;
     let score = yield redisUtil_1.rediszscore('queue-' + message.session.id, message.queueId);
-    if (downs > Math.max(1, upds) || historical || score < 1000) {
+    if (downs > Math.max(1, upds) || historical || true) {
         let playingId = yield redisUtil_1.redisGet('queue-playing-' + message.session.id);
         if (playingId === message.queueId) {
             yield (handleNext(io, { type: 'next', session: message.session, queueId: message.queueId, creds: message.creds }, true));
@@ -226,7 +227,7 @@ let resolveQueueEntry = (queueId, sessionId) => __awaiter(this, void 0, void 0, 
     let upds = votes.filter(v => v.up).length;
     let downs = votes.filter(v => !v.up).length;
     let score = yield redisUtil_1.rediszscore('queue-' + sessionId, queueId);
-    let res = Object.assign({}, content, { user: yield user_1.User.getUser(entry.userId), score: score - scoreShift, queueId, historical, canSkip: downs > Math.max(1, upds) || historical || score < 1000, votes });
+    let res = Object.assign({}, content, { user: yield user_1.User.getUser(entry.userId), score: score - scoreShift, queueId, historical, canSkip: downs > Math.max(1, upds) || historical || true, votes });
     return res;
 });
 // let handle = async (io: IoWrapper, message: Message, host: boolean) => {

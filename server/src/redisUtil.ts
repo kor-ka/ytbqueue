@@ -147,6 +147,17 @@ export let rediszincr = (key: string, val: string, score: number, tsx?: redis.Re
     })
 }
 
+export let rediszexists = (key: string, val: string, tsx?: redis.RedisClient) => {
+    return new Promise<boolean>(async (resolve, error) => {
+        try {
+            console.log('rediszexists', key)
+            await (tsx || client).zscore(key, val, (res, s) => !!s);
+        } catch (e) {
+            error(e);
+        }
+    })
+}
+
 export let redisincr = (key: string, tsx?: redis.RedisClient) => {
     return new Promise<number>(async (resolve, error) => {
         try {
@@ -173,7 +184,8 @@ export let rediszscore = (key: string, val: string, tsx?: redis.RedisClient) => 
 export let rediszcard = (key: string, tsx?: redis.RedisClient) => {
     return new Promise<number>(async (resolve, error) => {
         try {
-            console.log('rediszscore', key)
+            console.log('rediszcard', key, await rediszrange(key));
+            await rediszrange(key);
             await (tsx || client).zcard(key, (res, s) => resolve(s));
         } catch (e) {
             error(e);

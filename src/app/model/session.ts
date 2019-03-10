@@ -155,7 +155,7 @@ export class QueueSession {
     notifyQueue = () => {
         let queue = [...this.queue.values()].sort((a, b) => b.score - a.score)
         if (this.playing) {
-            queue = queue.filter(c => c.id !== this.playing.id);
+            queue = queue.filter(c => c.queueId !== this.playing.queueId);
             queue.unshift({ ...this.playing, playing: true })
         }
         for (let l of this.queueListeners) {

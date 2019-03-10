@@ -1,4 +1,4 @@
-import { redisGet, transaction, redisSet, rediszadd, redishset, redishsetobj, redisztop, redishgetall, rediszrange, rediszrem, redishget, rediszincr, rediszscore, redishdel, rediszcard, rediszrangebyscore } from "./redisUtil";
+import { redisGet, transaction, redisSet, rediszadd, redishset, redishsetobj, redisztop, redishgetall, rediszrange, rediszrem, redishget, rediszincr, rediszscore, redishdel, rediszcard, rediszrangebyscore, rediszexists } from "./redisUtil";
 import { hashCode } from "./utils";
 import { Server } from "socket.io";
 import { Message, Next, Add, Init, Vote, Skip } from "./model/message";
@@ -122,17 +122,20 @@ let checkQueue = async (io: IoBatch, source: Message) => {
     // add top from history if nothing to play
     let size = await rediszcard('queue-' + source.session.id);
     console.warn('checkQueue current size ', size);
-    if (size < 5) {
+    if (size < 6) {
         let histroyTop = await rediszrangebyscore('queue-history-' + source.session.id, 100000);
         console.warn('checkQueue add ', histroyTop);
-        let count = 5 - size;
-        for (let t of histroyTop) {
-            if (Math.random() >= 0.5) {
-                continue;
-            }
-            await handleAddHistorical(io, source.session.id, await resolveQueueEntry(t, source.session.id));
-            if (!--count) {
-                break;
+        let count = 6 - size;
+
+        while (count > 0) {
+            for (let t of histroyTop) {
+                if (Math.random() >= 0.5) {
+                    continue;
+                }
+                await handleAddHistorical(io, source.session.id, await resolveQueueEntry(t, source.session.id));
+                if (!--count) {
+                    break;
+                }
             }
         }
     }
@@ -195,7 +198,7 @@ let handleSkip = async (io: IoBatch, message: Skip, host: boolean) => {
     let upds = votes.filter(v => v.up).length;
     let downs = votes.filter(v => !v.up).length;
     let score = await rediszscore('queue-' + message.session.id, message.queueId)
-    if (downs > Math.max(1, upds) || historical || score < 1000) {
+    if (downs > Math.max(1, upds) || historical || true) {
         let playingId = await redisGet('queue-playing-' + message.session.id);
         if (playingId === message.queueId) {
             await (handleNext(io, { type: 'next', session: message.session, queueId: message.queueId, creds: message.creds }, true))
@@ -245,7 +248,7 @@ let resolveQueueEntry = async (queueId: string, sessionId: string) => {
     let downs = votes.filter(v => !v.up).length;
 
     let score = await rediszscore('queue-' + sessionId, queueId)
-    let res: QueueContent = { ...content, user: await User.getUser(entry.userId), score: score - scoreShift, queueId, historical, canSkip: downs > Math.max(1, upds) || historical || score < 1000, votes }
+    let res: QueueContent = { ...content, user: await User.getUser(entry.userId), score: score - scoreShift, queueId, historical, canSkip: downs > Math.max(1, upds) || historical || true, votes }
     return res;
 }
 

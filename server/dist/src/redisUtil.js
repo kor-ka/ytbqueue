@@ -156,6 +156,17 @@ exports.rediszincr = (key, val, score, tsx) => {
         }
     }));
 };
+exports.rediszexists = (key, val, tsx) => {
+    return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
+        try {
+            console.log('rediszexists', key);
+            yield (tsx || client).zscore(key, val, (res, s) => !!s);
+        }
+        catch (e) {
+            error(e);
+        }
+    }));
+};
 exports.redisincr = (key, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
@@ -181,7 +192,8 @@ exports.rediszscore = (key, val, tsx) => {
 exports.rediszcard = (key, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log('rediszscore', key);
+            console.log('rediszcard', key, yield exports.rediszrange(key));
+            yield exports.rediszrange(key);
             yield (tsx || client).zcard(key, (res, s) => resolve(s));
         }
         catch (e) {
