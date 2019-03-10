@@ -1,7 +1,7 @@
 import { redisGet, transaction, redisSet, rediszadd, redishset, redishsetobj, redisztop, redishgetall, rediszrange, rediszrem, redishget, rediszincr, rediszscore, redishdel, rediszcard, rediszrangebyscore, rediszexists } from "./redisUtil";
 import { hashCode } from "./utils";
 import { Server } from "socket.io";
-import { Message, Next, Add, Init, Vote, Skip } from "./model/message";
+import { Message, Next, Add, Init, Vote, Skip, Progress } from "./model/message";
 import { IoWrapper, InitQueue, Event, IoBatch } from "./model/event";
 import { QueueContent, QueueContentStored, Content, User as IUser } from "./model/entity";
 import { User } from "./user";
@@ -57,6 +57,8 @@ export let handleMessage = async (io: IoWrapper, message: Message) => {
             await handleVote(batch, message, isHost);
         } else if (message.type === 'skip') {
             await handleSkip(batch, message, isHost);
+        } else if (message.type === 'progress') {
+            await handleProgress(batch, message, isHost);
         }
         batch.commit();
 
@@ -206,6 +208,15 @@ let handleSkip = async (io: IoBatch, message: Skip, host: boolean) => {
     await checkQueue(io, message);
 }
 
+let handleProgress = async (io: IoBatch, message: Progress, host: boolean) => {
+    if (!host) {
+        io.emit({ type: 'error', message: 'only host can fire progress', source: message })
+    }
+    redishset('queue-entry-' + message.queueId, 'progress', message.current / message.duration + '');
+
+    await io.emit({ type: 'UpdateQueueContent', queueId: message.queueId, content: await resolveQueueEntry(message.queueId, message.session.id) }, true);
+}
+
 let handleNext = async (io: IoBatch, message: Next, host: boolean) => {
     if (host) {
         await redisSet('queue-playing-' + message.session.id, null);
@@ -243,8 +254,17 @@ let resolveQueueEntry = async (queueId: string, sessionId: string) => {
     let upds = votes.filter(v => v.up).length;
     let downs = votes.filter(v => !v.up).length;
 
-    let score = await rediszscore('queue-' + sessionId, queueId)
-    let res: QueueContent = { ...content, user: await User.getUser(entry.userId), score: score - scoreShift, queueId, historical, canSkip: downs > Math.max(1, upds) || historical, votes }
+    let score = await rediszscore('queue-' + sessionId, queueId);
+    let progress;
+    if (entry.progress) {
+        try {
+            progress = Number.parseFloat(entry.progress);
+        } catch (e) {
+            console.warn(e);
+        }
+    }
+
+    let res: QueueContent = { ...content, user: await User.getUser(entry.userId), score: score - scoreShift, queueId, historical, canSkip: downs > Math.max(1, upds) || historical, votes, progress }
     return res;
 }
 

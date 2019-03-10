@@ -71,6 +71,10 @@ export class QueueSession {
         await this.io.emit({ type: 'skip', queueId: qid });
     }
 
+    progress = async (qid: string, current: number, duration: number) => {
+        await this.io.emit({ type: 'progress', queueId: qid, current, duration });
+    }
+
     //
     // Input
     //
@@ -117,6 +121,7 @@ export class QueueSession {
         if (this.playing && this.playing.queueId === event.queueId) {
             this.playing = { ...this.playing, ...event.content };
         }
+        this.notifyAll();
     }
 
     handleInit = async (event: InitQueue) => {
@@ -128,7 +133,6 @@ export class QueueSession {
         this.playing = event.playing;
         this.inited = true;
     }
-
 
     //
     // Subscriptoins
@@ -146,13 +150,13 @@ export class QueueSession {
         callback({ queue: [...this.queue.values()].sort((a, b) => b.score - a.score), inited: this.inited });
     }
 
-    notifyPlaying = () => {
+    private notifyPlaying = () => {
         for (let l of this.playingListeners) {
             l(this.playing);
         }
     }
 
-    notifyQueue = () => {
+    private notifyQueue = () => {
         let queue = [...this.queue.values()].sort((a, b) => b.score - a.score)
         if (this.playing) {
             queue = queue.filter(c => c.queueId !== this.playing.queueId);
@@ -162,7 +166,7 @@ export class QueueSession {
             l({ queue, inited: this.inited });
         }
     }
-    notifyAll = async () => {
+    private notifyAll = async () => {
         this.notifyPlaying();
         this.notifyQueue();
     }

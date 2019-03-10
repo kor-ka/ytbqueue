@@ -22,10 +22,12 @@ export interface QueueContent extends Content {
     historical: boolean;
     canSkip?: boolean;
     votes: { user: User, up: boolean }[]
+    progress?: number;
 }
 
 export interface QueueContentStored {
     userId: string;
     queueId: string;
     contentId: string;
+    progress?: string;
 }

@@ -28,6 +28,13 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
             this.session.next(this.state.playing.queueId);
         }
     }
+
+    onProgress = (current: number, duration: number) => {
+        if (this.state.playing) {
+            this.session.progress(this.state.playing.queueId, current, duration);
+
+        }
+    }
     render() {
         return (
             <>
@@ -51,7 +58,7 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
                     </div>
                 )}
 
-                {this.state.playing && <Player key={this.state.playing.id} onEnd={this.onEnd} id={this.state.playing.id} autoplay={true} width="100%" height="100%" />}
+                {this.state.playing && <Player key={this.state.playing.queueId} onEnd={this.onEnd} onProgress={this.onProgress} id={this.state.playing.id} autoplay={true} width="100%" height="100%" />}
                 {!this.state.playing && (
                     <FlexLayout style={{ height: '100%', flex: 1, fontSize: '8vmin', alignSelf: 'stretch', opacity: 0.8, color: '#fff', fontWeight: 900, alignItems: 'center', justifyContent: 'center', textAlign: 'center' }} >
                         < Twemoji >{(this.state.q && this.state.q.inited) ? (this.state.q.queue.length === 0 ? 'Open this 👇 link on your phone' : '') : 'Connecting... 🙌'}</Twemoji>
@@ -77,21 +84,27 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
     }
 }
 
-export class Player extends React.PureComponent<{ id: string, width?: number | string, height?: number | string, onEnd?: () => void, autoplay?: boolean, mute?: boolean }, { width: number | string, height: number | string }>{
+export class Player extends React.PureComponent<{ id: string, width?: number | string, height?: number | string, onEnd?: () => void, onProgress?: (current: number, durarion: number) => void, autoplay?: boolean, mute?: boolean }, { width: number | string, height: number | string }>{
     constructor(props: any) {
         super(props);
         this.state = { width: 1, height: 2 };
     }
+
     mounted = false;
-    time = 0;
     playerInner?: any;
     timeout?: any;
+    updateDimensions = () => {
+        this.setState({ width: window.innerWidth, height: window.innerHeight });
+    }
     componentWillUnmount() {
+        window.removeEventListener("resize", this.updateDimensions);
         this.mounted = false;
     }
     componentDidMount() {
+        window.addEventListener("resize", this.updateDimensions);
         this.mounted = true;
     }
+
 
     _onReady = (event) => {
         // access to player in all event handlers via event.target
@@ -102,9 +115,9 @@ export class Player extends React.PureComponent<{ id: string, width?: number | s
     onChange = (event: { target: { getCurrentTime: () => any, seekTo: (time: number) => void }, data: number }) => {
         console.warn(event);
         this.playerInner = event.target;
-        if (this.time > event.target.getCurrentTime()) {
-            event.target.seekTo(this.time);
-        }
+        // if (this.time > event.target.getCurrentTime()) {
+        //     event.target.seekTo(this.time);
+        // }
         this.checkTime();
     }
     checkTime = () => {
@@ -112,11 +125,11 @@ export class Player extends React.PureComponent<{ id: string, width?: number | s
             if (!this.mounted) {
                 return;
             }
-            if (this.playerInner) {
-                this.time = this.playerInner.getCurrentTime();
+            if (this.playerInner && this.props.onProgress) {
+                this.props.onProgress(this.playerInner.getCurrentTime(), this.playerInner.getDuration())
             }
             this.checkTime();
-        }, 100)
+        }, 5000)
 
     }
     onEnd = () => {
@@ -127,7 +140,26 @@ export class Player extends React.PureComponent<{ id: string, width?: number | s
     render() {
         return (
             <div style={{ width: this.props.width || window.innerWidth, height: this.props.height || window.innerHeight }}>
-                <iframe frameBorder={0} style={{ position: 'absolute', width: '100%', height: '100%' }} src={`https://www.youtube.com/embed/${this.props.id}?showinfo=0&rel=0&controls=1&mute=0&autoplay=0&enablejsapi=1&origin=http%3A%2F%2Flocalhost%3A8080&widgetid=1`} />
+                {/* <iframe frameBorder={0} style={{ position: 'absolute', width: '100%', height: '100%' }} src={`https://www.youtube.com/embed/${this.props.id}?showinfo=0&rel=0&controls=1&mute=0&autoplay=0&enablejsapi=1&origin=http%3A%2F%2Flocalhost%3A8080&widgetid=1`} /> */}
+                <YouTube
+
+                    onReady={this._onReady}
+                    videoId={this.props.id}
+                    onStateChange={this.onChange}
+                    opts={{
+                        width: '100%',
+                        height: '100%',
+                        playerVars: {
+                            showinfo: 0,
+                            rel: 0,
+                            controls: 1,
+                            mute: this.props.mute ? 1 : 0,
+                            autoplay: this.props.autoplay ? 1 : 0,
+                        } as any,
+                    }}
+                    onEnd={this.onEnd}
+                    onError={this.onEnd}
+                />
             </div>
         );
     }

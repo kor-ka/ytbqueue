@@ -62,6 +62,9 @@ exports.handleMessage = (io, message) => __awaiter(this, void 0, void 0, functio
         else if (message.type === 'skip') {
             yield handleSkip(batch, message, isHost);
         }
+        else if (message.type === 'progress') {
+            yield handleProgress(batch, message, isHost);
+        }
         batch.commit();
     }
     catch (e) {
@@ -192,6 +195,13 @@ let handleSkip = (io, message, host) => __awaiter(this, void 0, void 0, function
     }
     yield checkQueue(io, message);
 });
+let handleProgress = (io, message, host) => __awaiter(this, void 0, void 0, function* () {
+    if (!host) {
+        io.emit({ type: 'error', message: 'only host can fire progress', source: message });
+    }
+    redisUtil_1.redishset('queue-entry-' + message.queueId, 'progress', message.current / message.duration + '');
+    yield io.emit({ type: 'UpdateQueueContent', queueId: message.queueId, content: yield resolveQueueEntry(message.queueId, message.session.id) }, true);
+});
 let handleNext = (io, message, host) => __awaiter(this, void 0, void 0, function* () {
     if (host) {
         yield redisUtil_1.redisSet('queue-playing-' + message.session.id, null);
@@ -224,7 +234,16 @@ let resolveQueueEntry = (queueId, sessionId) => __awaiter(this, void 0, void 0, 
     let upds = votes.filter(v => v.up).length;
     let downs = votes.filter(v => !v.up).length;
     let score = yield redisUtil_1.rediszscore('queue-' + sessionId, queueId);
-    let res = Object.assign({}, content, { user: yield user_1.User.getUser(entry.userId), score: score - scoreShift, queueId, historical, canSkip: downs > Math.max(1, upds) || historical, votes });
+    let progress;
+    if (entry.progress) {
+        try {
+            progress = Number.parseFloat(entry.progress);
+        }
+        catch (e) {
+            console.warn(e);
+        }
+    }
+    let res = Object.assign({}, content, { user: yield user_1.User.getUser(entry.userId), score: score - scoreShift, queueId, historical, canSkip: downs > Math.max(1, upds) || historical, votes, progress });
     return res;
 });
 // let handle = async (io: IoWrapper, message: Message, host: boolean) => {

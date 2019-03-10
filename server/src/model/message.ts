@@ -8,7 +8,7 @@ interface IMessage {
 
 export type Message =
     // session
-    Init | Next | Add | Vote | Skip | Promote
+    Init | Next | Add | Vote | Skip | Promote | Progress
     // user
     | SetName;
 
@@ -42,6 +42,13 @@ export interface Promote extends IMessage {
     type: 'promite';
     queueId: string;
     up: boolean;
+}
+
+export interface Progress extends IMessage {
+    type: 'progress';
+    queueId: string;
+    current: number;
+    duration: number;
 }
 
 //user

@@ -168,17 +168,13 @@ class QueueItem extends React.PureComponent<{ content: QueueContentLocal, sessio
             }
 
         });
-        // let userId = this.props.content.user.id;
-        let userId = '12asda';
-        console.warn()
-        console.warn(hashCode(userId), colors.length, colors.length % hashCode(userId));
-        console.warn('QueueItem', this.props.content.user.id, this.props.session.clientId);
+        let userId = this.props.content.user.id;
         let isYou = userId === this.props.session.clientId;
         let color = colors[colors.length - hashCode(userId) % colors.length];
         let name = color.name + ' ' + geners[geners.length - hashCode(userId) % geners.length] + (isYou ? ' (You)' : '');
         return (
             <FlexLayout style={{ position: 'relative', flexDirection: 'row', backgroundColor: this.props.content.playing ? 'black' : undefined, color: this.props.content.playing ? 'white' : undefined }}>
-                <ContentItem content={this.props.content} poster={!this.props.content.playing} subtitle={name} subtitleColor={color.color} />
+                <ContentItem content={this.props.content} progress={this.props.content.progress} poster={!this.props.content.playing} subtitle={name} subtitleColor={color.color} />
                 <FlexLayout style={{ flexDirection: 'column', zIndex: 100, position: 'absolute', top: 4, right: 0 }} divider={4}>
                     {!this.props.content.historical && <Button onClick={this.onVoteUp} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><span style={{ color: meUp ? 'green' : 'black', marginTop: 1 }}>{ups ? ups : ''}</span>🤘</Button>}
                     {!this.props.content.canSkip && <Button onClick={this.onVoteDown} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><span style={{ color: meDown ? 'red' : 'black', marginTop: 1 }}>{downs ? downs : ''}</span>👎</Button>}
@@ -274,6 +270,7 @@ class ContentItem extends React.PureComponent<{
     subtitle?: string,
     subtitleColor?: string,
     poster?: boolean,
+    progress?: number,
     subtitleCallback?: () => void
 }>{
     render() {
@@ -293,8 +290,24 @@ class ContentItem extends React.PureComponent<{
         }
         let poster = this.props.poster !== false;
         return (
-            <FlexLayout style={{ flexDirection: 'row', marginLeft: 20, marginRight: 20, paddingTop: 10, paddingBottom: 10, maxWidth: 'calc(100% - 160px)' }}>
-                {/* <Player id={this.props.content.id} width={100} height={70} /> */}
+            <FlexLayout style={{ flexDirection: 'row', marginLeft: 20, marginRight: 20, paddingTop: 10, paddingBottom: 10, maxWidth: 'calc(100% - 160px)', zIndex: 0 }}>
+                {this.props.progress !== undefined &&
+                    <div style={{
+                        background: `repeating-linear-gradient(
+                                    45deg,
+                                    #222,
+                                    #222 10px,
+                                    #000 10px,
+                                    #000 20px
+                                )`,
+                        position: 'absolute',
+                        width: 100 * this.props.progress + '%',
+                        height: '100%',
+                        zIndex: -1,
+                        marginTop: -10,
+                        marginLeft: -20,
+                        marginRight: -20
+                    }} />}
                 {poster && <FlexLayout style={{ justifyContent: 'center', alignItems: 'center', width: initialWidth, height: initialHeight }}>
                     {this.props.content.thumb && <img src={this.props.content.thumb.url} width={width} height={height} />}
                 </FlexLayout>}
