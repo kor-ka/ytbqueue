@@ -51,7 +51,7 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
                     </div>
                 )}
 
-                {this.state.playing && <Player key={this.state.playing.id} onEnd={this.onEnd} id={this.state.playing.id} autoplay={true} />}
+                {this.state.playing && <Player key={this.state.playing.id} onEnd={this.onEnd} id={this.state.playing.id} autoplay={true} width="100%" height="100%" />}
                 {!this.state.playing && (
                     <FlexLayout style={{ height: '100%', flex: 1, fontSize: '8vmin', alignSelf: 'stretch', opacity: 0.8, color: '#fff', fontWeight: 900, alignItems: 'center', justifyContent: 'center', textAlign: 'center' }} >
                         < Twemoji >{(this.state.q && this.state.q.inited) ? (this.state.q.queue.length === 0 ? 'Open this 👇 link on your phone' : '') : 'Connecting... 🙌'}</Twemoji>
@@ -77,7 +77,7 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
     }
 }
 
-export class Player extends React.PureComponent<{ id: string, width?: number, height?: number, onEnd?: () => void, autoplay?: boolean, mute?: boolean }, { width: number, height: number }>{
+export class Player extends React.PureComponent<{ id: string, width?: number | string, height?: number | string, onEnd?: () => void, autoplay?: boolean, mute?: boolean }, { width: number | string, height: number | string }>{
     constructor(props: any) {
         super(props);
         this.state = { width: 1, height: 2 };
@@ -86,15 +86,10 @@ export class Player extends React.PureComponent<{ id: string, width?: number, he
     time = 0;
     playerInner?: any;
     timeout?: any;
-    updateDimensions = () => {
-        this.setState({ width: window.innerWidth, height: window.innerHeight });
-    }
     componentWillUnmount() {
-        window.removeEventListener("resize", this.updateDimensions);
         this.mounted = false;
     }
     componentDidMount() {
-        window.addEventListener("resize", this.updateDimensions);
         this.mounted = true;
     }
 
@@ -132,24 +127,7 @@ export class Player extends React.PureComponent<{ id: string, width?: number, he
     render() {
         return (
             <div style={{ width: this.props.width || window.innerWidth, height: this.props.height || window.innerHeight }}>
-                <YouTube
-                    onReady={this._onReady}
-                    videoId={this.props.id}
-                    onStateChange={this.onChange}
-                    opts={{
-                        width: (this.props.width || window.innerWidth) + '',
-                        height: (this.props.height || window.innerHeight) + '',
-                        playerVars: {
-                            showinfo: 0,
-                            rel: 0,
-                            controls: 1,
-                            mute: this.props.mute ? 1 : 0,
-                            autoplay: this.props.autoplay ? 1 : 0,
-                        } as any,
-                    }}
-                    onEnd={this.onEnd}
-                    onError={this.onEnd}
-                />
+                <iframe frameBorder={0} style={{ position: 'absolute', width: '100%', height: '100%' }} src={`https://www.youtube.com/embed/${this.props.id}?showinfo=0&rel=0&controls=1&mute=0&autoplay=0&enablejsapi=1&origin=http%3A%2F%2Flocalhost%3A8080&widgetid=1`} />
             </div>
         );
     }
