@@ -10,6 +10,7 @@ export const FlexLayout = Glamorous.div<{
     flexDirection: "column",
     flexShrink: 0,
     WebkitOverflowScrolling: "touch",
+    boxSizing: "border-box",
     "> *": props.style && props.style.flexDirection === 'row' ? {
         marginLeft: props.divider !== undefined ? props.divider : 5,
         marginRight: props.divider !== undefined ? props.divider : 5

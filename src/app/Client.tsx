@@ -54,8 +54,9 @@ export class QueuePage extends React.PureComponent<{ playing?: QueueContent, que
         return (
             <>
                 <Button onClick={this.toSearch} style={{ position: 'fixed', zIndex: 300, bottom: 0, left: 0, right: 0, borderRadius: 0, backgroundColor: '#000', alignSelf: 'stretch', fontSize: 30, fontWeight: 900, color: "#fff" }}>Add something cool 😎</Button>
+                <div style={{ position: 'absolute', width: '100%', height: '100%', zIndex: -1, backgroundColor: 'rgba(249,249,249,1)' }} />
 
-                <FlexLayout divider={0} style={{ flexDirection: 'column', paddingBottom: 100, alignItems: 'stretch', marginTop: 0, height: '100%', width: '100%', overflowX: 'hidden', backgroundColor: 'rgba(249,249,249,1)' }}>
+                <FlexLayout divider={0} style={{ flexDirection: 'column', paddingBottom: 100, alignItems: 'stretch', marginTop: 0, width: '100%', overflowX: 'hidden' }}>
                     <div style={{ marginBottom: -5 }}>
                         <Prompt />
                     </div>
@@ -271,7 +272,7 @@ class ContentItem extends React.PureComponent<{
         }
         let poster = this.props.poster !== false;
         return (
-            <FlexLayout style={{ flexDirection: 'row', marginLeft: 20, marginRight: 20, height: 55, paddingTop: 10, paddingBottom: 10, maxWidth: 'calc(100% - 160px)' }}>
+            <FlexLayout style={{ flexDirection: 'row', marginLeft: 20, marginRight: 20, paddingTop: 10, paddingBottom: 10, maxWidth: 'calc(100% - 160px)' }}>
                 {/* <Player id={this.props.content.id} width={100} height={70} /> */}
                 {poster && <FlexLayout style={{ justifyContent: 'center', alignItems: 'center', width: initialWidth, height: initialHeight }}>
                     {this.props.content.thumb && <img src={this.props.content.thumb.url} width={width} height={height} />}
