@@ -121,7 +121,6 @@ export class QueueSession {
         if (this.playing && this.playing.queueId === event.queueId) {
             this.playing = { ...this.playing, ...event.content };
         }
-        this.notifyAll();
     }
 
     handleInit = async (event: InitQueue) => {

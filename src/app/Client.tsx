@@ -120,6 +120,7 @@ class PlayingContent extends React.PureComponent<{ session: QueueSession, playin
 
 export class Queue extends React.PureComponent<{ queue: QueueContentLocal[], session: QueueSession }> {
     render() {
+        console.warn('queue render');
         return (
             <FlexLayout divider={0} style={{ flexGrow: 1, flexDirection: 'column' }}>
                 <FlipMove>

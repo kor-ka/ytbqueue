@@ -20,6 +20,9 @@ class IoWrapper {
             if (!Array.isArray(event)) {
                 event = [event];
             }
+            if (!event.length) {
+                return;
+            }
             let m = JSON.stringify({ events: event, session: this.session });
             if (global) {
                 for (let e of sessionEmitters.get(this.session).values()) {
