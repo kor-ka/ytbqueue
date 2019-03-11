@@ -105,13 +105,6 @@
     "@types/node" "*"
     "@types/react" "*"
 
-"@types/react-flip-move@^2.9.12":
-  version "2.9.12"
-  resolved "https://registry.yarnpkg.com/@types/react-flip-move/-/react-flip-move-2.9.12.tgz#5a6270a44b3d5b3ad6dcc3f105823c0c26001039"
-  integrity sha512-NoQXHUFwboxbTV1NWf55ztoESiX/ShHUySG8uRCiu8ExBH+K033mRHAnBHAK8izVsH/eSfA3/IA1o1CqHA8QGg==
-  dependencies:
-    react-flip-move "*"
-
 "@types/react-router-dom@^4.3.1":
   version "4.3.1"
   resolved "https://registry.yarnpkg.com/@types/react-router-dom/-/react-router-dom-4.3.1.tgz#71fe2918f8f60474a891520def40a63997dafe04"
@@ -5262,10 +5255,12 @@ react-dom@16.4.1:
     object-assign "^4.1.1"
     prop-types "^15.6.0"
 
-react-flip-move@*, react-flip-move@^3.0.3:
-  version "3.0.3"
-  resolved "https://registry.yarnpkg.com/react-flip-move/-/react-flip-move-3.0.3.tgz#3065b0b9e622ae73953aba725f8feed8e4643667"
-  integrity sha512-gR2jvjUgIXI7ceFWJkr8owX4vKhV0IJoXIf/Dt7gESFe5OKiSz2H6d10mKTW8fN134NDI16J4HgEgq9pKqJd5A==
+react-flip-toolkit@^6.5.7:
+  version "6.5.7"
+  resolved "https://registry.yarnpkg.com/react-flip-toolkit/-/react-flip-toolkit-6.5.7.tgz#1ddc1479d64113f859d1f6ab02ed0cc33d7c1778"
+  integrity sha512-7v528bWuZhHwyitTr5I8XB1csFK90wPrRiYuNrSYyG1sFY2U/fD552Go3EIqs4wZ9iAcZiR0zfoZ+8YQICfjPw==
+  dependencies:
+    rematrix "0.2.2"
 
 react-html-attributes@^1.4.2:
   version "1.4.3"
@@ -5522,6 +5517,11 @@ regjsparser@^0.1.4:
   integrity sha1-fuj4Tcb6eS0/0K4ijSS9lJ6tIFw=
   dependencies:
     jsesc "~0.5.0"
+
+rematrix@0.2.2:
+  version "0.2.2"
+  resolved "https://registry.yarnpkg.com/rematrix/-/rematrix-0.2.2.tgz#c96a050260782db9908904885991256e23beda5d"
+  integrity sha512-agFFS3RzrLXJl5LY5xg/xYyXvUuVAnkhgKO7RaO9J1Ssth6yvbO+PIiV67V59MB5NCdAK2flvGvNT4mdKVniFA==
 
 remove-trailing-separator@^1.0.1:
   version "1.1.0"

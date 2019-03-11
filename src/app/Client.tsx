@@ -5,9 +5,9 @@ import { QueueContent, Content } from "../../server/src/model/entity";
 import { FlexLayout, Input, Button } from "./ui/ui";
 import * as youtubeSearch from "youtube-search";
 import { Player } from "./Host";
-import FlipMove from "react-flip-move";
 import { Prompt } from "./Prompt";
 import { hashCode } from "./utils/hashcode";
+import { Flipper, Flipped } from 'react-flip-toolkit';
 
 export const endpoint = window.location.hostname.indexOf('localhost') >= 0 ? 'http://localhost:5000' : '';
 
@@ -119,14 +119,36 @@ class PlayingContent extends React.PureComponent<{ session: QueueSession, playin
 }
 
 export class Queue extends React.PureComponent<{ queue: QueueContentLocal[], session: QueueSession }> {
+    onAppear(el, i) {
+        setTimeout(() => {
+            el.classList.add("fadeIn");
+            setTimeout(() => {
+                el.style.opacity = 1;
+                el.classList.remove("fadeIn");
+            }, 500);
+        }, i * 50);
+    }
+
+    onExit(el, i, removeElement) {
+        setTimeout(() => {
+            el.classList.add("slideOut");
+            setTimeout(removeElement, 500);
+        }, i * 50);
+    }
+
     render() {
-        console.warn('queue render');
+        console.warn(this.props.queue.map(i => i.queueId).join('-'));
         return (
             <FlexLayout divider={0} style={{ flexGrow: 1, flexDirection: 'column' }}>
-                <FlipMove>
-                    {this.props.queue.map(c => <QueueItem key={c.queueId} content={c} session={this.props.session} />)}
-                </FlipMove>
-
+                <Flipper flipKey={this.props.queue.map(i => i.queueId).join('-')}>
+                    {this.props.queue.map(c => (
+                        <Flipped onAppear={this.onAppear} onExit={this.onExit} key={c.queueId} flipId={c.queueId}>
+                            <div>
+                                <QueueItem key={c.queueId} content={c} session={this.props.session} />
+                            </div>
+                        </Flipped>
+                    ))}
+                </Flipper>
             </FlexLayout>
         );
     }
