@@ -65,7 +65,7 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
                         <br />
                         {this.state.q && this.state.q.queue.length === 0 &&
                             <FlexLayout style={{ border: '1.5vmin solid #fff', borderRadius: '1vmin', padding: '1vmin', paddingLeft: '1vmin', paddingRight: '1vmin', marginTop: 15, fontSize: '8vmin', fontWeight: 900, color: "#fff", }}>
-                                <Twemoji>📱azaza.app/<span style={{ color: '#7FDBFF' }}>{this.session.id + ' '}</span></Twemoji>
+                                <Twemoji>📱{window.location.host.replace('www.', '')}/<span style={{ color: '#7FDBFF' }}>{this.session.id + ' '}</span></Twemoji>
                             </FlexLayout>}
                     </FlexLayout>
                 )
@@ -73,7 +73,7 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
                 {this.state.playing && (
                     <FlexLayout style={{ position: 'absolute', bottom: 20, left: 20, opacity: 0.4 }}>
                         <Button style={{ fontWeight: 900, color: "#fff", backgroundColor: '#000', fontSize: '4vmin' }}>
-                            <Twemoji >📱azaza.app/<span style={{ color: '#7FDBFF' }}>{this.session.id + ' '}</span></Twemoji>
+                            <Twemoji >📱{window.location.host.replace('www.', '')}/<span style={{ color: '#7FDBFF' }}>{this.session.id + ' '}</span></Twemoji>
                         </Button>
                     </FlexLayout>
                 )}
