@@ -336,10 +336,10 @@ class ContentItem extends React.PureComponent<{
                 </FlexLayout>}
                 <FlexLayout style={{ flexGrow: 1, maxWidth: '100%', flexDirection: 'column' }} divider={0}>
                     <FlexLayout style={{ minHeight: 35 }}>
-                        <span style={{ fontWeight: 500, WebkitLineClamp: 3, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', lineClamp: 3 }}>{decodeURIComponent(this.props.content.title)}</span>
+                        <span style={{ fontWeight: 500, WebkitLineClamp: 3, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', lineClamp: 3 }}>{decodeURIComponent(this.props.content.title + 'Chemical Brothers - &quot;Believe&quot; (HD &amp; HQ)')}</span>
                     </FlexLayout>
                     <FlexLayout style={{ justifyContent: 'flex-end' }}>
-                        {this.props.subtitle && <span onClick={this.props.subtitleCallback} style={{ fontWeight: 500, color: this.props.subtitleColor, WebkitLineClamp: 1, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', lineClamp: 1 }}>{decodeURIComponent(this.props.subtitle)}</span>}
+                        {this.props.subtitle && <span onClick={this.props.subtitleCallback} style={{ fontWeight: 500, color: this.props.subtitleColor, WebkitLineClamp: 1, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', lineClamp: 1 }}>{decodeURIComponent(this.props.subtitle + 'Chemical Brothers - &quot;Believe&quot; (HD &amp; HQ)')}</span>}
                     </FlexLayout>
                 </FlexLayout>
             </FlexLayout>
