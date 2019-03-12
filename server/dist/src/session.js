@@ -120,10 +120,11 @@ let handleAdd = (io, message) => __awaiter(this, void 0, void 0, function* () {
     yield checkQueue(io, message);
 });
 let handleAddHistorical = (io, sessionId, source) => __awaiter(this, void 0, void 0, function* () {
+    source.progress = undefined;
     // create queue entry
     let queueId = (yield exports.pickId('queue_entry')) + '-h';
     let entry = { queueId, contentId: source.id, userId: source.user.id };
-    yield redisUtil_1.redishsetobj('queue-entry-' + queueId, Object.assign({}, entry, { progress: undefined }));
+    yield redisUtil_1.redishsetobj('queue-entry-' + queueId, entry);
     let score = scoreShift / 2 - new Date().getTime();
     yield redisUtil_1.rediszadd('queue-' + sessionId, queueId, score);
     // notify clients
