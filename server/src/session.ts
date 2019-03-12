@@ -132,7 +132,11 @@ let checkQueue = async (io: IoBatch, source: Message) => {
         for (let t of histroyTop) {
             await handleAddHistorical(io, source.session.id, await resolveQueueEntry(t, source.session.id));
             // lower score to pick other content later
-            await rediszincr('queue-history-' + source.session.id, t, -likeShift);
+            let decrement = -likeShift;
+            // add bit of random
+            // todo use votes to affect random part 
+            decrement += Math.floor(Math.random() * likeShift / 2);
+            await rediszincr('queue-history-' + source.session.id, t, decrement);
             if (!--count) {
                 break;
             }
@@ -185,8 +189,6 @@ let handleVote = async (io: IoBatch, message: Vote, host: boolean) => {
     if (playingId !== message.queueId) {
         await rediszincr('queue-' + message.session.id, message.queueId, increment);
     }
-    // increment history anyway
-    await rediszincr('queue-history-' + message.session.id, message.queueId, increment);
 
     await io.emit({ type: 'UpdateQueueContent', queueId: message.queueId, content: await resolveQueueEntry(message.queueId, message.session.id) }, true);
 }
@@ -205,6 +207,11 @@ let handleSkip = async (io: IoBatch, message: Skip, host: boolean) => {
             await rediszrem('queue-' + message.session.id, message.queueId);
             io.emit({ type: 'RemoveQueueContent', queueId: message.queueId }, true)
         }
+        // if skipped by users choise - remove from history
+        if (!historical) {
+            await rediszrem('queue-history-' + message.session.id, message.queueId.replace('-h', ''));
+        }
+
     }
     await checkQueue(io, message);
 }

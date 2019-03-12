@@ -128,7 +128,11 @@ let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
         for (let t of histroyTop) {
             yield handleAddHistorical(io, source.session.id, yield resolveQueueEntry(t, source.session.id));
             // lower score to pick other content later
-            yield redisUtil_1.rediszincr('queue-history-' + source.session.id, t, -likeShift);
+            let decrement = -likeShift;
+            // add bit of random
+            // todo use votes to affect random part 
+            decrement += Math.floor(Math.random() * likeShift / 2);
+            yield redisUtil_1.rediszincr('queue-history-' + source.session.id, t, decrement);
             if (!--count) {
                 break;
             }
@@ -174,8 +178,6 @@ let handleVote = (io, message, host) => __awaiter(this, void 0, void 0, function
     if (playingId !== message.queueId) {
         yield redisUtil_1.rediszincr('queue-' + message.session.id, message.queueId, increment);
     }
-    // increment history anyway
-    yield redisUtil_1.rediszincr('queue-history-' + message.session.id, message.queueId, increment);
     yield io.emit({ type: 'UpdateQueueContent', queueId: message.queueId, content: yield resolveQueueEntry(message.queueId, message.session.id) }, true);
 });
 let handleSkip = (io, message, host) => __awaiter(this, void 0, void 0, function* () {
@@ -192,6 +194,10 @@ let handleSkip = (io, message, host) => __awaiter(this, void 0, void 0, function
         else {
             yield redisUtil_1.rediszrem('queue-' + message.session.id, message.queueId);
             io.emit({ type: 'RemoveQueueContent', queueId: message.queueId }, true);
+        }
+        // if skipped by users choise - remove from history
+        if (!historical) {
+            yield redisUtil_1.rediszrem('queue-history-' + message.session.id, message.queueId.replace('-h', ''));
         }
     }
     yield checkQueue(io, message);
