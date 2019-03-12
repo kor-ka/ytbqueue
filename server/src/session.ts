@@ -9,11 +9,25 @@ import { User } from "./user";
 let scoreShift = 4000000000000000;
 let likeShift = 3000000000;
 let cicleShift = 100000000000000;
-export let pickSession = () => {
-    return (makeid());
+export let pickSession = async () => {
+    return (await pickId('session'));
 }
 
-export let makeid = () => {
+export let pickId = async (nameSpace: string) => {
+    let id = undefined;
+    while (!id) {
+        id = makeId();
+        let exists = await redishget(nameSpace, id);
+        if (exists) {
+            id = undefined;
+        } else {
+            await redishset(nameSpace, id, id);
+        }
+    }
+    return id;
+}
+
+let makeId = () => {
     var text = "";
     var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
@@ -29,7 +43,7 @@ export let getTokenFroSession = (id: string) => {
             await transaction(async tsx => {
                 let token = await redisGet('session_host_token_' + id, tsx);
                 if (!token) {
-                    token = makeid()
+                    token = await pickSession()
                     await redisSet('session_host_token_' + id, token, tsx);
                     res({ token, new: true });
                 } else {
@@ -95,7 +109,7 @@ let handleAdd = async (io: IoBatch, message: Add) => {
     // save content
     await redishsetobj('content-' + message.content.id, message.content);
     // create queue entry
-    let queueId = makeid();
+    let queueId = await pickId('queue_entry');
     let entry: QueueContentStored = { queueId, contentId: message.content.id, userId: message.creds.id };
     await redishsetobj('queue-entry-' + queueId, entry);
     let score = scoreShift - new Date().getTime();
@@ -109,7 +123,7 @@ let handleAdd = async (io: IoBatch, message: Add) => {
 
 let handleAddHistorical = async (io: IoBatch, sessionId: string, source: QueueContent) => {
     // create queue entry
-    let queueId = makeid() + '-h';
+    let queueId = (await pickId('queue_entry')) + '-h';
     let entry: QueueContentStored = { queueId, contentId: source.id, userId: source.user.id };
     await redishsetobj('queue-entry-' + queueId, { ...entry, progress: undefined });
     let score = scoreShift / 2 - new Date().getTime();

@@ -36,7 +36,7 @@ app
     res.sendFile(path.resolve(__dirname + '/../../public/cookie-policy.html'));
 }))
     .get('/', (req, res) => __awaiter(this, void 0, void 0, function* () {
-    let target = session_1.pickSession();
+    let target = yield session_1.pickSession();
     for (let k of Object.keys(req.cookies || {})) {
         if (k.startsWith('azaza_app_host_')) {
             target = k.replace('azaza_app_host_', '');

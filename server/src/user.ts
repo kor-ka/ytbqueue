@@ -1,5 +1,5 @@
 import { rediszincr, redisincr, redishsetobj, redishset, redishget, redishgetall } from "./redisUtil";
-import { makeid } from "./session";
+import { pickId } from "./session";
 import { User as IUser } from "./model/entity";
 import { IoWrapper } from "./model/event";
 import { Message } from "./model/message";
@@ -7,7 +7,7 @@ import { Message } from "./model/message";
 export class User {
     static getNewUser = async () => {
         let id = await redisincr('user-id');
-        let user: IUser = { id: id + '', token: makeid(), name: 'anon' };
+        let user: IUser = { id: id + '', token: await pickId('user'), name: 'anon' };
         await redishsetobj('user-' + id, user);
         return user;
     }

@@ -13,10 +13,24 @@ const user_1 = require("./user");
 let scoreShift = 4000000000000000;
 let likeShift = 3000000000;
 let cicleShift = 100000000000000;
-exports.pickSession = () => {
-    return (exports.makeid());
-};
-exports.makeid = () => {
+exports.pickSession = () => __awaiter(this, void 0, void 0, function* () {
+    return (yield exports.pickId('session'));
+});
+exports.pickId = (nameSpace) => __awaiter(this, void 0, void 0, function* () {
+    let id = undefined;
+    while (!id) {
+        id = makeId();
+        let exists = yield redisUtil_1.redishget(nameSpace, id);
+        if (exists) {
+            id = undefined;
+        }
+        else {
+            yield redisUtil_1.redishset(nameSpace, id, id);
+        }
+    }
+    return id;
+});
+let makeId = () => {
     var text = "";
     var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     for (var i = 0; i < 5; i++)
@@ -29,7 +43,7 @@ exports.getTokenFroSession = (id) => {
             yield redisUtil_1.transaction((tsx) => __awaiter(this, void 0, void 0, function* () {
                 let token = yield redisUtil_1.redisGet('session_host_token_' + id, tsx);
                 if (!token) {
-                    token = exports.makeid();
+                    token = yield exports.pickSession();
                     yield redisUtil_1.redisSet('session_host_token_' + id, token, tsx);
                     res({ token, new: true });
                 }
@@ -94,7 +108,7 @@ let handleAdd = (io, message) => __awaiter(this, void 0, void 0, function* () {
     // save content
     yield redisUtil_1.redishsetobj('content-' + message.content.id, message.content);
     // create queue entry
-    let queueId = exports.makeid();
+    let queueId = yield exports.pickId('queue_entry');
     let entry = { queueId, contentId: message.content.id, userId: message.creds.id };
     yield redisUtil_1.redishsetobj('queue-entry-' + queueId, entry);
     let score = scoreShift - new Date().getTime();
@@ -107,9 +121,9 @@ let handleAdd = (io, message) => __awaiter(this, void 0, void 0, function* () {
 });
 let handleAddHistorical = (io, sessionId, source) => __awaiter(this, void 0, void 0, function* () {
     // create queue entry
-    let queueId = exports.makeid() + '-h';
+    let queueId = (yield exports.pickId('queue_entry')) + '-h';
     let entry = { queueId, contentId: source.id, userId: source.user.id };
-    yield redisUtil_1.redishsetobj('queue-entry-' + queueId, entry);
+    yield redisUtil_1.redishsetobj('queue-entry-' + queueId, Object.assign({}, entry, { progress: undefined }));
     let score = scoreShift / 2 - new Date().getTime();
     yield redisUtil_1.rediszadd('queue-' + sessionId, queueId, score);
     // notify clients

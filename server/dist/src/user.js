@@ -23,7 +23,7 @@ class User {
 }
 User.getNewUser = () => __awaiter(this, void 0, void 0, function* () {
     let id = yield redisUtil_1.redisincr('user-id');
-    let user = { id: id + '', token: session_1.makeid(), name: 'anon' };
+    let user = { id: id + '', token: yield session_1.pickId('user'), name: 'anon' };
     yield redisUtil_1.redishsetobj('user-' + id, user);
     return user;
 });

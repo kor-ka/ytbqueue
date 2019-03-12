@@ -2,7 +2,7 @@ import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import * as cookieParser from 'cookie-parser';
 import * as cors from 'cors';
-import { pickSession, getTokenFroSession, handleMessage, makeid } from './src/session';
+import { pickSession, getTokenFroSession, handleMessage, pickId } from './src/session';
 var path = require('path');
 const PORT = process.env.PORT || 5000
 import { createServer, Server } from 'http';
@@ -31,7 +31,7 @@ app
     res.sendFile(path.resolve(__dirname + '/../../public/cookie-policy.html'));
   })
   .get('/', async (req, res) => {
-    let target = pickSession();
+    let target = await pickSession();
     for (let k of Object.keys(req.cookies || {})) {
       if (k.startsWith('azaza_app_host_')) {
         target = k.replace('azaza_app_host_', '');
