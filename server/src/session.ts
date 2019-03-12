@@ -111,7 +111,7 @@ let handleAddHistorical = async (io: IoBatch, sessionId: string, source: QueueCo
     // create queue entry
     let queueId = makeid() + '-h';
     let entry: QueueContentStored = { queueId, contentId: source.id, userId: source.user.id };
-    await redishsetobj('queue-entry-' + queueId, entry);
+    await redishsetobj('queue-entry-' + queueId, { ...entry, progress: undefined });
     let score = scoreShift / 2 - new Date().getTime();
     await rediszadd('queue-' + sessionId, queueId, score);
     // notify clients
