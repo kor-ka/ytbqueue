@@ -240,7 +240,7 @@ export class Searcher extends React.PureComponent<{ session: QueueSession, toQue
                         return;
                     }
                     let endpoint = 'https://api.cognitive.microsoft.com/bing/v7.0/videos/search?';
-                    let query = 'q=' + encodeURIComponent(q + '+site:youtu.be') + '&embedded=player' + '&market=en-us';
+                    let query = 'q=' + encodeURIComponent(q + '+site:youtube.com') + '&embedded=player' + '&market=en-us';
                     fetch(endpoint + query, { headers: [['Ocp-Apim-Subscription-Key', 'e56b32ef31084eadbc238947215b1d53']] }).then(async res => {
                         if (g === this.generation) {
                             this.setState({
