@@ -2,7 +2,6 @@ import * as React from "react";
 import { QueueSession, QueueContentLocal } from "./model/session";
 import { QueueContent, Content } from "../../server/src/model/entity";
 import { FlexLayout, Input, Button } from "./ui/ui";
-import * as youtubeSearch from "youtube-search";
 import { Player } from "./Host";
 import { Prompt } from "./Prompt";
 import { hashCode } from "./utils/hashcode";
@@ -41,6 +40,8 @@ export class Client extends React.PureComponent<{}, { playing?: QueueContent, qu
                     {!this.state.inited && <FlexLayout style={{ fontWeight: 900, fontSize: 30, width: '100%', height: '100%', color: '#fff', justifyContent: 'center', textAlign: 'center' }}>Connecting... 🙌</FlexLayout>}
                 </div>
                 {this.state.mode === 'search' && <Searcher toQueue={this.toQueue} session={this.session} />}
+                {/* <Searcher toQueue={this.toQueue} session={this.session} />} */}
+
             </>
         )
     }
@@ -232,26 +233,30 @@ export class Searcher extends React.PureComponent<{ session: QueueSession, toQue
                 this.setState({ results: [{ title: 'direct', id, subtitle: 'link' }] })
 
             } else {
-                // search
-                var opts: youtubeSearch.YouTubeSearchOptions = {
-                    maxResults: 20,
-                    type: 'video',
-                    videoEmbeddable: 'true',
-                    key: "AIzaSyDD0svyIgbg6lrE1310ma1mpiw2g3vomnc"
-                    // key: "AIzaSyBW-5ayHQTRcrELnx5gKJcjJc16qn2wlfk"
-                    // key: "AIzaSyBFnDOcWBoMBCLGUjoC0znC0GwN2WlnD8Y"
-
-
-                };
 
                 let g = ++this.generation;
                 setTimeout(() => {
                     if (g !== this.generation) {
                         return;
                     }
-                    youtubeSearch(q, opts, (err, results) => {
-                        if (!err && g === this.generation) {
-                            this.setState({ results: results.map(r => ({ title: r.title, id: r.id, subtitle: r.description, thumb: r.thumbnails.medium })) })
+                    let endpoint = 'https://api.cognitive.microsoft.com/bing/v7.0/videos/search?';
+                    let query = 'q=' + encodeURIComponent(q + '+site:youtu.be') + '&embedded=player' + '&market=en-us';
+                    fetch(endpoint + query, { headers: [['Ocp-Apim-Subscription-Key', 'e56b32ef31084eadbc238947215b1d53']] }).then(async res => {
+                        if (g === this.generation) {
+                            this.setState({
+                                results: (await res.json()).value.map(r => {
+                                    let contentUrlSplit = r.contentUrl.split('v=');
+                                    let id = contentUrlSplit[contentUrlSplit.length - 1];
+                                    let thumb = {
+                                        url: r.thumbnailUrl,
+                                        width: r.thumbnail.width,
+                                        height: r.thumbnail.height,
+                                    }
+                                    return ({ id, title: r.name, subtitle: r.description, thumb });
+                                })
+                            })
+                        } else {
+
                         }
                     });
                 }, 300)
