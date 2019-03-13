@@ -173,7 +173,7 @@ export class Player extends React.PureComponent<{ id: string, width?: number | s
                         playerVars: {
                             showinfo: 0,
                             rel: 0,
-                            controls: 1,
+                            controls: 0,
                             mute: this.props.mute ? 1 : 0,
                             autoplay: this.props.autoplay ? 1 : 0,
                         } as any,
