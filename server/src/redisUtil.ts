@@ -214,6 +214,7 @@ export let rediszrange = (key: string, tsx?: redis.RedisClient) => {
 export let rediszrangebyscore = (key: string, count: number, tsx?: redis.RedisClient) => {
     return new Promise<string[]>(async (resolve, error) => {
         try {
+            console.log('rediszrangebyscore', key, await rediszrange(key));
             await (tsx || client).zrevrangebyscore(key, Number.MAX_SAFE_INTEGER, 0, 'LIMIT', 0, count, (res, s) => {
                 console.warn('rediszrangebyscore', s);
                 resolve(s)

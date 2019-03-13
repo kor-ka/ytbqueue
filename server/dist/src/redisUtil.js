@@ -223,6 +223,7 @@ exports.rediszrange = (key, tsx) => {
 exports.rediszrangebyscore = (key, count, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
+            console.log('rediszrangebyscore', key, yield exports.rediszrange(key));
             yield (tsx || client).zrevrangebyscore(key, Number.MAX_SAFE_INTEGER, 0, 'LIMIT', 0, count, (res, s) => {
                 console.warn('rediszrangebyscore', s);
                 resolve(s);
