@@ -146,7 +146,6 @@ let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
             // add bit of random
             // todo use votes to affect random part 
             decrement += Math.floor(Math.random() * likeShift / 2);
-            decrement -= 390314040786;
             yield redisUtil_1.rediszincr('queue-history-' + source.session.id, t, decrement);
             if (!--count) {
                 break;

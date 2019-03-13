@@ -150,7 +150,6 @@ let checkQueue = async (io: IoBatch, source: Message) => {
             // add bit of random
             // todo use votes to affect random part 
             decrement += Math.floor(Math.random() * likeShift / 2);
-            decrement -= 390314040786;
             await rediszincr('queue-history-' + source.session.id, t, decrement);
             if (!--count) {
                 break;
