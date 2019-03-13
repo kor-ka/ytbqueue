@@ -12,7 +12,6 @@ const redisUtil_1 = require("./redisUtil");
 const user_1 = require("./user");
 let scoreShift = 4000000000000000;
 let likeShift = 3000000000;
-let cicleShift = 100000000000000;
 exports.pickSession = () => __awaiter(this, void 0, void 0, function* () {
     return (yield exports.pickId('session'));
 });

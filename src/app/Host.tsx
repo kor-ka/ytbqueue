@@ -71,16 +71,37 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
                 )
                 }
                 {this.state.playing && (
-                    <FlexLayout style={{ position: 'absolute', bottom: 20, left: 20, opacity: 0.4 }}>
-                        <Button style={{ fontWeight: 900, color: "#fff", backgroundColor: '#000', fontSize: '4vmin' }}>
-                            <Twemoji >📱{window.location.host.replace('www.', '')}/<span style={{ color: '#7FDBFF' }}>{this.session.id + ' '}</span></Twemoji>
-                        </Button>
-                    </FlexLayout>
+                    <WaterMark sessionId={this.session.id} />
                 )}
 
             </>
         );
 
+    }
+}
+
+
+class WaterMark extends React.PureComponent<{ sessionId: string }, { hidden?: boolean }>{
+    constructor(props: { sessionId: string }) {
+        super(props);
+        let hidden = window.localStorage.getItem('host_locked_' + props.sessionId) === 'true';
+        this.state = { hidden };
+    }
+    onClick = () => {
+        let hidden = !this.state.hidden;
+        this.setState({ hidden });
+        window.localStorage.setItem('host_locked_' + this.props.sessionId, hidden ? 'true' : 'false');
+
+    }
+    render() {
+        return (
+            <FlexLayout onClick={this.onClick} style={{ position: 'absolute', bottom: 20, left: 20, opacity: 0.4 }}>
+                <Button style={{ fontWeight: 900, color: "#fff", backgroundColor: '#000', fontSize: '4vmin' }}>
+                    {!this.state.hidden && <Twemoji >📱{window.location.host.replace('www.', '')}/<span style={{ color: '#7FDBFF' }}>{this.props.sessionId + ' '}</span></Twemoji>}
+                    {this.state.hidden && < Twemoji >🔒</Twemoji>}
+                </Button>
+            </FlexLayout >
+        );
     }
 }
 

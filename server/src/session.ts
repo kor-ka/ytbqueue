@@ -8,7 +8,6 @@ import { User } from "./user";
 
 let scoreShift = 4000000000000000;
 let likeShift = 3000000000;
-let cicleShift = 100000000000000;
 export let pickSession = async () => {
     return (await pickId('session'));
 }
