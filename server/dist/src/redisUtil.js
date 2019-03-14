@@ -192,7 +192,10 @@ exports.rediszscore = (key, val, tsx) => {
 exports.rediszcard = (key, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
-            yield (tsx || client).zcard(key, (res, s) => resolve(s));
+            yield (tsx || client).zcard(key, (res, s) => {
+                console.log('rediszcard', key, s);
+                resolve(s);
+            });
         }
         catch (e) {
             error(e);

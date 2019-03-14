@@ -184,7 +184,10 @@ export let rediszscore = (key: string, val: string, tsx?: redis.RedisClient) => 
 export let rediszcard = (key: string, tsx?: redis.RedisClient) => {
     return new Promise<number>(async (resolve, error) => {
         try {
-            await (tsx || client).zcard(key, (res, s) => resolve(s));
+            await (tsx || client).zcard(key, (res, s) => {
+                console.log('rediszcard', key, s);
+                resolve(s)
+            });
         } catch (e) {
             error(e);
         }
