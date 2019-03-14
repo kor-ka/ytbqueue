@@ -163,6 +163,7 @@ let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
                 // pretty much content, add bit of random
                 score = middle.score - Math.round(Math.random() * (middle.score - bottom.score - 1000));
             }
+            console.warn('checkQueue', 'rotate history', 'new score', score);
             yield redisUtil_1.rediszadd('queue-history-' + source.session.id, t, score, 'XX');
             if (!--historyAddCount) {
                 break;

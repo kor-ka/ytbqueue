@@ -167,6 +167,7 @@ let checkQueue = async (io: IoBatch, source: Message) => {
                 // pretty much content, add bit of random
                 score = middle.score - Math.round(Math.random() * (middle.score - bottom.score - 1000));
             }
+            console.warn('checkQueue', 'rotate history', 'new score', score);
 
             await rediszadd('queue-history-' + source.session.id, t, score, 'XX');
             if (!--historyAddCount) {
