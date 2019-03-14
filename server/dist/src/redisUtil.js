@@ -199,11 +199,11 @@ exports.rediszcard = (key, tsx) => {
         }
     }));
 };
-exports.rediszrange = (key, tsx) => {
+exports.rediszrange = (key, start, stop, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
             console.log('rediszrange', key);
-            yield (tsx || client).zrevrange(key, 0, -1, 'WITHSCORES', (res, s) => {
+            yield (tsx || client).zrevrange(key, start !== undefined ? start : 0, stop !== undefined ? stop : -1, 'WITHSCORES', (res, s) => {
                 resolve(s.reduce((prev, current, i, a) => {
                     if (i % 2 === 0) {
                         prev.push({ key: current, score: 0 });

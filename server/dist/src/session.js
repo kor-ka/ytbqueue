@@ -112,7 +112,13 @@ let handleAdd = (io, message) => __awaiter(this, void 0, void 0, function* () {
     yield redisUtil_1.redishsetobj('queue-entry-' + queueId, entry);
     let score = scoreShift - new Date().getTime();
     yield redisUtil_1.rediszadd('queue-' + message.session.id, queueId, score);
-    yield redisUtil_1.rediszadd('queue-history-' + message.session.id, queueId, score);
+    let historyScore = score;
+    let historyBottom = yield redisUtil_1.rediszrange('queue-history-' + message.session.id, -1, -1);
+    if (historyBottom[0]) {
+        // move to end of history queue
+        historyScore = historyBottom[0].score - 1000;
+    }
+    yield redisUtil_1.rediszadd('queue-history-' + message.session.id, queueId, historyScore);
     // notify clients
     let res = Object.assign({}, message.content, { user: yield user_1.User.getUser(message.creds.id), score: score - scoreShift, queueId, historical: false, votes: [] });
     io.emit({ type: 'AddQueueContent', content: res }, true);
@@ -135,18 +141,29 @@ let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
     // add top from history if nothing to play
     let size = yield redisUtil_1.rediszcard('queue-' + source.session.id);
     console.warn('checkQueue current size ', size);
-    if (size < 6) {
+    let minHistoryLength = 6;
+    if (size < minHistoryLength) {
         let histroyTop = yield redisUtil_1.rediszrangebyscore('queue-history-' + source.session.id, 100000);
         console.warn('checkQueue add ', histroyTop);
-        let count = 6 - size;
+        let count = minHistoryLength - size;
         for (let t of histroyTop) {
             yield handleAddHistorical(io, source.session.id, yield resolveQueueEntry(t, source.session.id));
             // lower score to pick other content later
-            let decrement = -likeShift;
-            // add bit of random
-            // todo use votes to affect random part 
-            decrement += Math.floor(Math.random() * likeShift / 2);
-            yield redisUtil_1.rediszincr('queue-history-' + source.session.id, t, decrement);
+            let count = yield redisUtil_1.rediszcard('queue-history-' + source.session.id);
+            let middleIndex = Math.round(count / 2) - 1;
+            let middle = (yield redisUtil_1.rediszrange('queue-history-' + source.session.id, middleIndex, middleIndex))[0];
+            let bottom = (yield redisUtil_1.rediszrange('queue-history-' + source.session.id, -1, -1))[0];
+            let score;
+            // todo? use votes to affect random part 
+            if (count < 3) {
+                // no too much content, just send to bottom
+                score = bottom.score - 1000;
+            }
+            else {
+                // pretty much content, add bit of random
+                score = middle.score - Math.round(Math.random() * (middle.score - bottom.score - 1000));
+            }
+            yield redisUtil_1.rediszadd('queue-history-' + source.session.id, t, score);
             if (!--count) {
                 break;
             }

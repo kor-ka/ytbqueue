@@ -191,11 +191,11 @@ export let rediszcard = (key: string, tsx?: redis.RedisClient) => {
     })
 }
 
-export let rediszrange = (key: string, tsx?: redis.RedisClient) => {
+export let rediszrange = (key: string, start?: number, stop?: number, tsx?: redis.RedisClient) => {
     return new Promise<{ key: string, score: number }[]>(async (resolve, error) => {
         try {
             console.log('rediszrange', key)
-            await (tsx || client).zrevrange(key, 0, -1, 'WITHSCORES', (res, s) => {
+            await (tsx || client).zrevrange(key, start !== undefined ? start : 0, stop !== undefined ? stop : -1, 'WITHSCORES', (res, s) => {
                 resolve(s.reduce((prev, current, i, a) => {
                     if (i % 2 === 0) {
                         prev.push({ key: current, score: 0 })
