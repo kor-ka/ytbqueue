@@ -165,7 +165,7 @@ let checkQueue = async (io: IoBatch, source: Message) => {
                 score = bottom.score - 1000;
             } else {
                 // pretty much content, add bit of random
-                score = middle.score - Math.round(Math.random() * (middle.score - bottom.score - 1000));
+                score = middle.score - Math.round(Math.random() * (middle.score - bottom.score + 1000));
             }
             console.warn('checkQueue', 'rotate history', 'new score', score);
 
