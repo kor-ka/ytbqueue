@@ -168,7 +168,7 @@ let checkQueue = async (io: IoBatch, source: Message) => {
                 score = middle.score - Math.round(Math.random() * (middle.score - bottom.score - 1000));
             }
 
-            await rediszadd('queue-history-' + source.session.id, t, score);
+            await rediszadd('queue-history-' + source.session.id, t, score, 'XX');
             if (!--historyAddCount) {
                 break;
             }
