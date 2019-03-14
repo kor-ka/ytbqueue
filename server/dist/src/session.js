@@ -145,7 +145,7 @@ let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
     if (size < minHistoryLength) {
         let histroyTop = yield redisUtil_1.rediszrangebyscore('queue-history-' + source.session.id, 100000);
         console.warn('checkQueue add ', histroyTop);
-        let count = minHistoryLength - size;
+        let historyAddCount = minHistoryLength - size;
         for (let t of histroyTop) {
             yield handleAddHistorical(io, source.session.id, yield resolveQueueEntry(t, source.session.id));
             // lower score to pick other content later
@@ -164,7 +164,7 @@ let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
                 score = middle.score - Math.round(Math.random() * (middle.score - bottom.score - 1000));
             }
             yield redisUtil_1.rediszadd('queue-history-' + source.session.id, t, score);
-            if (!--count) {
+            if (!--historyAddCount) {
                 break;
             }
         }

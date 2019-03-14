@@ -150,7 +150,7 @@ let checkQueue = async (io: IoBatch, source: Message) => {
     if (size < minHistoryLength) {
         let histroyTop = await rediszrangebyscore('queue-history-' + source.session.id, 100000);
         console.warn('checkQueue add ', histroyTop);
-        let count = minHistoryLength - size;
+        let historyAddCount = minHistoryLength - size;
         for (let t of histroyTop) {
             await handleAddHistorical(io, source.session.id, await resolveQueueEntry(t, source.session.id));
             // lower score to pick other content later
@@ -169,7 +169,7 @@ let checkQueue = async (io: IoBatch, source: Message) => {
             }
 
             await rediszadd('queue-history-' + source.session.id, t, score);
-            if (!--count) {
+            if (!--historyAddCount) {
                 break;
             }
         }
