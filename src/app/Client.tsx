@@ -124,7 +124,7 @@ export class Queue extends React.PureComponent<{ queue: QueueContentLocal[], ses
         console.warn('queue render');
         return (
             <FlexLayout divider={0} style={{ flexGrow: 1, flexDirection: 'column' }}>
-                <FlipMove>
+                <FlipMove leaveAnimation="fade">
                     {this.props.queue.map(c => <QueueItem key={c.queueId} content={c} session={this.props.session} />)}
                 </FlipMove>
 
