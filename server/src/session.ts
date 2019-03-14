@@ -115,11 +115,22 @@ let handleAdd = async (io: IoBatch, message: Add) => {
     await rediszadd('queue-' + message.session.id, queueId, score);
 
     let historyScore = score;
-    let historyBottom = await rediszrange('queue-history-' + message.session.id, -1, -1);
-    if (historyBottom[0]) {
-        // move to end of history queue
-        historyScore = historyBottom[0].score - 1000;
+    let historyCount = await rediszcard('queue-history-' + message.session.id);
+
+    if (historyCount === 1) {
+        let historyTop = await rediszrange('queue-history-' + message.session.id, -1, -1);
+        if (historyTop[0]) {
+            historyScore = historyTop[0].score + 1000;
+        }
+    } else {
+        let historyBottom = await rediszrange('queue-history-' + message.session.id, -1, -1);
+        if (historyBottom[0]) {
+            // move to end of history queue
+            historyScore = historyBottom[0].score - 1000;
+        }
     }
+
+
     await rediszadd('queue-history-' + message.session.id, queueId, historyScore);
     // notify clients
     let res: QueueContent = { ...message.content, user: await User.getUser(message.creds.id), score: score - scoreShift, queueId, historical: false, votes: [] }

@@ -113,10 +113,19 @@ let handleAdd = (io, message) => __awaiter(this, void 0, void 0, function* () {
     let score = scoreShift - new Date().getTime();
     yield redisUtil_1.rediszadd('queue-' + message.session.id, queueId, score);
     let historyScore = score;
-    let historyBottom = yield redisUtil_1.rediszrange('queue-history-' + message.session.id, -1, -1);
-    if (historyBottom[0]) {
-        // move to end of history queue
-        historyScore = historyBottom[0].score - 1000;
+    let historyCount = yield redisUtil_1.rediszcard('queue-history-' + message.session.id);
+    if (historyCount === 1) {
+        let historyTop = yield redisUtil_1.rediszrange('queue-history-' + message.session.id, -1, -1);
+        if (historyTop[0]) {
+            historyScore = historyTop[0].score + 1000;
+        }
+    }
+    else {
+        let historyBottom = yield redisUtil_1.rediszrange('queue-history-' + message.session.id, -1, -1);
+        if (historyBottom[0]) {
+            // move to end of history queue
+            historyScore = historyBottom[0].score - 1000;
+        }
     }
     yield redisUtil_1.rediszadd('queue-history-' + message.session.id, queueId, historyScore);
     // notify clients
