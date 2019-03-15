@@ -56,7 +56,7 @@ export class QueuePage extends React.PureComponent<{ playing?: QueueContent, que
         return (
             <>
                 <Button onClick={this.toSearch} style={{ position: 'fixed', zIndex: 300, bottom: 0, left: 0, right: 0, borderRadius: 0, backgroundColor: '#000', alignSelf: 'stretch', fontSize: 30, fontWeight: 900, color: "#fff" }}>Add something cool 😎</Button>
-                <div style={{ position: 'fixed', width: '100%', height: '100%', zIndex: -1, backgroundColor: 'rgba(249,249,249,1)' }} />
+                <div style={{ position: 'fixed', width: '100%', height: '100%', zIndex: -1, backgroundColor: '#F9F9F9' }} />
 
                 <FlexLayout divider={0} style={{ flexDirection: 'column', paddingBottom: 100, alignItems: 'stretch', marginTop: 0, width: '100%', overflowX: 'hidden' }}>
                     <div style={{ marginBottom: -5 }}>
@@ -176,7 +176,7 @@ class QueueItem extends React.PureComponent<{ content: QueueContentLocal, sessio
         let name = color.name + ' ' + geners[Math.abs(hashCode(userId)) % geners.length] + (isYou ? ' (You)' : '');
         return (
             <FlexLayout style={{ position: 'relative', flexDirection: 'row', backgroundColor: this.props.content.playing ? 'black' : undefined, color: this.props.content.playing ? 'white' : undefined }}>
-                <ContentItem content={this.props.content} progress={this.props.content.progress} poster={!this.props.content.playing} subtitle={name} subtitleColor={color.color} />
+                <ContentItem content={this.props.content} playing={this.props.content.playing} progress={this.props.content.progress} subtitle={name} subtitleColor={color.color} />
                 <FlexLayout style={{ flexDirection: 'column', zIndex: 100, position: 'absolute', top: 4, right: 0 }} divider={4}>
                     {!this.props.content.historical && <Button onClick={this.onVoteUp} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><span style={{ color: meUp ? 'green' : 'black', marginTop: 1 }}>{ups ? ups : ''}</span>🤘</Button>}
                     {!this.props.content.canSkip && <Button onClick={this.onVoteDown} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><span style={{ color: meDown ? 'red' : 'black', marginTop: 1 }}>{downs ? downs : ''}</span>👎</Button>}
@@ -253,7 +253,7 @@ export class Searcher extends React.PureComponent<{ session: QueueSession, toQue
 
     render() {
         return (
-            <FlexLayout style={{ flexDirection: 'column', alignItems: 'stretch', height: '100%', overflowY: 'hidden', backgroundColor: 'rgba(249,249,249,1)' }}>
+            <FlexLayout style={{ flexDirection: 'column', alignItems: 'stretch', height: '100%', overflowY: 'hidden', backgroundColor: '#F9F9F9' }}>
                 <FlexLayout style={{ flexDirection: 'row' }}>
                     <Button onClick={this.toQueue} style={{ width: 1, backgroundColor: 'transparent', position: 'absolute', marginTop: 16, marginLeft: 14, zIndex: 200 }}>👈</Button>
                     <Input placeholder="search from some awesome music 😜" autoFocus={true} style={{ flexGrow: 1, flexShrink: 0, backgroundColor: '#fff', height: 40, borderRadius: 10, margin: 20, padding: 10, zIndex: 100, paddingLeft: 40 }} value={this.state.q} onChange={this.onInputChange} />
@@ -271,14 +271,15 @@ export class Searcher extends React.PureComponent<{ session: QueueSession, toQue
     }
 }
 
-class ContentItem extends React.PureComponent<{
-    content: Content,
-    subtitle?: string,
-    subtitleColor?: string,
-    poster?: boolean,
-    progress?: number,
-    subtitleCallback?: () => void
-}>{
+interface ContentItemProps {
+    content: Content;
+    subtitle?: string;
+    subtitleColor?: string;
+    progress?: number;
+    playing?: boolean;
+    subtitleCallback?: () => void;
+}
+class ContentItem extends React.PureComponent<ContentItemProps>{
     render() {
         let scale = 1;
         let width = 80;
@@ -294,11 +295,11 @@ class ContentItem extends React.PureComponent<{
             height = th * scale;
 
         }
-        let poster = this.props.poster !== false;
         return (
             <FlexLayout style={{ flexDirection: 'row', marginLeft: 20, marginRight: 20, paddingTop: 10, paddingBottom: 10, maxWidth: 'calc(100% - 160px)', zIndex: 0 }}>
                 {this.props.progress !== undefined &&
                     <div style={{
+                        transition: 'width 0.2s',
                         background: `repeating-linear-gradient(
                                     45deg,
                                     #222,
@@ -314,9 +315,9 @@ class ContentItem extends React.PureComponent<{
                         marginLeft: -20,
                         marginRight: -20
                     }} />}
-                {poster && <FlexLayout style={{ justifyContent: 'center', alignItems: 'center', width: initialWidth, height: initialHeight }}>
+                <FlexLayout style={{ justifyContent: 'center', alignItems: 'center', width: this.props.playing ? 0 : initialWidth, height: initialHeight, transition: 'width 0.2s' }}>
                     {this.props.content.thumb && <img src={this.props.content.thumb.url} width={width} height={height} />}
-                </FlexLayout>}
+                </FlexLayout>
                 <FlexLayout style={{ flexGrow: 1, maxWidth: '100%', flexDirection: 'column' }} divider={0}>
                     <FlexLayout style={{ minHeight: 35 }}>
                         <span style={{ fontWeight: 500, WebkitLineClamp: 3, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', lineClamp: 3 }}>{htmlDecode(this.props.content.title)}</span>
