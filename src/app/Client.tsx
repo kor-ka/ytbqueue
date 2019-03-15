@@ -297,26 +297,25 @@ class ContentItem extends React.PureComponent<ContentItemProps>{
         }
         return (
             <FlexLayout style={{ flexDirection: 'row', marginLeft: 20, marginRight: 20, paddingTop: 10, paddingBottom: 10, maxWidth: 'calc(100% - 160px)', zIndex: 0 }}>
-                {this.props.progress !== undefined &&
-                    <div style={{
-                        transition: 'width 0.2s',
-                        background: `repeating-linear-gradient(
+                <div style={{
+                    transition: 'width 0.2s',
+                    background: `repeating-linear-gradient(
                                     45deg,
                                     #222,
                                     #222 10px,
                                     #000 10px,
                                     #000 20px
                                 )`,
-                        position: 'absolute',
-                        width: 100 * this.props.progress + '%',
-                        height: '100%',
-                        zIndex: -1,
-                        marginTop: -10,
-                        marginLeft: -20,
-                        marginRight: -20
-                    }} />}
-                <FlexLayout style={{ justifyContent: 'center', alignItems: 'center', width: this.props.playing ? 0 : initialWidth, height: initialHeight, transition: 'width 0.2s' }}>
-                    {this.props.content.thumb && <img src={this.props.content.thumb.url} width={width} height={height} />}
+                    position: 'absolute',
+                    width: 100 * (this.props.progress || 0) + '%',
+                    height: '100%',
+                    zIndex: -1,
+                    marginTop: -10,
+                    marginLeft: -20,
+                    marginRight: -20
+                }} />
+                <FlexLayout style={{ margin: this.props.playing ? 0 : undefined, justifyContent: 'center', alignItems: 'center', width: this.props.playing ? 0 : initialWidth, height: initialHeight, transition: 'width 0.2s' }}>
+                    {this.props.content.thumb && <img src={this.props.content.thumb.url} width={this.props.playing ? 0 : width} height={height} />}
                 </FlexLayout>
                 <FlexLayout style={{ flexGrow: 1, maxWidth: '100%', flexDirection: 'column' }} divider={0}>
                     <FlexLayout style={{ minHeight: 35 }}>
