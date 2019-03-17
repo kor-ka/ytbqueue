@@ -107,6 +107,7 @@ class PlayingContent extends React.PureComponent<{ session: QueueSession, playin
         });
         return (
             <FlexLayout style={{ position: 'relative' }}>
+                <div style={{ position: 'absolute', backgroundColor: 'black', height: 85, bottom: -85, width: '100%' }} />
 
                 <Player height={200} id={this.props.playing.id} />
                 {/* <FlexLayout style={{ position: 'absolute', flexDirection: 'row', left: 20, bottom: 20, backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 20 }}>
@@ -119,12 +120,22 @@ class PlayingContent extends React.PureComponent<{ session: QueueSession, playin
     }
 }
 
+
+interface Animation {
+    from: Partial<CSSStyleDeclaration>;
+    to: Partial<CSSStyleDeclaration>;
+}
 export class Queue extends React.PureComponent<{ queue: QueueContentLocal[], session: QueueSession }> {
+
+    leaveAnimation: Animation = {
+        from: { transform: 'translate(0, 0)', opacity: '1' },
+        to: { transform: 'translate(0, -100%)', opacity: '0' },
+    }
     render() {
         console.warn('queue render');
         return (
             <FlexLayout divider={0} style={{ flexGrow: 1, flexDirection: 'column' }}>
-                <FlipMove leaveAnimation="fade">
+                <FlipMove leaveAnimation={this.leaveAnimation}>
                     {this.props.queue.map(c => <QueueItem key={c.queueId} content={c} session={this.props.session} />)}
                 </FlipMove>
 
@@ -175,13 +186,16 @@ class QueueItem extends React.PureComponent<{ content: QueueContentLocal, sessio
         let color = colors[Math.abs(hashCode(userId)) % colors.length];
         let name = color.name + ' ' + geners[Math.abs(hashCode(userId)) % geners.length] + (isYou ? ' (You)' : '');
         return (
-            <FlexLayout style={{ position: 'relative', flexDirection: 'row', backgroundColor: this.props.content.playing ? 'black' : undefined, color: this.props.content.playing ? 'white' : undefined }}>
-                <ContentItem content={this.props.content} playing={this.props.content.playing} progress={this.props.content.progress} subtitle={name} subtitleColor={color.color} />
-                <FlexLayout style={{ flexDirection: 'column', zIndex: 100, position: 'absolute', top: 4, right: 0 }} divider={4}>
-                    {!this.props.content.historical && <Button onClick={this.onVoteUp} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><span style={{ color: meUp ? 'green' : 'black', marginTop: 1 }}>{ups ? ups : ''}</span>🤘</Button>}
-                    {!this.props.content.canSkip && <Button onClick={this.onVoteDown} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><span style={{ color: meDown ? 'red' : 'black', marginTop: 1 }}>{downs ? downs : ''}</span>👎</Button>}
-                    {this.props.content.canSkip && <Button onClick={this.onSkip} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}>⏭</Button>}
-                </FlexLayout>
+            <FlexLayout id={this.props.content.queueId} style={{ position: 'relative', flexDirection: 'row' }}>
+                <div style={{ flexGrow: 1, color: this.props.content.playing ? 'white' : undefined, transition: 'background-color 0.5s, color 0.5s' }}>
+                    <ContentItem content={this.props.content} playing={this.props.content.playing} progress={this.props.content.progress} subtitle={name} subtitleColor={color.color} />
+                    <FlexLayout style={{ flexDirection: 'column', zIndex: 100, position: 'absolute', top: 4, right: 0 }} divider={4}>
+                        {!this.props.content.historical && <Button onClick={this.onVoteUp} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><span style={{ color: meUp ? 'green' : 'black', marginTop: 1 }}>{ups ? ups : ''}</span>🤘</Button>}
+                        {!this.props.content.canSkip && <Button onClick={this.onVoteDown} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><span style={{ color: meDown ? 'red' : 'black', marginTop: 1 }}>{downs ? downs : ''}</span>👎</Button>}
+                        {this.props.content.canSkip && <Button onClick={this.onSkip} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}>⏭</Button>}
+                    </FlexLayout>
+                </div>
+
             </FlexLayout>
         );
     }
@@ -256,7 +270,7 @@ export class Searcher extends React.PureComponent<{ session: QueueSession, toQue
             <FlexLayout style={{ flexDirection: 'column', alignItems: 'stretch', height: '100%', overflowY: 'hidden', backgroundColor: '#F9F9F9' }}>
                 <FlexLayout style={{ flexDirection: 'row' }}>
                     <Button onClick={this.toQueue} style={{ width: 1, backgroundColor: 'transparent', position: 'absolute', marginTop: 16, marginLeft: 14, zIndex: 200 }}>👈</Button>
-                    <Input placeholder="search from some awesome music 😜" autoFocus={true} style={{ flexGrow: 1, flexShrink: 0, backgroundColor: '#fff', height: 40, borderRadius: 10, margin: 20, padding: 10, zIndex: 100, paddingLeft: 40 }} value={this.state.q} onChange={this.onInputChange} />
+                    <Input placeholder="search for some awesome music 😜" autoFocus={true} style={{ flexGrow: 1, flexShrink: 0, backgroundColor: '#fff', height: 40, borderRadius: 10, margin: 20, padding: 10, zIndex: 100, paddingLeft: 40 }} value={this.state.q} onChange={this.onInputChange} />
                 </FlexLayout>
                 <FlexLayout style={{ flexDirection: 'column', overflowY: 'scroll', flexGrow: 1, height: 1, marginTop: -80, paddingTop: 80 }}>
                     {this.state.q && this.state.results.map(r => (
@@ -314,8 +328,8 @@ class ContentItem extends React.PureComponent<ContentItemProps>{
                     marginLeft: -20,
                     marginRight: -20
                 }} />
-                <FlexLayout style={{ margin: this.props.playing ? 0 : undefined, justifyContent: 'center', alignItems: 'center', width: this.props.playing ? 0 : initialWidth, height: initialHeight, transition: 'width 0.2s' }}>
-                    {this.props.content.thumb && <img src={this.props.content.thumb.url} width={this.props.playing ? 0 : width} height={height} />}
+                <FlexLayout style={{}}>
+                    {this.props.content.thumb && <img src={this.props.content.thumb.url} width={this.props.playing ? 0 : width} height={height} style={{ margin: this.props.playing ? 0 : undefined, justifyContent: 'center', alignItems: 'center', transition: 'width 0.2s' }} />}
                 </FlexLayout>
                 <FlexLayout style={{ flexGrow: 1, maxWidth: '100%', flexDirection: 'column' }} divider={0}>
                     <FlexLayout style={{ minHeight: 35 }}>
