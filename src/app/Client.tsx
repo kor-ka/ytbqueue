@@ -323,15 +323,15 @@ class ContentItem extends React.PureComponent<ContentItemProps>{
                     position: 'absolute',
                     width: 100 * (this.props.progress || 0) + '%',
                     height: '100%',
-                    zIndex: -1,
+                    zIndex: 0,
                     marginTop: -10,
                     marginLeft: -20,
                     marginRight: -20
                 }} />
-                <FlexLayout style={{}}>
+                <FlexLayout style={{ zIndex: 1 }}>
                     {this.props.content.thumb && <img src={this.props.content.thumb.url} width={this.props.playing ? 0 : width} height={height} style={{ margin: this.props.playing ? 0 : undefined, justifyContent: 'center', alignItems: 'center', transition: 'width 0.2s' }} />}
                 </FlexLayout>
-                <FlexLayout style={{ flexGrow: 1, maxWidth: '100%', flexDirection: 'column' }} divider={0}>
+                <FlexLayout style={{ flexGrow: 1, zIndex: 1, maxWidth: '100%', flexDirection: 'column' }} divider={0}>
                     <FlexLayout style={{ minHeight: 35 }}>
                         <span style={{ fontWeight: 500, WebkitLineClamp: 3, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', lineClamp: 3 }}>{htmlDecode(this.props.content.title)}</span>
                     </FlexLayout>
