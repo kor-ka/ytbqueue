@@ -172,7 +172,7 @@ export class Queue extends React.PureComponent<{ queue: QueueContentLocal[], ses
     }
 }
 
-let geners = ['Rock', 'Alternative', 'Classical', 'Jazz', 'Blues', 'Hip-Hop', 'Dance', 'Folk', 'Soul', 'Country', 'Pop', 'Grunge', 'Reggae', 'New Wave', 'Hardcore', 'Opera', 'House', 'Techno', 'Drum and Bass', 'Disco', 'Ambient',]
+let geners = ['Rock', 'Alternative', 'Classical', 'Jazz', 'Blues', 'Hip-Hop', 'Dance', 'Folk', 'Soul', 'Country', 'Pop', 'Grunge', 'Reggae', 'New Wave', 'Hardcore', 'Opera', 'House', 'Techno', 'Disco', 'Ambient',]
 let colors = [
     { name: 'Blue', color: '#0074D9' },
     { name: 'Green', color: '#2ECC40' },
@@ -218,8 +218,8 @@ class QueueItem extends React.PureComponent<{ content: QueueContentLocal, sessio
                 <div style={{ flexGrow: 1, color: this.props.content.playing ? 'white' : undefined, transition: 'background-color 0.5s, color 0.5s' }}>
                     <ContentItem content={this.props.content} playing={this.props.content.playing} progress={this.props.content.progress} subtitle={name} subtitleColor={color.color} />
                     <FlexLayout style={{ flexDirection: 'column', zIndex: 100, position: 'absolute', top: 4, right: 0 }} divider={4}>
-                        {!this.props.content.historical && <Button onClick={this.onVoteUp} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><span style={{ color: meUp ? 'green' : 'black', marginTop: 1 }}>{ups ? ups : ''}</span>🤘</Button>}
-                        {!this.props.content.canSkip && <Button onClick={this.onVoteDown} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><span style={{ color: meDown ? 'red' : 'black', marginTop: 1 }}>{downs ? downs : ''}</span>👎</Button>}
+                        {!this.props.content.historical && <Button onClick={this.onVoteUp} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><span style={{ color: meUp ? 'green' : this.props.content.playing ? 'white' : 'black', transition: 'color 0.2s', marginTop: 1 }}>{ups ? ups : ''}</span>🤘</Button>}
+                        {!this.props.content.canSkip && <Button onClick={this.onVoteDown} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><span style={{ color: meDown ? 'red' : this.props.content.playing ? 'white' : 'black', transition: 'color 0.2s', marginTop: 1 }}>{downs ? downs : ''}</span>👎</Button>}
                         {this.props.content.canSkip && <Button onClick={this.onSkip} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}>⏭</Button>}
                     </FlexLayout>
                 </div>
