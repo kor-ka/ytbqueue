@@ -26,7 +26,7 @@ class IoWrapper {
             let m = JSON.stringify({ events: event, session: this.session });
             if (global) {
                 for (let e of sessionEmitters.get(this.session).values()) {
-                    console.warn('emiting[g] to ', this.io.id, m);
+                    console.warn('emiting[g] to ', e.io.id, m);
                     e.io.emit('event', m);
                 }
             }
