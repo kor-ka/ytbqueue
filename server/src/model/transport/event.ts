@@ -1,4 +1,4 @@
-import { User, Content, QueueContent as QueueContent } from "./entity";
+import { User, Content, QueueContent as QueueContent } from "../entity";
 import { Message } from "./message";
 import { Server } from "socket.io";
 

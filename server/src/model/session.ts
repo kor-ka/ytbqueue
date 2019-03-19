@@ -1,9 +1,9 @@
-import { redisGet, transaction, redisSet, rediszadd, redishset, redishsetobj, redisztop, redishgetall, rediszrange, rediszrem, redishget, rediszincr, rediszscore, redishdel, rediszcard, rediszrangebyscore, rediszexists } from "./redisUtil";
-import { hashCode } from "./utils";
+import { redisGet, transaction, redisSet, rediszadd, redishset, redishsetobj, redisztop, redishgetall, rediszrange, rediszrem, redishget, rediszincr, rediszscore, redishdel, rediszcard, rediszrangebyscore, rediszexists } from "../redisUtil";
+import { hashCode } from "../utils";
 import { Server } from "socket.io";
-import { Message, Next, Add, Init, Vote, Skip, Progress } from "./model/message";
-import { IoWrapper, InitQueue, Event, IoBatch } from "./model/event";
-import { QueueContent, QueueContentStored, Content, User as IUser } from "./model/entity";
+import { Message, Next, Add, Init, Vote, Skip, Progress } from "../model/transport/message";
+import { IoWrapper, InitQueue, Event, IoBatch } from "../model/transport/event";
+import { QueueContent, QueueContentStored, Content, User as IUser } from "../model/entity";
 import { User } from "./user";
 
 let scoreShift = 4000000000000000;
@@ -56,39 +56,37 @@ export let getTokenFroSession = (id: string) => {
     });
 }
 
-export let handleMessage = async (io: IoWrapper, message: Message) => {
-    let validToken = (await getTokenFroSession(message.session.id)).token;
-    let isHost = message.session.token === validToken;
-    let batch = io.batch();
+export let handleMessage = async (batch: IoBatch, message: Message) => {
     try {
         if (message.type === 'add') {
             await handleAdd(batch, message);
         } else if (message.type === 'next') {
-            await handleNext(batch, message, isHost);
+            await handleNext(batch, message);
         } else if (message.type === 'init') {
-            await handleInit(batch, message, isHost);
+            await handleInit(batch, message);
         } else if (message.type === 'vote') {
-            await handleVote(batch, message, isHost);
+            await handleVote(batch, message);
         } else if (message.type === 'skip') {
-            await handleSkip(batch, message, isHost);
+            await handleSkip(batch, message);
         } else if (message.type === 'progress') {
-            await handleProgress(batch, message, isHost);
+            await handleProgress(batch, message);
         }
-        batch.commit();
 
     } catch (e) {
-        io.emit({ type: 'error', message: e.message, source: message });
+        batch.emit({ type: 'error', message: e.message, source: message });
+        return true;
+
     }
-
+    return false;
 }
 
 
-let handleInit = async (io: IoBatch, message: Init, host: boolean) => {
+let handleInit = async (io: IoBatch, message: Init) => {
     await checkQueue(io, message);
-    await sendInit(io, message, host);
+    await sendInit(io, message);
 }
 
-let sendInit = async (io: IoBatch, message: Init, host: boolean, forceGlobal?: boolean) => {
+let sendInit = async (io: IoBatch, message: Init, forceGlobal?: boolean) => {
     let playingId = await redisGet('queue-playing-' + message.session.id);
     let playing: QueueContent;
     if (playingId) {
@@ -205,7 +203,7 @@ let checkQueue = async (io: IoBatch, source: Message) => {
 }
 
 
-let handleVote = async (io: IoBatch, message: Vote, host: boolean) => {
+let handleVote = async (io: IoBatch, message: Vote) => {
     if (message.queueId.endsWith('-h')) {
         return;
     }
@@ -237,7 +235,7 @@ let handleVote = async (io: IoBatch, message: Vote, host: boolean) => {
     await io.emit({ type: 'UpdateQueueContent', queueId: message.queueId, content: await resolveQueueEntry(message.queueId, message.session.id) }, true);
 }
 
-let handleSkip = async (io: IoBatch, message: Skip, host: boolean) => {
+let handleSkip = async (io: IoBatch, message: Skip) => {
     let historical = message.queueId.endsWith('-h');
     let votes = await getVotes(message.queueId);
     let upds = votes.filter(v => v.up).length;
@@ -246,7 +244,7 @@ let handleSkip = async (io: IoBatch, message: Skip, host: boolean) => {
     if (downs > Math.max(1, upds) || historical) {
         let playingId = await redisGet('queue-playing-' + message.session.id);
         if (playingId === message.queueId) {
-            await (handleNext(io, { type: 'next', session: message.session, queueId: message.queueId, creds: message.creds }, true))
+            await (handleNext(io, { type: 'next', session: message.session, queueId: message.queueId, creds: message.creds }))
         } else {
             await rediszrem('queue-' + message.session.id, message.queueId);
             io.emit({ type: 'RemoveQueueContent', queueId: message.queueId }, true)
@@ -260,23 +258,16 @@ let handleSkip = async (io: IoBatch, message: Skip, host: boolean) => {
     await checkQueue(io, message);
 }
 
-let handleProgress = async (io: IoBatch, message: Progress, host: boolean) => {
-    if (!host) {
-        io.emit({ type: 'error', message: 'only host can fire progress', source: message })
-    }
+let handleProgress = async (io: IoBatch, message: Progress) => {
     redishset('queue-entry-' + message.queueId, 'progress', message.current / message.duration + '');
 
     await io.emit({ type: 'UpdateQueueContent', queueId: message.queueId, content: await resolveQueueEntry(message.queueId, message.session.id) }, true);
 }
 
-let handleNext = async (io: IoBatch, message: Next, host: boolean) => {
-    if (host) {
-        await redisSet('queue-playing-' + message.session.id, null);
-        await rediszrem('queue-' + message.session.id, message.queueId);
-        io.emit({ type: 'RemoveQueueContent', queueId: message.queueId }, true)
-    } else {
-        io.emit({ type: 'error', message: 'only host can fire next', source: message })
-    }
+let handleNext = async (io: IoBatch, message: Next) => {
+    await redisSet('queue-playing-' + message.session.id, null);
+    await rediszrem('queue-' + message.session.id, message.queueId);
+    io.emit({ type: 'RemoveQueueContent', queueId: message.queueId }, true)
     await checkQueue(io, message);
 }
 
@@ -321,6 +312,6 @@ let resolveQueueEntry = async (queueId: string, sessionId: string) => {
 }
 
 
-// let handle = async (io: IoWrapper, message: Message, host: boolean) => {
+// let handle = async (io: IoWrapper, message: Message) => {
 
 // }

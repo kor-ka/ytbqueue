@@ -2,17 +2,18 @@ import * as express from 'express';
 import * as bodyParser from 'body-parser';
 import * as cookieParser from 'cookie-parser';
 import * as cors from 'cors';
-import { pickSession, getTokenFroSession, handleMessage, pickId } from './src/session';
+import { pickSession, getTokenFroSession, handleMessage, pickId } from './src/model/session';
 var path = require('path');
 const PORT = process.env.PORT || 5000
 import { createServer, Server } from 'http';
 import * as socketIo from 'socket.io';
-import { Message } from './src/model/message';
-import { IoWrapper } from './src/model/event';
 import { SocketListener } from './src/model/transport/SocketListener';
-import { User } from './src/user';
+import { User } from './src/model/user';
+import * as MobileDetect from 'mobile-detect';
+import { setHostFlag } from './src/model/hostRace';
 
 const notSoSoon = new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365 * 1000);
+
 //
 // Configure http
 //
@@ -43,16 +44,28 @@ app
   .use(express.static(path.resolve(__dirname + '/../../public')))
   .use("/build", express.static(__dirname + '/../../public/build'))
   .get('/:id', async (req, res) => {
-    // authorize first host session
     let sessionId = req.params.id.toUpperCase();
     let token = await getTokenFroSession(sessionId);
-    if (token.new) {
+    //// authorize first session as host
+    // if (token.new) {
+    //// authorize non mobile as host
+    let md = new MobileDetect(req.headers['user-agent'] as string);
+
+    if (!md.mobile()) {
       res.cookie('azaza_app_host_' + sessionId, token.token, { expires: notSoSoon });
     }
     // authorize client if not
+    let uid;
     if (!req.cookies.azaza_app_client) {
       let u = await User.getNewUser();
       res.cookie('azaza_app_client', u.id + '-' + u.token, { expires: notSoSoon });
+      uid = u.id;
+    } else {
+      uid = req.cookies.azaza_app_client.split('-')[0];
+    }
+
+    if (token.new) {
+      setHostFlag(sessionId, uid)
     }
 
     res.sendFile(path.resolve(__dirname + '/../../public/index.html'));

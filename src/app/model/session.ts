@@ -3,8 +3,8 @@ import * as socketIo from 'socket.io-client';
 export const endpoint = window.location.hostname.indexOf('localhost') >= 0 ? 'http://localhost:5000' : '';
 
 import { QueueContent, Content, UserCreds } from './../../../server/src/model/entity'
-import { Event, InitQueue, AddQueueContent, RemoveQueueContent, Playing, UpdateQueueContent } from './../../../server/src/model/event'
-import { Message } from './../../../server/src/model/message'
+import { Event, InitQueue, AddQueueContent, RemoveQueueContent, Playing, UpdateQueueContent } from './../../../server/src/model/transport/event'
+import { Message } from './../../../server/src/model/transport/message'
 import * as Cookie from 'js-cookie';
 
 class Emitter {
@@ -49,6 +49,16 @@ export class QueueSession {
         this.io = new Emitter(socket, { id: this.id, token }, { id: this.clientId, token: clientToken });
         socket.on('connect', () => this.io.emit({ type: 'init' }));
 
+        if (!!token) {
+            this.ping();
+        }
+    }
+
+    ping = () => {
+        window.setTimeout(() => {
+            this.ping();
+            this.io.emit({ type: 'hostPing' })
+        }, 1000)
     }
 
     //

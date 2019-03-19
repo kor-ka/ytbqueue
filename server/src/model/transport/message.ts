@@ -1,4 +1,4 @@
-import { Content, UserCreds } from "./entity";
+import { Content, UserCreds } from "../entity";
 
 interface IMessage {
     session?: { id: string, token: string };
@@ -9,6 +9,8 @@ interface IMessage {
 export type Message =
     // session
     Init | Next | Add | Vote | Skip | Promote | Progress
+    // host race
+    | HostPing
     // user
     | SetName;
 
@@ -49,6 +51,10 @@ export interface Progress extends IMessage {
     queueId: string;
     current: number;
     duration: number;
+}
+
+export interface HostPing extends IMessage {
+    type: 'hostPing';
 }
 
 //user

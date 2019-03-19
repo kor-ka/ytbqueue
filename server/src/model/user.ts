@@ -1,8 +1,8 @@
-import { rediszincr, redisincr, redishsetobj, redishset, redishget, redishgetall } from "./redisUtil";
+import { rediszincr, redisincr, redishsetobj, redishset, redishget, redishgetall } from "../redisUtil";
 import { pickId } from "./session";
-import { User as IUser } from "./model/entity";
-import { IoWrapper } from "./model/event";
-import { Message } from "./model/message";
+import { User as IUser } from "../model/entity";
+import { IoWrapper, IoBatch } from "../model/transport/event";
+import { Message } from "../model/transport/message";
 
 export class User {
     static getNewUser = async () => {
@@ -27,15 +27,17 @@ export class User {
     }
 }
 
-export let handleMessageUser = async (io: IoWrapper, message: Message) => {
+export let handleMessageUser = async (io: IoBatch, message: Message) => {
     let authorized = message.creds && await User.checkToken(message.creds.id, message.creds.token);
     if (!authorized) {
         io.emit({ type: 'error', message: 'not authorized', source: message });
-        return;
+        return true;
     }
 
     if (message.type === 'setName') {
         await User.setName(message.id, message.name)
         // todo: notify all name updated
     }
+
+    return false;
 }

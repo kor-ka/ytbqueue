@@ -8,9 +8,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const event_1 = require("../event");
-const session_1 = require("../../../src/session");
-const user_1 = require("../../../src/user");
+const event_1 = require("../transport/event");
+const session_1 = require("../../../src/model/session");
+const hostRace_1 = require("../../../src/model/hostRace");
+const user_1 = require("../../../src/model/user");
 class SocketListener {
     constructor(socket) {
         this.dispose = () => {
@@ -28,10 +29,19 @@ class SocketListener {
                 message.session.id = message.session.id.toUpperCase();
             }
             wrapper.bindSession(message.session.id);
+            let batch = wrapper.batch();
             // todo: validate message
-            // check token
-            yield session_1.handleMessage(wrapper, message);
-            yield user_1.handleMessageUser(wrapper, message);
+            let handlers = [];
+            handlers.push(hostRace_1.handleMessage);
+            handlers.push(session_1.handleMessage);
+            handlers.push(user_1.handleMessageUser);
+            for (let h of handlers) {
+                let stop = yield h(batch, message);
+                if (stop) {
+                    break;
+                }
+            }
+            batch.commit();
         }));
     }
 }

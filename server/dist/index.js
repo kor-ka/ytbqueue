@@ -11,13 +11,15 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express = require("express");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
-const session_1 = require("./src/session");
+const session_1 = require("./src/model/session");
 var path = require('path');
 const PORT = process.env.PORT || 5000;
 const http_1 = require("http");
 const socketIo = require("socket.io");
 const SocketListener_1 = require("./src/model/transport/SocketListener");
-const user_1 = require("./src/user");
+const user_1 = require("./src/model/user");
+const MobileDetect = require("mobile-detect");
+const hostRace_1 = require("./src/model/hostRace");
 const notSoSoon = new Date(new Date().getTime() + 1000 * 60 * 60 * 24 * 365 * 1000);
 //
 // Configure http
@@ -47,16 +49,27 @@ app
     .use(express.static(path.resolve(__dirname + '/../../public')))
     .use("/build", express.static(__dirname + '/../../public/build'))
     .get('/:id', (req, res) => __awaiter(this, void 0, void 0, function* () {
-    // authorize first host session
     let sessionId = req.params.id.toUpperCase();
     let token = yield session_1.getTokenFroSession(sessionId);
-    if (token.new) {
+    //// authorize first session as host
+    // if (token.new) {
+    //// authorize non mobile as host
+    let md = new MobileDetect(req.headers['user-agent']);
+    if (!md.mobile()) {
         res.cookie('azaza_app_host_' + sessionId, token.token, { expires: notSoSoon });
     }
     // authorize client if not
+    let uid;
     if (!req.cookies.azaza_app_client) {
         let u = yield user_1.User.getNewUser();
         res.cookie('azaza_app_client', u.id + '-' + u.token, { expires: notSoSoon });
+        uid = u.id;
+    }
+    else {
+        uid = req.cookies.azaza_app_client.split('-')[0];
+    }
+    if (token.new) {
+        hostRace_1.setHostFlag(sessionId, uid);
     }
     res.sendFile(path.resolve(__dirname + '/../../public/index.html'));
 }));
