@@ -1,4 +1,5 @@
 import * as React from "react";
+import * as ReactDOM from "react-dom";
 import { QueueSession, QueueContentLocal } from "./model/session";
 import { QueueContent, Content } from "../../server/src/model/entity";
 import { FlexLayout, Input, Button } from "./ui/ui";
@@ -107,7 +108,6 @@ class PlayingContent extends React.PureComponent<{ session: QueueSession, playin
         });
         return (
             <FlexLayout style={{ position: 'relative' }}>
-                <div style={{ position: 'absolute', backgroundColor: 'black', height: 85, bottom: -85, width: '100%' }} />
 
                 <Player height={200} id={this.props.playing.id} />
                 {/* <FlexLayout style={{ position: 'absolute', flexDirection: 'row', left: 20, bottom: 20, backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 20 }}>
@@ -127,16 +127,44 @@ interface Animation {
 }
 export class Queue extends React.PureComponent<{ queue: QueueContentLocal[], session: QueueSession }> {
 
+    playingRef = React.createRef<QueueItem>();
+    playingBackground = React.createRef<HTMLDivElement>();
+
     leaveAnimation: Animation = {
         from: { transform: 'translate(0, 0)', opacity: '1' },
         to: { transform: 'translate(0, -100%)', opacity: '0' },
     }
+
+    componentDidMount() {
+        this.resizePlayingBackground()
+    }
+
+    componentDidUpdate() {
+        this.resizePlayingBackground()
+    }
+
+    resizePlayingBackground = () => {
+        if (this.playingRef.current && this.playingBackground.current) {
+            // this.playingBackground.current.style.height = this.playingRef.current.
+            let playingDiv = ReactDOM.findDOMNode(this.playingRef.current);
+            let playingBackDiv = ReactDOM.findDOMNode(this.playingBackground.current);
+            if (playingDiv && playingBackDiv) {
+                let height = playingDiv.getBoundingClientRect().height;
+                console.warn(height, (playingBackDiv as any).style!);
+                (playingBackDiv as any).style!.height = height;
+            }
+        }
+    }
+
+
     render() {
         console.warn('queue render');
         return (
-            <FlexLayout divider={0} style={{ flexGrow: 1, flexDirection: 'column' }}>
+            <FlexLayout divider={0} style={{ flexGrow: 1, position: 'relative', flexDirection: 'column' }}>
+                <div ref={this.playingBackground} style={{ position: 'absolute', backgroundColor: 'black', top: 0, width: '100%', transition: 'height 0.3s' }} />
+
                 <FlipMove leaveAnimation={this.leaveAnimation}>
-                    {this.props.queue.map(c => <QueueItem key={c.queueId} content={c} session={this.props.session} />)}
+                    {this.props.queue.map(c => <QueueItem innerRef={c.playing ? this.playingRef : undefined} key={c.queueId} content={c} session={this.props.session} />)}
                 </FlipMove>
 
             </FlexLayout>
@@ -156,7 +184,7 @@ let colors = [
     { name: 'Yellow', color: '#FFDC00' },
     { name: 'Olive', color: '#3D9970' },
 ]
-class QueueItem extends React.PureComponent<{ content: QueueContentLocal, session: QueueSession, }>{
+class QueueItem extends React.PureComponent<{ content: QueueContentLocal, session: QueueSession, innerRef?: any }>{
     onVoteUp = () => {
         this.props.session.vote(this.props.content.queueId, true);
     }
@@ -186,7 +214,7 @@ class QueueItem extends React.PureComponent<{ content: QueueContentLocal, sessio
         let color = colors[Math.abs(hashCode(userId)) % colors.length];
         let name = color.name + ' ' + geners[Math.abs(hashCode(userId)) % geners.length] + (isYou ? ' (You)' : '');
         return (
-            <FlexLayout id={this.props.content.queueId} style={{ position: 'relative', flexDirection: 'row' }}>
+            <FlexLayout innerRef={this.props.innerRef} id={this.props.content.queueId} style={{ position: 'relative', flexDirection: 'row' }}>
                 <div style={{ flexGrow: 1, color: this.props.content.playing ? 'white' : undefined, transition: 'background-color 0.5s, color 0.5s' }}>
                     <ContentItem content={this.props.content} playing={this.props.content.playing} progress={this.props.content.progress} subtitle={name} subtitleColor={color.color} />
                     <FlexLayout style={{ flexDirection: 'column', zIndex: 100, position: 'absolute', top: 4, right: 0 }} divider={4}>
