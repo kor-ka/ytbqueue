@@ -58,7 +58,7 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
                     </div>
                 )}
 
-                {this.state.playing && <Player key={this.state.playing.queueId} onEnd={this.onEnd} onProgress={this.onProgress} id={this.state.playing.id} autoplay={true} width="100%" height="100%" />}
+                {this.state.playing && <Player key={this.state.playing.queueId} onEnd={this.onEnd} current={this.state.playing ? this.state.playing.current : undefined} onProgress={this.onProgress} id={this.state.playing.id} autoplay={true} width="100%" height="100%" />}
                 {!this.state.playing && (
                     <FlexLayout style={{ height: '100%', flex: 1, fontSize: '8vmin', alignSelf: 'stretch', opacity: 0.8, color: '#fff', fontWeight: 900, alignItems: 'center', justifyContent: 'center', textAlign: 'center' }} >
                         < Twemoji >{(this.state.q && this.state.q.inited) ? (this.state.q.queue.length === 0 ? 'Open this 👇 link on your phone' : '') : 'Connecting... 🙌'}</Twemoji>
@@ -105,7 +105,7 @@ class WaterMark extends React.PureComponent<{ sessionId: string }, { hidden?: bo
     }
 }
 
-export class Player extends React.PureComponent<{ id: string, width?: number | string, height?: number | string, onEnd?: () => void, onProgress?: (current: number, durarion: number) => void, autoplay?: boolean, mute?: boolean }, { width: number | string, height: number | string }>{
+export class Player extends React.PureComponent<{ id: string, current?: number, width?: number | string, height?: number | string, onEnd?: () => void, onProgress?: (current: number, durarion: number) => void, autoplay?: boolean, mute?: boolean }, { width: number | string, height: number | string }>{
     constructor(props: any) {
         super(props);
         this.state = { width: 1, height: 2 };
@@ -130,15 +130,15 @@ export class Player extends React.PureComponent<{ id: string, width?: number | s
     _onReady = (event) => {
         // access to player in all event handlers via event.target
         if (this.props.autoplay) {
+            if (this.props.current) {
+                event.target.seekTo(this.props.current);
+            }
             event.target.playVideo();
         }
     }
     onChange = (event: { target: { getCurrentTime: () => any, seekTo: (time: number) => void }, data: number }) => {
         console.warn(event);
         this.playerInner = event.target;
-        // if (this.time > event.target.getCurrentTime()) {
-        //     event.target.seekTo(this.time);
-        // }
         this.checkTime();
     }
     checkTime = () => {

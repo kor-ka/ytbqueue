@@ -242,7 +242,9 @@ let handleSkip = (io, message) => __awaiter(this, void 0, void 0, function* () {
     yield checkQueue(io, message);
 });
 let handleProgress = (io, message) => __awaiter(this, void 0, void 0, function* () {
-    redisUtil_1.redishset('queue-entry-' + message.queueId, 'progress', message.current / message.duration + '');
+    yield redisUtil_1.redishset('queue-entry-' + message.queueId, 'progress', message.current / message.duration + '');
+    yield redisUtil_1.redishset('queue-entry-' + message.queueId, 'current', message.current + '');
+    yield redisUtil_1.redishset('queue-entry-' + message.queueId, 'duration', message.duration + '');
     yield io.emit({ type: 'UpdateQueueContent', queueId: message.queueId, content: yield resolveQueueEntry(message.queueId, message.session.id) }, true);
 });
 let handleNext = (io, message) => __awaiter(this, void 0, void 0, function* () {
@@ -272,16 +274,10 @@ let resolveQueueEntry = (queueId, sessionId) => __awaiter(this, void 0, void 0, 
     let upds = votes.filter(v => v.up).length;
     let downs = votes.filter(v => !v.up).length;
     let score = yield redisUtil_1.rediszscore('queue-' + sessionId, queueId);
-    let progress;
-    if (entry.progress) {
-        try {
-            progress = Number.parseFloat(entry.progress);
-        }
-        catch (e) {
-            console.warn(e);
-        }
-    }
-    let res = Object.assign({}, content, { user: yield user_1.User.getUser(entry.userId), score: score - scoreShift, queueId, historical, canSkip: downs > Math.max(1, upds) || historical, votes, progress });
+    let progress = entry.progress ? Number.parseFloat(entry.progress) || 0 : 0;
+    let current = entry.current ? Number.parseFloat(entry.current) || 0 : 0;
+    let duration = entry.duration ? Number.parseFloat(entry.duration) || 0 : 0;
+    let res = Object.assign({}, content, { user: yield user_1.User.getUser(entry.userId), score: score - scoreShift, queueId, historical, canSkip: downs > Math.max(1, upds) || historical, votes, progress, current, duration });
     return res;
 });
 // let handle = async (io: IoWrapper, message: Message) => {

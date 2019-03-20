@@ -23,6 +23,8 @@ export interface QueueContent extends Content {
     canSkip?: boolean;
     votes: { user: User, up: boolean }[]
     progress?: number;
+    current?: number;
+    duration?: number;
 }
 
 export interface QueueContentStored {
@@ -30,4 +32,6 @@ export interface QueueContentStored {
     queueId: string;
     contentId: string;
     progress?: string;
+    current?: string;
+    duration?: string;
 }

@@ -259,7 +259,9 @@ let handleSkip = async (io: IoBatch, message: Skip) => {
 }
 
 let handleProgress = async (io: IoBatch, message: Progress) => {
-    redishset('queue-entry-' + message.queueId, 'progress', message.current / message.duration + '');
+    await redishset('queue-entry-' + message.queueId, 'progress', message.current / message.duration + '');
+    await redishset('queue-entry-' + message.queueId, 'current', message.current + '');
+    await redishset('queue-entry-' + message.queueId, 'duration', message.duration + '');
 
     await io.emit({ type: 'UpdateQueueContent', queueId: message.queueId, content: await resolveQueueEntry(message.queueId, message.session.id) }, true);
 }
@@ -298,16 +300,11 @@ let resolveQueueEntry = async (queueId: string, sessionId: string) => {
     let downs = votes.filter(v => !v.up).length;
 
     let score = await rediszscore('queue-' + sessionId, queueId);
-    let progress;
-    if (entry.progress) {
-        try {
-            progress = Number.parseFloat(entry.progress);
-        } catch (e) {
-            console.warn(e);
-        }
-    }
+    let progress = entry.progress ? Number.parseFloat(entry.progress) || 0 : 0;
+    let current = entry.current ? Number.parseFloat(entry.current) || 0 : 0;
+    let duration = entry.duration ? Number.parseFloat(entry.duration) || 0 : 0;
 
-    let res: QueueContent = { ...content, user: await User.getUser(entry.userId), score: score - scoreShift, queueId, historical, canSkip: downs > Math.max(1, upds) || historical, votes, progress }
+    let res: QueueContent = { ...content, user: await User.getUser(entry.userId), score: score - scoreShift, queueId, historical, canSkip: downs > Math.max(1, upds) || historical, votes, progress, current, duration }
     return res;
 }
 
