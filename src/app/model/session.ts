@@ -81,6 +81,10 @@ export class QueueSession {
         await this.io.emit({ type: 'skip', queueId: qid });
     }
 
+    remove = async (qid: string) => {
+        await this.io.emit({ type: 'remove', queueId: qid });
+    }
+
     progress = async (qid: string, current: number, duration: number) => {
         await this.io.emit({ type: 'progress', queueId: qid, current, duration });
     }

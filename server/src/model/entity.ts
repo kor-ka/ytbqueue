@@ -21,6 +21,7 @@ export interface QueueContent extends Content {
     score: number;
     historical: boolean;
     canSkip?: boolean;
+    owner: User;
     votes: { user: User, up: boolean }[]
     progress?: number;
     current?: number;

@@ -73,6 +73,9 @@ exports.handleMessage = (batch, message) => __awaiter(this, void 0, void 0, func
         else if (message.type === 'skip') {
             yield handleSkip(batch, message);
         }
+        else if (message.type === 'remove') {
+            yield handleSkip(batch, message);
+        }
         else if (message.type === 'progress') {
             yield handleProgress(batch, message);
         }
@@ -127,7 +130,7 @@ let handleAdd = (io, message) => __awaiter(this, void 0, void 0, function* () {
     }
     yield redisUtil_1.rediszadd('queue-history-' + message.session.id, queueId, historyScore);
     // notify clients
-    let res = Object.assign({}, message.content, { user: yield user_1.User.getUser(message.creds.id), score: score - scoreShift, queueId, historical: false, votes: [] });
+    let res = yield resolveQueueEntry(queueId, message.session.id);
     io.emit({ type: 'AddQueueContent', content: res }, true);
     yield checkQueue(io, message);
 });
@@ -140,7 +143,7 @@ let handleAddHistorical = (io, sessionId, source) => __awaiter(this, void 0, voi
     let score = scoreShift / 2 - new Date().getTime();
     yield redisUtil_1.rediszadd('queue-' + sessionId, queueId, score);
     // notify clients
-    let res = Object.assign({}, source, { score: score - scoreShift, queueId, historical: true, canSkip: true });
+    let res = yield resolveQueueEntry(queueId, sessionId);
     io.emit({ type: 'AddQueueContent', content: res }, true);
 });
 let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
@@ -193,39 +196,44 @@ let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
     }
 });
 let handleVote = (io, message) => __awaiter(this, void 0, void 0, function* () {
-    if (message.queueId.endsWith('-h')) {
-        return;
-    }
+    let historical = message.queueId.includes('-h');
+    let origQueueId = message.queueId.replace('-h', '');
     let vote = message.up ? 'up' : 'down';
     let increment = vote === 'up' ? 1 : vote === 'down' ? -1 : 0;
     increment *= likeShift;
     // get old vote
-    let voteStored = yield redisUtil_1.redishget('queue-entry-vote-' + message.queueId, message.creds.id);
+    let voteStored = yield redisUtil_1.redishget('queue-entry-vote-' + origQueueId, message.creds.id);
     // save new vote
-    yield redisUtil_1.redishset('queue-entry-vote-' + message.queueId, message.creds.id, vote);
-    if (voteStored === vote) {
-        increment *= -1;
-        yield redisUtil_1.redishdel('queue-entry-vote-' + message.queueId, message.creds.id);
-    }
-    else if (voteStored) {
-        console.warn('stored -x2', voteStored);
-        // have saved vote and new is diffirent - x2 for reset and increment new
-        increment *= 2;
-    }
-    // do not change score for playing - it will return it to queue
-    let playingId = yield redisUtil_1.redisGet('queue-playing-' + message.session.id);
-    if (playingId !== message.queueId) {
-        yield redisUtil_1.rediszincr('queue-' + message.session.id, message.queueId, increment);
+    yield redisUtil_1.redishset('queue-entry-vote-' + origQueueId, message.creds.id, vote);
+    if (!historical) {
+        if (voteStored === vote) {
+            increment *= -1;
+            yield redisUtil_1.redishdel('queue-entry-vote-' + message.queueId, message.creds.id);
+        }
+        else if (voteStored) {
+            console.warn('stored -x2', voteStored);
+            // have saved vote and new is diffirent - x2 for reset and increment new
+            increment *= 2;
+        }
+        // do not change score for playing - it will return it to queue
+        let playingId = yield redisUtil_1.redisGet('queue-playing-' + message.session.id);
+        if (playingId !== message.queueId) {
+            yield redisUtil_1.rediszincr('queue-' + message.session.id, message.queueId, increment);
+        }
     }
     yield io.emit({ type: 'UpdateQueueContent', queueId: message.queueId, content: yield resolveQueueEntry(message.queueId, message.session.id) }, true);
 });
 let handleSkip = (io, message) => __awaiter(this, void 0, void 0, function* () {
     let historical = message.queueId.endsWith('-h');
-    let votes = yield getVotes(message.queueId);
+    let orgQueueId = message.queueId.replace('-h', '');
+    let owner = yield redisUtil_1.redishget('queue-entry-' + orgQueueId, 'userId');
+    if (message.type === 'remove' && owner !== message.creds.id) {
+        throw new Error('only owner can remove contnet from queue');
+    }
+    let votes = yield getVotes(orgQueueId);
     let upds = votes.filter(v => v.up).length;
     let downs = votes.filter(v => !v.up).length;
-    let score = yield redisUtil_1.rediszscore('queue-' + message.session.id, message.queueId);
-    if (downs > Math.max(1, upds) || historical) {
+    if (downs > Math.max(1, upds) || historical || message.type === 'remove') {
         let playingId = yield redisUtil_1.redisGet('queue-playing-' + message.session.id);
         if (playingId === message.queueId) {
             yield (handleNext(io, { type: 'next', session: message.session, queueId: message.queueId, creds: message.creds }));
@@ -235,8 +243,8 @@ let handleSkip = (io, message) => __awaiter(this, void 0, void 0, function* () {
             io.emit({ type: 'RemoveQueueContent', queueId: message.queueId }, true);
         }
         // if skipped by users choise - remove from history
-        if (!historical) {
-            yield redisUtil_1.rediszrem('queue-history-' + message.session.id, message.queueId.replace('-h', ''));
+        if (downs > Math.max(1, upds) || message.type === 'remove') {
+            yield redisUtil_1.rediszrem('queue-history-' + message.session.id, orgQueueId);
         }
     }
     yield checkQueue(io, message);
@@ -268,16 +276,19 @@ let getVotes = (queueId) => __awaiter(this, void 0, void 0, function* () {
 let resolveQueueEntry = (queueId, sessionId) => __awaiter(this, void 0, void 0, function* () {
     console.warn('resolveQueueEntry');
     let historical = queueId.endsWith('-h');
+    let orgQueueId = queueId.replace('-h', '');
     let entry = yield redisUtil_1.redishgetall('queue-entry-' + queueId);
     let content = yield redisUtil_1.redishgetall('content-' + entry.contentId);
-    let votes = yield getVotes(queueId);
+    let votes = yield getVotes(orgQueueId);
     let upds = votes.filter(v => v.up).length;
     let downs = votes.filter(v => !v.up).length;
+    let ownerId = yield redisUtil_1.redishget('queue-entry-' + orgQueueId, 'userId');
+    let owner = yield user_1.User.getUser(ownerId);
     let score = yield redisUtil_1.rediszscore('queue-' + sessionId, queueId);
     let progress = entry.progress ? Number.parseFloat(entry.progress) || 0 : 0;
     let current = entry.current ? Number.parseFloat(entry.current) || 0 : 0;
     let duration = entry.duration ? Number.parseFloat(entry.duration) || 0 : 0;
-    let res = Object.assign({}, content, { user: yield user_1.User.getUser(entry.userId), score: score - scoreShift, queueId, historical, canSkip: downs > Math.max(1, upds) || historical, votes, progress, current, duration });
+    let res = Object.assign({}, content, { user: yield user_1.User.getUser(entry.userId), score: score - scoreShift, queueId, historical, canSkip: downs > Math.max(1, upds) || historical, votes, progress, current, duration, owner });
     return res;
 });
 // let handle = async (io: IoWrapper, message: Message) => {

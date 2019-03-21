@@ -8,7 +8,7 @@ interface IMessage {
 
 export type Message =
     // session
-    Init | Next | Add | Vote | Skip | Promote | Progress
+    Init | Next | Add | Vote | Skip | Remove | Promote | Progress
     // host race
     | HostPing
     // user
@@ -37,6 +37,11 @@ export interface Vote extends IMessage {
 
 export interface Skip extends IMessage {
     type: 'skip';
+    queueId: string;
+}
+
+export interface Remove extends IMessage {
+    type: 'remove';
     queueId: string;
 }
 

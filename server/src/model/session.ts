@@ -1,7 +1,7 @@
 import { redisGet, transaction, redisSet, rediszadd, redishset, redishsetobj, redisztop, redishgetall, rediszrange, rediszrem, redishget, rediszincr, rediszscore, redishdel, rediszcard, rediszrangebyscore, rediszexists } from "../redisUtil";
 import { hashCode } from "../utils";
 import { Server } from "socket.io";
-import { Message, Next, Add, Init, Vote, Skip, Progress } from "../model/transport/message";
+import { Message, Next, Add, Init, Vote, Skip, Progress, Remove } from "../model/transport/message";
 import { IoWrapper, InitQueue, Event, IoBatch } from "../model/transport/event";
 import { QueueContent, QueueContentStored, Content, User as IUser } from "../model/entity";
 import { User } from "./user";
@@ -68,6 +68,8 @@ export let handleMessage = async (batch: IoBatch, message: Message) => {
             await handleVote(batch, message);
         } else if (message.type === 'skip') {
             await handleSkip(batch, message);
+        } else if (message.type === 'remove') {
+            await handleSkip(batch, message);
         } else if (message.type === 'progress') {
             await handleProgress(batch, message);
         }
@@ -131,7 +133,7 @@ let handleAdd = async (io: IoBatch, message: Add) => {
 
     await rediszadd('queue-history-' + message.session.id, queueId, historyScore);
     // notify clients
-    let res: QueueContent = { ...message.content, user: await User.getUser(message.creds.id), score: score - scoreShift, queueId, historical: false, votes: [] }
+    let res = await resolveQueueEntry(queueId, message.session.id);
     io.emit({ type: 'AddQueueContent', content: res }, true)
     await checkQueue(io, message);
 }
@@ -145,7 +147,7 @@ let handleAddHistorical = async (io: IoBatch, sessionId: string, source: QueueCo
     let score = scoreShift / 2 - new Date().getTime();
     await rediszadd('queue-' + sessionId, queueId, score);
     // notify clients
-    let res: QueueContent = { ...source, score: score - scoreShift, queueId, historical: true, canSkip: true }
+    let res = await resolveQueueEntry(queueId, sessionId);
     io.emit({ type: 'AddQueueContent', content: res }, true)
 }
 
@@ -237,13 +239,19 @@ let handleVote = async (io: IoBatch, message: Vote) => {
     await io.emit({ type: 'UpdateQueueContent', queueId: message.queueId, content: await resolveQueueEntry(message.queueId, message.session.id) }, true);
 }
 
-let handleSkip = async (io: IoBatch, message: Skip) => {
+let handleSkip = async (io: IoBatch, message: Skip | Remove) => {
     let historical = message.queueId.endsWith('-h');
     let orgQueueId = message.queueId.replace('-h', '');
+
+    let owner = await redishget('queue-entry-' + orgQueueId, 'userId');
+    if (message.type === 'remove' && owner !== message.creds.id) {
+        throw new Error('only owner can remove contnet from queue');
+    }
+
     let votes = await getVotes(orgQueueId);
     let upds = votes.filter(v => v.up).length;
     let downs = votes.filter(v => !v.up).length;
-    if (downs > Math.max(1, upds) || historical) {
+    if (downs > Math.max(1, upds) || historical || message.type === 'remove') {
         let playingId = await redisGet('queue-playing-' + message.session.id);
         if (playingId === message.queueId) {
             await (handleNext(io, { type: 'next', session: message.session, queueId: message.queueId, creds: message.creds }))
@@ -252,7 +260,7 @@ let handleSkip = async (io: IoBatch, message: Skip) => {
             io.emit({ type: 'RemoveQueueContent', queueId: message.queueId }, true)
         }
         // if skipped by users choise - remove from history
-        if (downs > Math.max(1, upds)) {
+        if (downs > Math.max(1, upds) || message.type === 'remove') {
             await rediszrem('queue-history-' + message.session.id, orgQueueId);
         }
 
@@ -293,20 +301,24 @@ let getVotes = async (queueId: string) => {
 let resolveQueueEntry = async (queueId: string, sessionId: string) => {
     console.warn('resolveQueueEntry')
     let historical = queueId.endsWith('-h');
+    let orgQueueId = queueId.replace('-h', '');
 
     let entry: QueueContentStored = await redishgetall('queue-entry-' + queueId) as any;
     let content: Content = await redishgetall('content-' + entry.contentId) as any;
 
-    let votes = await getVotes(queueId.replace('-h', ''));
+    let votes = await getVotes(orgQueueId);
     let upds = votes.filter(v => v.up).length;
     let downs = votes.filter(v => !v.up).length;
+
+    let ownerId = await redishget('queue-entry-' + orgQueueId, 'userId');
+    let owner = await User.getUser(ownerId);
 
     let score = await rediszscore('queue-' + sessionId, queueId);
     let progress = entry.progress ? Number.parseFloat(entry.progress) || 0 : 0;
     let current = entry.current ? Number.parseFloat(entry.current) || 0 : 0;
     let duration = entry.duration ? Number.parseFloat(entry.duration) || 0 : 0;
 
-    let res: QueueContent = { ...content, user: await User.getUser(entry.userId), score: score - scoreShift, queueId, historical, canSkip: downs > Math.max(1, upds) || historical, votes, progress, current, duration }
+    let res: QueueContent = { ...content, user: await User.getUser(entry.userId), score: score - scoreShift, queueId, historical, canSkip: downs > Math.max(1, upds) || historical, votes, progress, current, duration, owner }
     return res;
 }
 
