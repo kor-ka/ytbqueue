@@ -204,32 +204,34 @@ let checkQueue = async (io: IoBatch, source: Message) => {
 
 
 let handleVote = async (io: IoBatch, message: Vote) => {
-    if (message.queueId.endsWith('-h')) {
-        return;
-    }
+    let historical = message.queueId.includes('-h');
+    let origQueueId = message.queueId.replace('-h', '');
+
     let vote = message.up ? 'up' : 'down';
     let increment = vote === 'up' ? 1 : vote === 'down' ? -1 : 0;
     increment *= likeShift;
 
     // get old vote
-    let voteStored = await redishget('queue-entry-vote-' + message.queueId, message.creds.id);
+    let voteStored = await redishget('queue-entry-vote-' + origQueueId, message.creds.id);
     // save new vote
-    await redishset('queue-entry-vote-' + message.queueId, message.creds.id, vote);
+    await redishset('queue-entry-vote-' + origQueueId, message.creds.id, vote);
 
-    if (voteStored === vote) {
-        increment *= -1;
-        await redishdel('queue-entry-vote-' + message.queueId, message.creds.id);
+    if (!historical) {
+        if (voteStored === vote) {
+            increment *= -1;
+            await redishdel('queue-entry-vote-' + message.queueId, message.creds.id);
 
-    } else if (voteStored) {
-        console.warn('stored -x2', voteStored);
-        // have saved vote and new is diffirent - x2 for reset and increment new
-        increment *= 2;
-    }
+        } else if (voteStored) {
+            console.warn('stored -x2', voteStored);
+            // have saved vote and new is diffirent - x2 for reset and increment new
+            increment *= 2;
+        }
 
-    // do not change score for playing - it will return it to queue
-    let playingId = await redisGet('queue-playing-' + message.session.id);
-    if (playingId !== message.queueId) {
-        await rediszincr('queue-' + message.session.id, message.queueId, increment);
+        // do not change score for playing - it will return it to queue
+        let playingId = await redisGet('queue-playing-' + message.session.id);
+        if (playingId !== message.queueId) {
+            await rediszincr('queue-' + message.session.id, message.queueId, increment);
+        }
     }
 
     await io.emit({ type: 'UpdateQueueContent', queueId: message.queueId, content: await resolveQueueEntry(message.queueId, message.session.id) }, true);
@@ -237,10 +239,10 @@ let handleVote = async (io: IoBatch, message: Vote) => {
 
 let handleSkip = async (io: IoBatch, message: Skip) => {
     let historical = message.queueId.endsWith('-h');
-    let votes = await getVotes(message.queueId);
+    let orgQueueId = message.queueId.replace('-h', '');
+    let votes = await getVotes(orgQueueId);
     let upds = votes.filter(v => v.up).length;
     let downs = votes.filter(v => !v.up).length;
-    let score = await rediszscore('queue-' + message.session.id, message.queueId)
     if (downs > Math.max(1, upds) || historical) {
         let playingId = await redisGet('queue-playing-' + message.session.id);
         if (playingId === message.queueId) {
@@ -250,8 +252,8 @@ let handleSkip = async (io: IoBatch, message: Skip) => {
             io.emit({ type: 'RemoveQueueContent', queueId: message.queueId }, true)
         }
         // if skipped by users choise - remove from history
-        if (!historical) {
-            await rediszrem('queue-history-' + message.session.id, message.queueId.replace('-h', ''));
+        if (downs > Math.max(1, upds)) {
+            await rediszrem('queue-history-' + message.session.id, orgQueueId);
         }
 
     }
@@ -295,7 +297,7 @@ let resolveQueueEntry = async (queueId: string, sessionId: string) => {
     let entry: QueueContentStored = await redishgetall('queue-entry-' + queueId) as any;
     let content: Content = await redishgetall('content-' + entry.contentId) as any;
 
-    let votes = await getVotes(queueId);
+    let votes = await getVotes(queueId.replace('-h', ''));
     let upds = votes.filter(v => v.up).length;
     let downs = votes.filter(v => !v.up).length;
 
