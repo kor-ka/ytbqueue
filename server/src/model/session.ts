@@ -310,15 +310,12 @@ let resolveQueueEntry = async (queueId: string, sessionId: string) => {
     let upds = votes.filter(v => v.up).length;
     let downs = votes.filter(v => !v.up).length;
 
-    let ownerId = await redishget('queue-entry-' + orgQueueId, 'userId');
-    let owner = await User.getUser(ownerId);
-
     let score = await rediszscore('queue-' + sessionId, queueId);
     let progress = entry.progress ? Number.parseFloat(entry.progress) || 0 : 0;
     let current = entry.current ? Number.parseFloat(entry.current) || 0 : 0;
     let duration = entry.duration ? Number.parseFloat(entry.duration) || 0 : 0;
 
-    let res: QueueContent = { ...content, user: await User.getUser(entry.userId), score: score - scoreShift, queueId, historical, canSkip: downs > Math.max(1, upds) || historical, votes, progress, current, duration, owner }
+    let res: QueueContent = { ...content, user: await User.getUser(entry.userId), score: score - scoreShift, queueId, historical, canSkip: downs > Math.max(1, upds) || historical, votes, progress, current, duration }
     return res;
 }
 

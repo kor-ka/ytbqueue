@@ -282,13 +282,11 @@ let resolveQueueEntry = (queueId, sessionId) => __awaiter(this, void 0, void 0, 
     let votes = yield getVotes(orgQueueId);
     let upds = votes.filter(v => v.up).length;
     let downs = votes.filter(v => !v.up).length;
-    let ownerId = yield redisUtil_1.redishget('queue-entry-' + orgQueueId, 'userId');
-    let owner = yield user_1.User.getUser(ownerId);
     let score = yield redisUtil_1.rediszscore('queue-' + sessionId, queueId);
     let progress = entry.progress ? Number.parseFloat(entry.progress) || 0 : 0;
     let current = entry.current ? Number.parseFloat(entry.current) || 0 : 0;
     let duration = entry.duration ? Number.parseFloat(entry.duration) || 0 : 0;
-    let res = Object.assign({}, content, { user: yield user_1.User.getUser(entry.userId), score: score - scoreShift, queueId, historical, canSkip: downs > Math.max(1, upds) || historical, votes, progress, current, duration, owner });
+    let res = Object.assign({}, content, { user: yield user_1.User.getUser(entry.userId), score: score - scoreShift, queueId, historical, canSkip: downs > Math.max(1, upds) || historical, votes, progress, current, duration });
     return res;
 });
 // let handle = async (io: IoWrapper, message: Message) => {
