@@ -137,10 +137,12 @@ export class Queue extends React.PureComponent<{ queue: QueueContentLocal[], ses
 
     componentDidMount() {
         this.resizePlayingBackground()
+        window.setTimeout(this.resizePlayingBackground, 100)
     }
 
     componentDidUpdate() {
         this.resizePlayingBackground()
+        window.setTimeout(this.resizePlayingBackground, 100)
     }
 
     resizePlayingBackground = () => {
