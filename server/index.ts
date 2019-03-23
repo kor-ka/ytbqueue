@@ -22,6 +22,9 @@ app
   .use(bodyParser.json())
   .use(cookieParser())
 
+  .get('/favicon.ico', async (req, res) => {
+    res.sendFile(path.resolve(__dirname + '/../../public/favicon.ico'));
+  })
   .get('/legal/terms-and-conditions', async (req, res) => {
     res.sendFile(path.resolve(__dirname + '/../../public/terms.html'));
   })

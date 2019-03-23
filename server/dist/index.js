@@ -28,6 +28,9 @@ let app = express();
 app
     .use(bodyParser.json())
     .use(cookieParser())
+    .get('/favicon.ico', (req, res) => __awaiter(this, void 0, void 0, function* () {
+    res.sendFile(path.resolve(__dirname + '/../../public/favicon.ico'));
+}))
     .get('/legal/terms-and-conditions', (req, res) => __awaiter(this, void 0, void 0, function* () {
     res.sendFile(path.resolve(__dirname + '/../../public/terms.html'));
 }))
