@@ -41,7 +41,7 @@ export class Client extends React.PureComponent<{}, { playing?: QueueContent, qu
                     {!this.state.inited && <FlexLayout style={{ fontWeight: 900, fontSize: 30, width: '100%', height: '100%', color: '#fff', justifyContent: 'center', textAlign: 'center' }}>Connecting... 🙌</FlexLayout>}
                 </div>
                 {this.state.mode === 'search' && <Searcher toQueue={this.toQueue} session={this.session} />}
-                {/* <Searcher toQueue={this.toQueue} session={this.session} />} */}
+                {/* <Searcher toQueue={this.toQueue} session={this.session} /> */}
 
             </>
         )
@@ -56,19 +56,18 @@ export class QueuePage extends React.PureComponent<{ playing?: QueueContent, que
     render() {
         return (
             <>
-                <Button onClick={this.toSearch} style={{ position: 'fixed', zIndex: 300, bottom: 0, left: 0, right: 0, borderRadius: 0, backgroundColor: '#000', alignSelf: 'stretch', fontSize: 30, fontWeight: 900, color: "#fff" }}>Add something cool 😎</Button>
+                {this.props.queue.length !== 0 && <Button onClick={this.toSearch} style={{ position: 'fixed', zIndex: 300, bottom: 0, left: 0, right: 0, borderRadius: 0, backgroundColor: '#000', alignSelf: 'stretch', fontSize: 30, fontWeight: 900, color: "#fff" }}>Add something cool </Button>}
                 <div style={{ position: 'fixed', width: '100%', height: '100%', zIndex: -1, backgroundColor: '#F9F9F9' }} />
 
                 <FlexLayout divider={0} style={{ flexDirection: 'column', paddingBottom: 100, alignItems: 'stretch', marginTop: 0, width: '100%', overflowX: 'hidden' }}>
-                    <div style={{ marginBottom: -5 }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%' }}>
                         <Prompt />
                     </div>
                     {this.props.playing && <PlayingContent session={this.props.session} playing={this.props.playing} />}
-                    {!this.props.playing && (
+                    {!this.props.playing && this.props.queue.length === 0 && (
                         <>
-                            <FlexLayout style={{ backgroundColor: '#000', height: 200, alignSelf: 'stretch', color: '#fff', fontWeight: 900, alignItems: 'center', justifyContent: 'center', textAlign: 'center' }} >
-                                {this.props.queue.length === 0 && 'No music to play 🤷‍♂️'}
-                                {this.props.queue.length === 0 && <Button onClick={this.toSearch} style={{ border: '5px solid #fff', marginTop: 15, fontSize: 30, fontWeight: 900, color: "#fff", backgroundColor: '#000' }}>Start party 🎉</Button>}
+                            <FlexLayout style={{ backgroundColor: '#fff', height: '100vh', alignSelf: 'stretch', color: '#fff', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }} >
+                                {<Button onClick={this.toSearch} style={{ border: '1px solid #000', marginTop: 15, fontSize: 30, fontWeight: 200, color: "#000", backgroundColor: '#fff' }}>Start party</Button>}
                             </FlexLayout>
                         </>
                     )}
@@ -304,10 +303,22 @@ export class Searcher extends React.PureComponent<{ session: QueueSession, toQue
 
     render() {
         return (
-            <FlexLayout style={{ flexDirection: 'column', alignItems: 'stretch', height: '100%', overflowY: 'hidden', backgroundColor: '#F9F9F9' }}>
+            <FlexLayout style={{ flexDirection: 'column', alignItems: 'stretch', height: '100%', overflowY: 'hidden', backgroundColor: '#fff' }}>
                 <FlexLayout style={{ flexDirection: 'row' }}>
-                    <Button onClick={this.toQueue} style={{ width: 1, backgroundColor: 'transparent', position: 'absolute', marginTop: 16, marginLeft: 14, zIndex: 200 }}>👈</Button>
-                    <Input placeholder="search for some awesome music 😜" autoFocus={true} style={{ flexGrow: 1, flexShrink: 0, backgroundColor: '#fff', height: 40, borderRadius: 10, margin: 20, padding: 10, zIndex: 100, paddingLeft: 40 }} value={this.state.q} onChange={this.onInputChange} />
+                    {/* <Button onClick={this.toQueue} style={{ width: 1, backgroundColor: 'transparent', position: 'absolute', marginTop: 16, marginLeft: 14, zIndex: 200 }}>👈</Button> */}
+                    <FlexLayout style={{ height: 40, width: 40, marginLeft: 20, position: 'absolute', zIndex: 200, justifyContent: 'center', marginTop: 20 }} >
+                        <svg
+                            style={{ marginLeft: 14 }}
+                            xmlns="http://www.w3.org/2000/svg" width="11" height="18" viewBox="0 0 11 18"
+                        >
+                            <g fill="none" fill-rule="nonzero">
+                                <path d="M0-2h11v22H0z" />
+                                <path fill="#000" d="M8.272 1.32L1.295 8.28a1.025 1.025 0 0 0 0 1.439l6.977 6.96a1.075 1.075 0 0 0 1.531 0 1.181 1.181 0 0 0 0-1.658L3.96 9.192a.273.273 0 0 1 0-.385l5.843-5.83a1.181 1.181 0 0 0 0-1.658A1.085 1.085 0 0 0 9.038 1c-.276 0-.552.107-.766.32z" />
+                            </g>
+                        </svg>
+                    </FlexLayout>
+
+                    <Input placeholder="search music" autoFocus={true} style={{ flexGrow: 1, flexShrink: 0, backgroundColor: '#fff', border: '1px solid black', height: 40, borderRadius: 10, margin: 20, paddingTop: 9, paddingBottom: 11, zIndex: 100, paddingLeft: 40 }} value={this.state.q} onChange={this.onInputChange} />
                 </FlexLayout>
                 <FlexLayout style={{ flexDirection: 'column', overflowY: 'scroll', flexGrow: 1, height: 1, marginTop: -80, paddingTop: 80 }}>
                     {this.state.q && this.state.results.map(r => (
@@ -369,11 +380,11 @@ class ContentItem extends React.PureComponent<ContentItemProps>{
                     {this.props.content.thumb && <img src={this.props.content.thumb.url} width={this.props.playing ? 0 : width} height={height} style={{ margin: this.props.playing ? 0 : undefined, justifyContent: 'center', alignItems: 'center', transition: 'width 0.2s' }} />}
                 </FlexLayout>
                 <FlexLayout style={{ flexGrow: 1, zIndex: 1, maxWidth: '100%', flexDirection: 'column' }} divider={0}>
-                    <FlexLayout style={{ minHeight: 35 }}>
-                        <span style={{ fontWeight: 500, WebkitLineClamp: 3, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', lineClamp: 3 }}>{htmlDecode(this.props.content.title)}</span>
+                    <FlexLayout>
+                        <span style={{ fontWeight: 200, WebkitLineClamp: 3, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', lineClamp: 3 }}>{htmlDecode(this.props.content.title)}</span>
                     </FlexLayout>
                     <FlexLayout style={{ justifyContent: 'flex-end' }}>
-                        {this.props.subtitle && <span onClick={this.props.subtitleCallback} style={{ fontWeight: 500, color: this.props.subtitleColor, WebkitLineClamp: 1, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', lineClamp: 1 }}>{htmlDecode(this.props.subtitle)}</span>}
+                        {this.props.subtitle && <span onClick={this.props.subtitleCallback} style={{ fontWeight: 300, color: this.props.subtitleColor, WebkitLineClamp: 1, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden', lineClamp: 1 }}>{htmlDecode(this.props.subtitle)}</span>}
                     </FlexLayout>
                 </FlexLayout>
             </FlexLayout>

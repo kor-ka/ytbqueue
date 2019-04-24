@@ -38,7 +38,7 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
     render() {
         return (
             <>
-
+                {/* 
                 {!this.state.playing && ((window as any).chrome || navigator.userAgent.toLowerCase().includes('safari')) && (
                     <div style={{ position: 'fixed', opacity: 0.4, zIndex: -1, top: 0, left: 0, width: '100%', height: '100%' }}>
                         <svg className="hue" height="100%" width="100%">
@@ -56,16 +56,22 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
                         </svg>
 
                     </div>
-                )}
+                )} */}
 
                 {this.state.playing && <Player key={this.state.playing.queueId} onEnd={this.onEnd} current={this.state.playing ? this.state.playing.current : undefined} onProgress={this.onProgress} id={this.state.playing.id} autoplay={true} width="100%" height="100%" />}
                 {!this.state.playing && (
-                    <FlexLayout style={{ height: '100%', flex: 1, fontSize: '8vmin', alignSelf: 'stretch', opacity: 0.8, color: '#fff', fontWeight: 900, alignItems: 'center', justifyContent: 'center', textAlign: 'center' }} >
-                        < Twemoji >{(this.state.q && this.state.q.inited) ? (this.state.q.queue.length === 0 ? 'Open this 👇 link on your phone' : '') : 'Connecting... 🙌'}</Twemoji>
-                        <br />
+                    <FlexLayout style={{ height: '100%', flex: 1, fontSize: '5vmin', alignSelf: 'stretch', opacity: 0.8, color: '#000', fontWeight: 100, alignItems: 'center', justifyContent: 'center', textAlign: 'center', }} >
+                        < Twemoji >{(this.state.q && this.state.q.inited) ? (this.state.q.queue.length === 0 ? (
+                            <>
+                                <span style={{ color: '#555', position: 'absolute', fontSize: '5vmin', top: '10vmin', width: '100%', left: 0 }}>This is a service for creating collective party playlists </span>
+
+                                <span>To start open this link on your phone</span>
+                            </>
+                        ) : '') : 'Connecting... 🙌'}</Twemoji>
                         {this.state.q && this.state.q.queue.length === 0 &&
-                            <FlexLayout style={{ border: '1.5vmin solid #fff', borderRadius: '1vmin', padding: '1vmin', paddingLeft: '1vmin', paddingRight: '1vmin', marginTop: 15, fontSize: '8vmin', fontWeight: 900, color: "#fff", }}>
-                                <Twemoji>📱{window.location.host.replace('www.', '')}/<span style={{ color: '#7FDBFF' }}>{this.session.id + ' '}</span></Twemoji>
+                            <FlexLayout style={{ border: '0.2vmin solid #000', marginTop: '3vmin', borderRadius: '2vmin', padding: '0.3vmin', paddingBottom: '1vmin', paddingLeft: '2vmin', paddingRight: '2vmin', fontSize: '5vmin', fontWeight: 100, color: "#000", }}>
+                                {/* <Twemoji>{window.location.host.replace('www.', '')}/{this.session.id.toLocaleLowerCase() + ' '}</Twemoji> */}
+                                <Twemoji>wopwop.app/typidor</Twemoji>
                             </FlexLayout>}
                     </FlexLayout>
                 )
