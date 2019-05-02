@@ -63,7 +63,7 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
                     <FlexLayout style={{ height: '100%', flex: 1, fontSize: '5vmin', alignSelf: 'stretch', opacity: 0.8, color: '#000', fontWeight: 100, alignItems: 'center', justifyContent: 'center', textAlign: 'center', }} >
                         < Twemoji >{(this.state.q && this.state.q.inited) ? (this.state.q.queue.length === 0 ? (
                             <>
-                                <span style={{ color: '#555', position: 'absolute', fontSize: '5vmin', top: '10vmin', width: '100%', left: 0 }}>This is a service for creating collective party playlists </span>
+                                <span style={{ color: '#555', position: 'absolute', fontSize: '5vmin', top: '10vmin', width: '100%', left: 0 }}>Collective playlists service</span>
 
                                 <span>To start open this link on your phone</span>
                             </>
