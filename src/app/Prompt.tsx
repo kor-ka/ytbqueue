@@ -5,7 +5,7 @@ export class Prompt extends React.PureComponent<{}, { accepted?: boolean }> {
     accepted = false;
     constructor(props: any) {
         super(props);
-        this.state = { accepted: localStorage.getItem('shown') === 'true' && false };
+        this.state = { accepted: localStorage.getItem('shown') === 'true' };
     }
 
     onAccepted = () => {
@@ -14,6 +14,7 @@ export class Prompt extends React.PureComponent<{}, { accepted?: boolean }> {
     }
 
     render() {
+        console.warn('boom', this.state.accepted);
         if (this.state.accepted) {
             return null;
         }
