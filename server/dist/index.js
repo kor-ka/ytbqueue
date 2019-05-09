@@ -41,13 +41,21 @@ app
     res.sendFile(path.resolve(__dirname + '/../../public/cookie-policy.html'));
 }))
     .get('/', (req, res) => __awaiter(this, void 0, void 0, function* () {
+    let md = new MobileDetect(req.headers['user-agent']);
     let target = yield session_1.pickSession();
-    for (let k of Object.keys(req.cookies || {})) {
-        if (k.startsWith('azaza_app_host_')) {
-            target = k.replace('azaza_app_host_', '');
+    if (!md.mobile()) {
+        let target = yield session_1.pickSession();
+        for (let k of Object.keys(req.cookies || {})) {
+            if (k.startsWith('azaza_app_host_')) {
+                target = k.replace('azaza_app_host_', '');
+            }
         }
+        res.redirect('/' + target);
     }
-    res.redirect('/' + target);
+    else {
+        res.cookie('azaza_app_suggested_session', target);
+        res.sendFile(path.resolve(__dirname + '/../../public/index.html'));
+    }
 }))
     .use(express.static(path.resolve(__dirname + '/../../public')))
     .use("/build", express.static(__dirname + '/../../public/build'))

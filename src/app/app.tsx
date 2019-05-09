@@ -5,6 +5,7 @@ import { Route } from "react-router";
 import * as Cookie from 'js-cookie';
 import { Client } from "./Client";
 import { Prompt } from "./Prompt";
+import { Lendos } from "./Lendos";
 
 export const isChromium = (window as any).chrome;
 
@@ -21,9 +22,10 @@ export class Root extends React.PureComponent {
     render() {
         return (
             <>
-                {this.token && <Hab />}
-                {!this.token && this.clientId && <Client />}
-                {!this.token && !this.clientId && 'what are you?'}
+                {this.id && this.token && <Hab />}
+                {this.id && !this.token && this.clientId && <Client />}
+                {this.id && !this.token && !this.clientId && 'what are you?'}
+                {!this.id && <Lendos />}
             </>
         );
     }

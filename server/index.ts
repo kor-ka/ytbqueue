@@ -35,13 +35,25 @@ app
     res.sendFile(path.resolve(__dirname + '/../../public/cookie-policy.html'));
   })
   .get('/', async (req, res) => {
+
+    let md = new MobileDetect(req.headers['user-agent'] as string);
+
     let target = await pickSession();
-    for (let k of Object.keys(req.cookies || {})) {
-      if (k.startsWith('azaza_app_host_')) {
-        target = k.replace('azaza_app_host_', '');
+
+    if (!md.mobile()) {
+      let target = await pickSession();
+      for (let k of Object.keys(req.cookies || {})) {
+        if (k.startsWith('azaza_app_host_')) {
+          target = k.replace('azaza_app_host_', '');
+        }
       }
+      res.redirect('/' + target)
+    } else {
+      res.cookie('azaza_app_suggested_session', target);
+      res.sendFile(path.resolve(__dirname + '/../../public/index.html'));
     }
-    res.redirect('/' + target)
+
+
   })
 
   .use(express.static(path.resolve(__dirname + '/../../public')))

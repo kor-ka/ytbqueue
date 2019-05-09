@@ -70,8 +70,7 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
                         ) : '') : 'Connecting... 🙌'}</Twemoji>
                         {this.state.q && this.state.q.queue.length === 0 &&
                             <FlexLayout style={{ border: '0.2vmin solid #000', marginTop: '3vmin', borderRadius: '2vmin', padding: '0.3vmin', paddingBottom: '1vmin', paddingLeft: '2vmin', paddingRight: '2vmin', fontSize: '5vmin', fontWeight: 100, color: "#000", }}>
-                                {/* <Twemoji>{window.location.host.replace('www.', '')}/{this.session.id.toLocaleLowerCase() + ' '}</Twemoji> */}
-                                <Twemoji>wopwop.app/typidor</Twemoji>
+                                <Twemoji>{window.location.host.replace('www.', '')}/{this.session.id.toLocaleLowerCase() + ' '}</Twemoji>
                             </FlexLayout>}
                     </FlexLayout>
                 )

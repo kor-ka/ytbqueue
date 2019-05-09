@@ -137,7 +137,7 @@ let handleAdd = (io, message) => __awaiter(this, void 0, void 0, function* () {
 let handleAddHistorical = (io, sessionId, source) => __awaiter(this, void 0, void 0, function* () {
     source.progress = undefined;
     // create queue entry
-    let queueId = (yield exports.pickId('queue_entry')) + '-h';
+    let queueId = source.queueId + '-h';
     let entry = { queueId, contentId: source.id, userId: source.user.id };
     yield redisUtil_1.redishsetobj('queue-entry-' + queueId, entry);
     let score = scoreShift / 2 - new Date().getTime();
@@ -228,7 +228,8 @@ let handleSkip = (io, message) => __awaiter(this, void 0, void 0, function* () {
     let orgQueueId = message.queueId.replace('-h', '');
     let owner = yield redisUtil_1.redishget('queue-entry-' + orgQueueId, 'userId');
     if (message.type === 'remove' && owner !== message.creds.id) {
-        throw new Error('only owner can remove contnet from queue');
+        //TODO owner can be null here, wtf
+        throw new Error('only owner can remove contnet from queue currentUser: ' + message.creds.id + ' owner: ' + owner);
     }
     let votes = yield getVotes(orgQueueId);
     let upds = votes.filter(v => v.up).length;

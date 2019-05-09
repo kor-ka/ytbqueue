@@ -60,79 +60,32 @@ export class QueuePage extends React.PureComponent<{ playing?: QueueContent, que
                 {/* {this.props.queue.length !== 0 &&
                     <Button onClick={this.toSearch} style={{ position: 'fixed', zIndex: 300, bottom: 0, left: 0, right: 0, borderRadius: 0, alignSelf: 'stretch', fontSize: 30, fontWeight: 200, color: "#000" }}>Add video</Button>
                 } */}
-                <Searcher onClear={() => { }} session={this.props.session} />
+                {/* <Searcher onClear={() => { }} session={this.props.session} /> */}
 
-                <div style={{ position: 'fixed', width: '100%', height: '100%', zIndex: -1, backgroundColor: '#F9F9F9' }} />
 
 
 
                 <FlexLayout divider={0} style={{ flexDirection: 'column', paddingBottom: 100, alignItems: 'stretch', marginTop: 0, width: '100%', overflowX: 'hidden' }}>
-                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', zIndex: 2000 }}>
                         <Prompt />
                     </div>
                     {/* {this.props.playing && <PlayingContent session={this.props.session} playing={this.props.playing} />} */}
 
-                    {!this.props.playing && this.props.queue.length === 0 && (
-                        <>
-                            <FlexLayout style={{ backgroundColor: '#fff', height: '100vh', alignSelf: 'stretch', color: '#fff', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }} >
-                                {<Button onClick={this.toSearch} style={{ border: '1px solid #000', marginTop: 15, fontSize: 30, fontWeight: 200, color: "#000", backgroundColor: '#fff' }}>Start party</Button>}
-                            </FlexLayout>
-                        </>
-                    )}
-                    <Queue queue={this.props.queue} session={this.props.session} />
+
+                    <QueueSearch queue={this.props.queue} session={this.props.session} />
 
                 </FlexLayout>
+
             </>
         );
     }
 }
 
-class PlayingContent extends React.PureComponent<{ session: QueueSession, playing: QueueContent }>{
-    onVoteUp = () => {
-        this.props.session.vote(this.props.playing.queueId, true);
-    }
-    onVoteDown = () => {
-        this.props.session.vote(this.props.playing.queueId, false);
-    }
-    onSkip = () => {
-        this.props.session.skip(this.props.playing.queueId);
-    }
-    render() {
-        let ups = 0;
-        let downs = 0;
-        let meUp = false;
-        let meDown = false;
-        this.props.playing.votes.map(v => {
-            console.warn(v.user, this.props.session.clientId);
-            if (v.up) {
-                ups++;
-                meUp = meUp || (v.user.id === this.props.session.clientId);
-            } else {
-                downs++;
-                meDown = meDown || (v.user.id === this.props.session.clientId);
-            }
-
-        });
-        return (
-            <FlexLayout style={{ position: 'relative' }}>
-
-                {/* <Player height={200} id={this.props.playing.id} /> */}
-                {/* <FlexLayout style={{ position: 'absolute', flexDirection: 'row', left: 20, bottom: 20, backgroundColor: 'rgba(255,255,255,0.7)', borderRadius: 20 }}>
-                    {!this.props.playing.historical && <Button onClick={this.onVoteUp} style={{ backgroundColor: 'transparent', height: 20, textAlign: 'right' }}><span style={{ color: meUp ? 'green' : 'black', marginTop: 1 }}>{ups}</span>🤘</Button>}
-                    {!this.props.playing.canSkip && <Button onClick={this.onVoteDown} style={{ backgroundColor: 'transparent', height: 20, textAlign: 'right' }}><span style={{ color: meDown ? 'red' : 'black', marginTop: 1 }}>{downs}</span>👎</Button>}
-                    {this.props.playing.canSkip && <Button onClick={this.onSkip} style={{ backgroundColor: 'transparent', height: 20, textAlign: 'right' }}>⏭</Button>}
-                </FlexLayout> */}
-            </FlexLayout>
-        );
-    }
-}
-
-
 interface Animation {
     from: Partial<CSSStyleDeclaration>;
     to: Partial<CSSStyleDeclaration>;
 }
-export class Queue extends React.PureComponent<{ queue: QueueContentLocal[], session: QueueSession }> {
+export class QueueSearch extends React.PureComponent<{ queue: QueueContentLocal[], session: QueueSession }, { q: string, results: Content[] }> {
 
     playingRef = React.createRef<QueueItem>();
     playingBackground = React.createRef<HTMLDivElement>();
@@ -142,41 +95,120 @@ export class Queue extends React.PureComponent<{ queue: QueueContentLocal[], ses
         to: { transform: 'translate(0, -100%)', opacity: '0' },
     }
 
-    componentDidMount() {
-        this.resizePlayingBackground()
-        window.setTimeout(this.resizePlayingBackground, 100)
+    constructor(props: any) {
+        super(props);
+        this.state = { q: '', results: [] };
     }
+    generation = 0;
 
-    componentDidUpdate() {
-        this.resizePlayingBackground()
-        window.setTimeout(this.resizePlayingBackground, 100)
-    }
+    onInputChange = (event: React.FormEvent<HTMLInputElement>) => {
+        let q = event.currentTarget.value;
+        if (q) {
+            this.setState({ q })
 
-    resizePlayingBackground = () => {
-        if (this.playingRef.current && this.playingBackground.current) {
-            // this.playingBackground.current.style.height = this.playingRef.current.
-            let playingDiv = ReactDOM.findDOMNode(this.playingRef.current);
-            let playingBackDiv = ReactDOM.findDOMNode(this.playingBackground.current);
-            if (playingDiv && playingBackDiv) {
-                let height = playingDiv.getBoundingClientRect().height;
-                console.warn(height, (playingBackDiv as any).style!);
-                (playingBackDiv as any).style!.height = height;
+            if (q.includes('youtu.be')) {
+                // direct link
+                let split = q.split('/');
+                let id = split[split.length - 1];
+                this.setState({ results: [{ title: 'direct', id, subtitle: 'link' }] })
+
+            } else {
+
+                let g = ++this.generation;
+                setTimeout(() => {
+                    if (g !== this.generation) {
+                        return;
+                    }
+                    let endpoint = 'https://api.cognitive.microsoft.com/bing/v7.0/videos/search?';
+                    let query = 'q=' + encodeURIComponent(q + '+site:youtube.com') + '&embedded=player' + '&market=en-us';
+                    fetch(endpoint + query, { headers: [['Ocp-Apim-Subscription-Key', 'e56b32ef31084eadbc238947215b1d53']] }).then(async res => {
+                        if (g === this.generation) {
+                            this.setState({
+                                results: (await res.json()).value.map(r => {
+                                    let contentUrlSplit = r.contentUrl.split('v=');
+                                    let id = contentUrlSplit[contentUrlSplit.length - 1];
+                                    let thumb = {
+                                        url: r.thumbnailUrl,
+                                        width: r.thumbnail.width,
+                                        height: r.thumbnail.height,
+                                    }
+                                    return ({ id, title: r.name, subtitle: r.description, thumb });
+                                })
+                            })
+                        } else {
+
+                        }
+                    });
+                }, 300)
             }
+
+        } else {
+            this.setState({ q: '', results: [] })
         }
     }
 
+    onSelect = (conent: Content) => {
+        this.setState({ q: '', results: [] })
+        this.props.session.add(conent);
+    }
+
+    onClear = () => {
+        ++this.generation
+        this.setState({ q: '', results: [] })
+    }
 
     render() {
-        console.warn('queue render');
-        return (
-            <FlexLayout divider={0} style={{ flexGrow: 1, position: 'relative', flexDirection: 'column' }}>
-                <div ref={this.playingBackground} style={{ position: 'absolute', backgroundColor: '#F9F9F9', top: 0, width: '100%', transition: 'height 0.3s' }} />
+        let input = (
+            <FlexLayout style={{ flexDirection: 'row', width: '100%', position: 'fixed', zIndex: 1001 }}>
+                {/* <Button onClick={this.toQueue} style={{ width: 1, backgroundColor: 'transparent', position: 'absolute', marginTop: 16, marginLeft: 14, zIndex: 200 }}>👈</Button> */}
+                {!!this.state.q && <FlexLayout onClick={this.onClear} style={{ height: 40, width: 40, position: 'absolute', right: 10, zIndex: 200, justifyContent: 'center', marginTop: 20 }} >
+                    <Clear />
+                </FlexLayout>}
+
+                <Input placeholder="search music" autoFocus={true} style={{ flexGrow: 1, flexShrink: 0, backgroundColor: '#fff', border: '1px solid black', height: 40, borderRadius: 10, margin: 20, paddingTop: 9, paddingBottom: 11, zIndex: 100, paddingLeft: 16 }} value={this.state.q} onChange={this.onInputChange} />
+            </FlexLayout>
+        );
+
+        let queue = (
+            <FlexLayout divider={0} style={{ flexGrow: 1, position: 'relative', flexDirection: 'column', paddingTop: 80 }}>
+
+
 
                 <FlipMove leaveAnimation={this.leaveAnimation}>
                     {this.props.queue.map(c => <QueueItem innerRef={c.playing ? this.playingRef : undefined} key={c.queueId} content={c} session={this.props.session} />)}
+                    {this.props.queue.length === 0 &&
+                        <FlexLayout key={'palceholder'} style={{ opacity: 0.5, fontSize: 20, height: 100, alignItems: 'center', justifyContent: 'center' }}>
+                            <div>To start add some videos</div>
+                        </FlexLayout>}
                 </FlipMove>
 
+
+
+
             </FlexLayout>
+        )
+
+        let searchRes = (
+            <>
+                {!!this.state.results.length && <div style={{ backgroundColor: '#fff', height: '100%', width: '100%', zIndex: 999, position: 'fixed' }} />}
+
+
+
+                <FlexLayout style={{ flexDirection: 'column', overflowY: 'scroll', height: '100%', paddingTop: 80, zIndex: 1000, backgroundColor: '#fff' }}>
+                    {this.state.q && this.state.results.map(r => (
+                        <FlexLayout onClick={() => this.onSelect(r)}>
+                            <ContentItem content={{ id: r.id, title: r.title, thumb: r.thumb }} subtitle={r.subtitle} subtitleColor="dddddd" />
+                        </FlexLayout>
+                    ))}
+                </FlexLayout>
+            </>
+        )
+
+        return (
+            <>
+                {input}
+                {this.state.q ? searchRes : queue}
+            </>
         );
     }
 }
@@ -246,101 +278,7 @@ class QueueItem extends React.PureComponent<{ content: QueueContentLocal, sessio
 }
 
 export class Searcher extends React.PureComponent<{ session: QueueSession, onClear: () => void }, { q: string, results: Content[] }>{
-    constructor(props: any) {
-        super(props);
-        this.state = { q: '', results: [] };
-    }
-    generation = 0;
 
-    toQueue = () => {
-        this.props.onClear();
-    }
-
-
-    onInputChange = (event: React.FormEvent<HTMLInputElement>) => {
-        let q = event.currentTarget.value;
-        if (q) {
-            this.setState({ q })
-
-            if (q.includes('youtu.be')) {
-                // direct link
-                let split = q.split('/');
-                let id = split[split.length - 1];
-                this.setState({ results: [{ title: 'direct', id, subtitle: 'link' }] })
-
-            } else {
-
-                let g = ++this.generation;
-                setTimeout(() => {
-                    if (g !== this.generation) {
-                        return;
-                    }
-                    let endpoint = 'https://api.cognitive.microsoft.com/bing/v7.0/videos/search?';
-                    let query = 'q=' + encodeURIComponent(q + '+site:youtube.com') + '&embedded=player' + '&market=en-us';
-                    fetch(endpoint + query, { headers: [['Ocp-Apim-Subscription-Key', 'e56b32ef31084eadbc238947215b1d53']] }).then(async res => {
-                        if (g === this.generation) {
-                            this.setState({
-                                results: (await res.json()).value.map(r => {
-                                    let contentUrlSplit = r.contentUrl.split('v=');
-                                    let id = contentUrlSplit[contentUrlSplit.length - 1];
-                                    let thumb = {
-                                        url: r.thumbnailUrl,
-                                        width: r.thumbnail.width,
-                                        height: r.thumbnail.height,
-                                    }
-                                    return ({ id, title: r.name, subtitle: r.description, thumb });
-                                })
-                            })
-                        } else {
-
-                        }
-                    });
-                }, 300)
-            }
-
-        } else {
-            this.setState({ q: '', results: [] })
-        }
-    }
-
-    onSelect = (conent: Content) => {
-        this.setState({ q: '', results: [] })
-        this.props.session.add(conent);
-        this.props.onClear();
-    }
-
-    onClear = () => {
-        ++this.generation
-        this.setState({ q: '', results: [] })
-    }
-
-    render() {
-        return (
-            <FlexLayout style={{ position: 'absolute', width: '100%' }}>
-                <FlexLayout style={{ flexDirection: 'row', width: '100%', position: 'fixed', zIndex: 1001 }}>
-                    {/* <Button onClick={this.toQueue} style={{ width: 1, backgroundColor: 'transparent', position: 'absolute', marginTop: 16, marginLeft: 14, zIndex: 200 }}>👈</Button> */}
-                    {!!this.state.q && <FlexLayout onClick={this.onClear} style={{ height: 40, width: 40, position: 'absolute', right: 10, zIndex: 200, justifyContent: 'center', marginTop: 20 }} >
-                        <Clear />
-                    </FlexLayout>}
-
-                    <Input placeholder="search music" autoFocus={true} style={{ flexGrow: 1, flexShrink: 0, backgroundColor: '#fff', border: '1px solid black', height: 40, borderRadius: 10, margin: 20, paddingTop: 9, paddingBottom: 11, zIndex: 100, paddingLeft: 16 }} value={this.state.q} onChange={this.onInputChange} />
-                </FlexLayout>
-
-                {!!this.state.results.length && <div style={{ backgroundColor: '#f9f9f9', height: '100%', width: '100%', zIndex: 999, position: 'fixed' }} />}
-
-
-
-                <FlexLayout style={{ flexDirection: 'column', overflowY: 'scroll', height: '100%', paddingTop: 80, zIndex: 1000, backgroundColor: '#f9f9f9' }}>
-                    {this.state.q && this.state.results.map(r => (
-                        <FlexLayout onClick={() => this.onSelect(r)}>
-                            <ContentItem content={{ id: r.id, title: r.title, thumb: r.thumb }} subtitle={r.subtitle} subtitleColor="dddddd" />
-                        </FlexLayout>
-                    ))}
-                </FlexLayout>
-
-            </FlexLayout>
-        );
-    }
 }
 
 interface ContentItemProps {
@@ -375,8 +313,8 @@ class ContentItem extends React.PureComponent<ContentItemProps>{
                                     45deg,
                                     #f1f1f1,
                                     #f1f1f1 10px,
-                                    #F9F9F9 10px,
-                                    #F9F9F9 20px
+                                    #fff 10px,
+                                    #fff 20px
                                 )`,
                     position: 'absolute',
                     width: 100 * (this.props.progress || 0) + '%',
