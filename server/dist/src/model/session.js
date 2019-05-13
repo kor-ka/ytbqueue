@@ -151,7 +151,7 @@ let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
     // add top from history if nothing to play
     let size = yield redisUtil_1.rediszcard('queue-' + source.session.id);
     console.warn('checkQueue current size ', size);
-    let minHistoryLength = 6;
+    let minHistoryLength = 12;
     if (size < minHistoryLength) {
         let histroyTop = yield redisUtil_1.rediszrangebyscore('queue-history-' + source.session.id, 100000);
         console.warn('checkQueue add ', histroyTop);
@@ -259,6 +259,8 @@ let handleProgress = (io, message) => __awaiter(this, void 0, void 0, function* 
 let handleNext = (io, message) => __awaiter(this, void 0, void 0, function* () {
     yield redisUtil_1.redisSet('queue-playing-' + message.session.id, null);
     yield redisUtil_1.rediszrem('queue-' + message.session.id, message.queueId);
+    yield redisUtil_1.redishset('queue-entry-' + message.queueId, 'progress', '0');
+    yield redisUtil_1.redishset('queue-entry-' + message.queueId, 'current', '0');
     io.emit({ type: 'RemoveQueueContent', queueId: message.queueId }, true);
     yield checkQueue(io, message);
 });

@@ -32,11 +32,12 @@ export class QueueSession {
     queue = new Map<string, QueueContentLocal>();
     io: Emitter;
     inited = false;
+    isHost = false;
 
     constructor() {
         this.id = window.location.pathname.split('/').filter(s => s.length)[0];
         let token = Cookie.get('azaza_app_host_' + (this.id ? this.id.toUpperCase() : ''));
-
+        this.isHost = !!token;
         let client = Cookie.get('azaza_app_client');
         this.clientId = client.split('-')[0];
         let clientToken = client.split('-')[1];
@@ -158,7 +159,7 @@ export class QueueSession {
         callback(this.playing);
     }
 
-    onQueueChange = (callback: (data: { queue: QueueContent[], inited: boolean }) => void) => {
+    onQueueChange = (callback: (data: { queue: QueueContentLocal[], inited: boolean }) => void) => {
         this.queueListeners.add(callback);
         callback({ queue: [...this.queue.values()].sort((a, b) => b.score - a.score), inited: this.inited });
     }

@@ -157,7 +157,7 @@ let checkQueue = async (io: IoBatch, source: Message) => {
     // add top from history if nothing to play
     let size = await rediszcard('queue-' + source.session.id);
     console.warn('checkQueue current size ', size);
-    let minHistoryLength = 6;
+    let minHistoryLength = 12;
     if (size < minHistoryLength) {
         let histroyTop = await rediszrangebyscore('queue-history-' + source.session.id, 100000);
         console.warn('checkQueue add ', histroyTop);
@@ -281,6 +281,8 @@ let handleProgress = async (io: IoBatch, message: Progress) => {
 let handleNext = async (io: IoBatch, message: Next) => {
     await redisSet('queue-playing-' + message.session.id, null);
     await rediszrem('queue-' + message.session.id, message.queueId);
+    await redishset('queue-entry-' + message.queueId, 'progress', '0');
+    await redishset('queue-entry-' + message.queueId, 'current', '0');
     io.emit({ type: 'RemoveQueueContent', queueId: message.queueId }, true)
     await checkQueue(io, message);
 }
