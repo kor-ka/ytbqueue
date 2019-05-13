@@ -160,7 +160,6 @@ export class QueueSearch extends React.PureComponent<{ queue: QueueContentLocal[
     render() {
         let input = (
             <FlexLayout style={{ flexDirection: 'row', width: '100%', position: 'fixed', zIndex: 1001 }}>
-                {/* <Button onClick={this.toQueue} style={{ width: 1, backgroundColor: 'transparent', position: 'absolute', marginTop: 16, marginLeft: 14, zIndex: 200 }}>👈</Button> */}
                 {!!this.state.q && <FlexLayout onClick={this.onClear} style={{ height: 40, width: 40, position: 'absolute', right: 10, zIndex: 200, justifyContent: 'center', marginTop: 20 }} >
                     <Clear />
                 </FlexLayout>}
@@ -175,9 +174,27 @@ export class QueueSearch extends React.PureComponent<{ queue: QueueContentLocal[
 
 
                 <FlipMove leaveAnimation={this.leaveAnimation}>
-                    {this.props.queue.map(c => <QueueItem innerRef={c.playing ? this.playingRef : undefined} key={c.queueId} content={c} session={this.props.session} />)}
+                    {this.props.queue.reduce((res, content, i, data) => {
+                        let prev = data[i - 1];
+                        if (prev && !prev.historical && content.historical) {
+                            res.push('Next up')
+                        }
+                        res.push(content);
+                        return res;
+                    }, [] as (QueueContentLocal | string)[]).map(c => {
+                        if (typeof c === 'string') {
+
+                            return <FlexLayout key="separetor" style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', opacity: 0.5, fontSize: 20, height: 100 }}>
+                                <div>{c}</div>
+                            </FlexLayout>
+
+                        } else {
+                            return <QueueItem innerRef={c.playing ? this.playingRef : undefined} key={c.queueId} content={c} session={this.props.session} />
+
+                        }
+                    })}
                     {this.props.queue.length === 0 &&
-                        <FlexLayout key={'palceholder'} style={{ opacity: 0.5, fontSize: 20, height: 100, alignItems: 'center', justifyContent: 'center' }}>
+                        <FlexLayout key={'placeholder'} style={{ opacity: 0.5, fontSize: 20, height: 100, alignItems: 'center', justifyContent: 'center' }}>
                             <div>To start add some videos</div>
                         </FlexLayout>}
                 </FlipMove>
@@ -259,7 +276,7 @@ class QueueItem extends React.PureComponent<{ content: QueueContentLocal, sessio
         let name = color.name + ' ' + geners[Math.abs(hashCode(userId)) % geners.length] + (isYou ? ' (You)' : '');
         let mine = this.props.content.user.id === this.props.session.clientId;
         return (
-            <FlexLayout innerRef={this.props.innerRef} id={this.props.content.queueId} style={{ position: 'relative', flexDirection: 'row' }}>
+            <FlexLayout innerRef={this.props.innerRef} id={this.props.content.queueId} style={{ position: 'relative', flexDirection: 'row', opacity: this.props.content.historical && !this.props.content.playing ? 0.6 : undefined }}>
                 <div style={{ flexGrow: 1 }}>
                     <ContentItem content={this.props.content} playing={this.props.content.playing} progress={this.props.content.progress} subtitle={name} subtitleColor={color.color} />
                     <FlexLayout style={{ flexDirection: 'column', zIndex: 100, position: 'absolute', top: 4, right: 7 }} divider={4}>
@@ -282,7 +299,7 @@ export class Searcher extends React.PureComponent<{ session: QueueSession, onCle
 }
 
 interface ContentItemProps {
-    content: Content;
+    content: Partial<QueueContentLocal>;
     subtitle?: string;
     subtitleColor?: string;
     progress?: number;
