@@ -1,9 +1,12 @@
 import * as React from "react";
-import { QueueSession } from "./model/session";
+import { QueueSession, QueueContentLocal } from "./model/session";
 import { QueueContent } from "../../server/src/model/entity";
 import YouTube from "react-youtube";
 import { FlexLayout, Button } from "./ui/ui";
 import { default as Twemoji } from 'react-twemoji';
+import FlipMove from "react-flip-move";
+import { QueueItem, ContentItem } from "./Client";
+import { Arrow } from "./ui/icons";
 
 export const endpoint = window.location.hostname.indexOf('localhost') >= 0 ? 'http://localhost:5000' : '';
 
@@ -58,7 +61,12 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
                     </div>
                 )} */}
 
-                {this.state.playing && <Player key={this.state.playing.queueId} onEnd={this.onEnd} current={this.state.playing ? this.state.playing.current : undefined} onProgress={this.onProgress} id={this.state.playing.id} autoplay={true} width="100%" height="100%" />}
+                {this.state.playing &&
+                    <FlexLayout style={{ flexDirection: 'row', height: '100%', justifyContent: 'stretch', alignItems: 'stretch' }} divider={0}>
+                        <Player key={this.state.playing.queueId} onEnd={this.onEnd} current={this.state.playing ? this.state.playing.current : undefined} onProgress={this.onProgress} id={this.state.playing.id} autoplay={true} width="100%" height="100%" />
+                        <Queue q={this.state.q.queue || []} session={this.session} />
+                    </FlexLayout>
+                }
                 {!this.state.playing && (
                     <FlexLayout style={{ height: '100%', flex: 1, fontSize: '5vmin', alignSelf: 'stretch', opacity: 0.8, color: '#000', fontWeight: 100, alignItems: 'center', justifyContent: 'center', textAlign: 'center', }} >
                         < Twemoji >{(this.state.q && this.state.q.inited) ? (this.state.q.queue.length === 0 ? (
@@ -70,7 +78,7 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
                         ) : '') : 'Connecting... 🙌'}</Twemoji>
                         {this.state.q && this.state.q.queue.length === 0 &&
                             <FlexLayout style={{ border: '0.2vmin solid #000', marginTop: '3vmin', borderRadius: '2vmin', padding: '0.3vmin', paddingBottom: '1vmin', paddingLeft: '2vmin', paddingRight: '2vmin', fontSize: '5vmin', fontWeight: 100, color: "#000", }}>
-                                <Twemoji>{window.location.host.replace('www.', '')}/{this.session.id.toLocaleLowerCase() + ' '}</Twemoji>
+                                <Twemoji >{window.location.host.replace('www.', '')}/{this.session.id.toLocaleLowerCase() + ' '}</Twemoji>
                             </FlexLayout>}
                     </FlexLayout>
                 )
@@ -82,6 +90,42 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
             </>
         );
 
+    }
+}
+
+interface Animation {
+    from: Partial<CSSStyleDeclaration>;
+    to: Partial<CSSStyleDeclaration>;
+}
+class Queue extends React.PureComponent<{ q: QueueContentLocal[], session: QueueSession }, { show: boolean }>{
+    constructor(props: any) {
+        super(props);
+        this.state = { show: true };
+    }
+    leaveAnimation: Animation = {
+        from: { transform: 'translate(0, 0)', opacity: '1' },
+        to: { transform: 'translate(0, -100%)', opacity: '0' },
+    }
+
+    toggleShow = () => {
+        this.setState({ show: !this.state.show })
+    }
+
+    render() {
+        return (
+
+            <FlexLayout divider={0} style={{ transition: 'width 0.3s ease-in-out', overflow: 'hidden', position: 'relative', width: this.state.show ? '400px' : '0px', flexDirection: 'column', paddingTop: 80, backgroundColor: '#000' }}>
+                <FlexLayout onClick={this.toggleShow} style={{ height: 50, width: 50, transition: 'transform 0.3s ease-in-out, opacity 0.3s ease-in-out', transform: this.state.show ? 'rotate(180deg) scale(1,1)' : 'rotate(0deg) scale(2,2)', opacity: this.state.show ? 1 : 0.3, position: 'fixed', top: 65, right: 20, zIndex: 1000, alignItems: 'center', justifyContent: 'center' }}>
+                    <Arrow />
+                </FlexLayout>
+                <div style={{ color: 'rgba(255,255,255, 0.5)', marginBottom: 17, borderBottom: '1px solid rgba(255,255,255, 0.4)', paddingLeft: 17, fontSize: 22, paddingBottom: 11 }}>Queue</div>
+                <FlipMove leaveAnimation={this.leaveAnimation}>
+                    {this.props.q.map(c => {
+                        return <QueueItem maxWidth={'280px'} key={c.queueId} content={c} session={this.props.session} style={{ progress1: '#111', progress2: '#222', textColor: 'white' }} />
+                    })}
+                </FlipMove>
+            </FlexLayout>
+        )
     }
 }
 
@@ -100,10 +144,9 @@ class WaterMark extends React.PureComponent<{ sessionId: string }, { hidden?: bo
     }
     render() {
         return (
-            <FlexLayout onClick={this.onClick} style={{ position: 'absolute', bottom: 20, left: 20, opacity: 0.4 }}>
-                <Button style={{ fontWeight: 900, color: "#fff", backgroundColor: '#000', fontSize: '4vmin' }}>
-                    {!this.state.hidden && <Twemoji >📱{window.location.host.replace('www.', '')}/<span style={{ color: '#7FDBFF' }}>{this.props.sessionId + ' '}</span></Twemoji>}
-                    {this.state.hidden && < Twemoji >🔒</Twemoji>}
+            <FlexLayout onClick={this.onClick} style={{ position: 'absolute', bottom: 20, left: 20, opacity: 0.4, height: '4vmin' }}>
+                <Button style={{ fontWeight: 200, color: "#fff", backgroundColor: '#000', fontSize: '4vmin', height: '4vmin', alignItems: 'start' }}>
+                    {<Twemoji style={{ marginLeft: '-0.27em' }}> 🔗{this.state.hidden ? '' : window.location.host.replace('www.', '') + '/' + this.props.sessionId.toLocaleLowerCase() + ' '}</Twemoji>}
                 </Button>
             </FlexLayout >
         );
@@ -165,7 +208,7 @@ export class Player extends React.PureComponent<{ id: string, current?: number, 
     }
     render() {
         return (
-            <div style={{ width: this.props.width || window.innerWidth, height: this.props.height || window.innerHeight }}>
+            <div style={{ width: this.props.width || window.innerWidth, height: this.props.height, position: 'relative', flexGrow: 1 }}>
                 {/* <iframe frameBorder={0} style={{ position: 'absolute', width: '100%', height: '100%' }} src={`https://www.youtube.com/embed/${this.props.id}?showinfo=0&rel=0&controls=1&mute=0&autoplay=0&enablejsapi=1&origin=http%3A%2F%2Flocalhost%3A8080&widgetid=1`} /> */}
                 <YouTube
 
