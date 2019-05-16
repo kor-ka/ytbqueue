@@ -83,9 +83,6 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
                     </FlexLayout>
                 )
                 }
-                {this.state.playing && (
-                    <WaterMark sessionId={this.session.id} />
-                )}
 
             </>
         );
@@ -113,41 +110,79 @@ class Queue extends React.PureComponent<{ q: QueueContentLocal[], session: Queue
 
     render() {
         return (
+            <FlexLayout style={{ flexDirection: 'column', backgroundColor: '#000', height: '100%' }} divider={0}>
+                <FlexLayout divider={0} style={{ height: 'calc(100% - 100px)', transition: 'width 0.3s ease-in-out', position: 'relative', width: this.state.show ? '400px' : '0px', flexDirection: 'column', paddingTop: 80 }}>
+                    <FlexLayout onClick={this.toggleShow} style={{ height: 50, width: 50, transition: 'transform 0.3s ease-in-out, opacity 0.3s ease-in-out', transform: this.state.show ? 'rotate(180deg) scale(1,1)' : 'rotate(0deg) scale(2,2)', opacity: this.state.show ? 1 : 0.3, position: 'fixed', top: 65, right: 20, zIndex: 1000, alignItems: 'center', justifyContent: 'center' }}>
+                        <Arrow />
+                    </FlexLayout>
+                    <div style={{ color: 'rgba(255,255,255, 0.5)', borderBottom: '1px solid rgba(255,255,255, 0.4)', paddingLeft: 17, fontSize: 22, paddingBottom: 11 }}>Queue</div>
 
-            <FlexLayout divider={0} style={{ transition: 'width 0.3s ease-in-out', overflow: 'hidden', position: 'relative', width: this.state.show ? '400px' : '0px', flexDirection: 'column', paddingTop: 80, backgroundColor: '#000' }}>
-                <FlexLayout onClick={this.toggleShow} style={{ height: 50, width: 50, transition: 'transform 0.3s ease-in-out, opacity 0.3s ease-in-out', transform: this.state.show ? 'rotate(180deg) scale(1,1)' : 'rotate(0deg) scale(2,2)', opacity: this.state.show ? 1 : 0.3, position: 'fixed', top: 65, right: 20, zIndex: 1000, alignItems: 'center', justifyContent: 'center' }}>
-                    <Arrow />
+                    <FlexLayout style={{ height: 'calc(100% - 20px)', overflowY: 'scroll' }} divider={0}>
+                        <div style={{ marginTop: 17 }} />
+                        <FlipMove leaveAnimation={this.leaveAnimation}>
+                            {this.props.q.map(c => {
+                                return <QueueItem maxWidth={'280px'} key={c.queueId} content={c} session={this.props.session} style={{ progress1: '#111', progress2: '#222', textColor: 'white' }} />
+                            })}
+                        </FlipMove>
+                    </FlexLayout>
                 </FlexLayout>
-                <div style={{ color: 'rgba(255,255,255, 0.5)', marginBottom: 17, borderBottom: '1px solid rgba(255,255,255, 0.4)', paddingLeft: 17, fontSize: 22, paddingBottom: 11 }}>Queue</div>
-                <FlipMove leaveAnimation={this.leaveAnimation}>
-                    {this.props.q.map(c => {
-                        return <QueueItem maxWidth={'280px'} key={c.queueId} content={c} session={this.props.session} style={{ progress1: '#111', progress2: '#222', textColor: 'white' }} />
-                    })}
-                </FlipMove>
+                <Link sessionId={this.props.session.id} queueShown={this.state.show} />
+
             </FlexLayout>
+
         )
     }
 }
 
 
-class WaterMark extends React.PureComponent<{ sessionId: string }, { hidden?: boolean }>{
-    constructor(props: { sessionId: string }) {
+class Link extends React.PureComponent<{ sessionId: string, queueShown: boolean }, { show: boolean }>{
+    constructor(props: { sessionId: string, queueShown: boolean }) {
         super(props);
-        let hidden = window.localStorage.getItem('host_locked_' + props.sessionId) === 'true';
-        this.state = { hidden };
+        let show = window.localStorage.getItem('show_link' + props.sessionId) === 'true';
+        this.state = { show };
     }
     onClick = () => {
-        let hidden = !this.state.hidden;
-        this.setState({ hidden });
-        window.localStorage.setItem('host_locked_' + this.props.sessionId, hidden ? 'true' : 'false');
+        let show = !this.state.show;
+        this.setState({ show });
+        window.localStorage.setItem('show_link' + this.props.sessionId, show ? 'true' : 'false');
 
     }
     render() {
+        let show = this.props.queueShown || this.state.show;
         return (
-            <FlexLayout onClick={this.onClick} style={{ position: 'absolute', bottom: 20, left: 20, opacity: 0.4, height: '4vmin' }}>
-                <Button style={{ fontWeight: 200, color: "#fff", backgroundColor: '#000', fontSize: '4vmin', height: '4vmin', alignItems: 'start' }}>
-                    {<Twemoji style={{ marginLeft: '-0.27em' }}> 🔗{this.state.hidden ? '' : window.location.host.replace('www.', '') + '/' + this.props.sessionId.toLocaleLowerCase() + ' '}</Twemoji>}
-                </Button>
+            <FlexLayout onClick={this.onClick} style={{ height: 90, width: 0 }} divider={0}>
+                <FlexLayout
+                    divider={0}
+                    style={
+                        {
+                            overflow: 'hidden',
+                            position: 'fixed',
+                            bottom: 20, right: 50,
+                            height: 50,
+
+                            alignItems: 'center',
+                            justifyContent: 'center',
+
+                            width: show ? 250 : 50,
+                            opacity: this.props.queueShown ? 1 : 0.4,
+                            transition: 'width 0.3s, opacity 0.3s',
+
+                            backgroundColor: '#000',
+
+                            borderRadius: 30,
+
+                            fontWeight: 200,
+                            color: "#fff",
+                            fontSize: 25,
+                            paddingBottom: 2
+
+
+
+                        }}>
+                    {!show && <Twemoji >🔗</Twemoji>}
+                    {/* {show && window.location.host.replace('www.', '') + '/' + this.props.sessionId.toLocaleLowerCase()} */}
+                    {show && 'wopwop.app' + '/' + this.props.sessionId.toLocaleLowerCase()}
+                </FlexLayout>
             </FlexLayout >
         );
     }
