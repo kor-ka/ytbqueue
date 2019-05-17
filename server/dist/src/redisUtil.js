@@ -46,7 +46,7 @@ exports.redispub = (key, value, tsx) => {
 exports.redissub = (key, callback, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
-            var sub = redis.createClient();
+            var sub = redis.createClient(process.env.REDIS_URL);
             sub.on("message", callback);
             yield sub.subscribe(key, () => resolve(() => {
                 sub.unsubscribe();

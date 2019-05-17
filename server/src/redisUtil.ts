@@ -40,7 +40,7 @@ export let redispub = (key: string, value: string | null, tsx?: redis.RedisClien
 export let redissub = (key: string, callback: (channel: string, val: string) => void, tsx?: redis.RedisClient) => {
     return new Promise<() => void>(async (resolve, error) => {
         try {
-            var sub = redis.createClient();
+            var sub = redis.createClient(process.env.REDIS_URL);
             sub.on("message", callback);
             await sub.subscribe(key, () => resolve(() => {
                 sub.unsubscribe();
