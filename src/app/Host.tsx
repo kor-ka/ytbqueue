@@ -62,7 +62,7 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
                 )} */}
 
                 {this.state.playing &&
-                    <FlexLayout style={{ flexDirection: 'row', height: '100%', justifyContent: 'stretch', alignItems: 'stretch' }} divider={0}>
+                    <FlexLayout style={{ flexDirection: 'row', height: '100%', justifyContent: 'stretch', alignItems: 'stretch', backgroundColor: 'black' }} divider={0}>
                         <Player key={this.state.playing.queueId} onEnd={this.onEnd} current={this.state.playing ? this.state.playing.current : undefined} onProgress={this.onProgress} id={this.state.playing.id} autoplay={true} width="100%" height="100%" />
                         <Queue q={this.state.q.queue || []} session={this.session} />
                     </FlexLayout>
@@ -111,15 +111,12 @@ class Queue extends React.PureComponent<{ q: QueueContentLocal[], session: Queue
     render() {
         return (
             <>
-                <FlexLayout style={{ flexDirection: 'column', backgroundColor: '#000', height: '100%' }} divider={0}>
-                    <FlexLayout divider={0} style={{ height: 'calc(100% - 100px)', transition: 'width 0.3s ease-in-out', position: 'relative', width: this.state.show ? 400 : 0.1, flexDirection: 'column', paddingTop: 80 }}>
-                        <FlexLayout onClick={this.toggleShow} style={{ height: 50, width: 50, transition: 'transform 0.3s ease-in-out, opacity 0.3s ease-in-out', transform: this.state.show ? 'rotate(180deg) scale(1,1)' : 'rotate(0deg) scale(2,2)', opacity: this.state.show ? 1 : 0.3, position: 'fixed', top: 65, right: 20, zIndex: 1000, alignItems: 'center', justifyContent: 'center' }}>
-                            <Arrow />
-                        </FlexLayout>
-                        <div style={{ color: 'rgba(255,255,255, 0.5)', borderBottom: '1px solid rgba(255,255,255, 0.4)', paddingLeft: 17, fontSize: 22, paddingBottom: 11 }}>Queue</div>
+                <FlexLayout style={{ flexDirection: 'column', backgroundColor: '#000', height: '100%', overflowX: 'hidden' }} divider={0}>
+                    <FlexLayout divider={0} style={{ height: 'calc(100% - 100px)', transition: 'width 0.3s ease-in-out', width: this.state.show ? 400 : 0.1, flexDirection: 'column', paddingTop: 80 }}>
+                        <FlexLayout style={{ color: 'rgba(255,255,255, 0.5)', borderBottom: '1px solid rgba(255,255,255, 0.4)', paddingLeft: 17, fontSize: 22, paddingBottom: 11 }}>Queue</FlexLayout>
 
                         <FlexLayout style={{ height: 'calc(100% - 20px)', overflowY: 'hidden' }} divider={0}>
-                            <div style={{ marginTop: 17 }} />
+                            <FlexLayout style={{ marginTop: 17 }} />
                             <FlipMove leaveAnimation={this.leaveAnimation}>
                                 {this.props.q.map(c => {
                                     return <QueueItem maxWidth={'280px'} key={c.queueId} content={c} session={this.props.session} style={{ progress1: '#111', progress2: '#222', textColor: 'white' }} />
@@ -129,6 +126,10 @@ class Queue extends React.PureComponent<{ q: QueueContentLocal[], session: Queue
                     </FlexLayout>
                     <FlexLayout style={{ height: 90, width: 0 }} divider={0} />
 
+                </FlexLayout>
+
+                <FlexLayout onClick={this.toggleShow} style={{ height: 50, width: 50, transition: 'transform 0.3s ease-in-out, opacity 0.3s ease-in-out', transform: this.state.show ? 'rotate(180deg) scale(1,1)' : 'rotate(0deg) scale(2,2)', opacity: this.state.show ? 1 : 0.3, position: 'fixed', top: 65, right: 20, zIndex: 1000, alignItems: 'center', justifyContent: 'center' }}>
+                    <Arrow />
                 </FlexLayout>
                 <Link sessionId={this.props.session.id} queueShown={this.state.show} />
 
