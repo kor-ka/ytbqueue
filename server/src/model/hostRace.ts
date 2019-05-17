@@ -39,8 +39,15 @@ let guardHostMessage = async (io: IoBatch, message: Message, isHost: boolean, ha
 
 let handleHostPing = async (io: IoBatch, message: HostPing, isHost: boolean, hasFlag: boolean) => {
     console.warn('handleHostPing', message.creds.id, hasFlag);
+    // track does session have any active host
+    await redisSet('host_latest_ttl_' + message.session.id, (new Date().getTime() + 3000) + '');
+
+    let sendPing = () => {
+        io.emit({ type: 'host_ping' }, true);
+    }
     if (hasFlag) {
         await redisSet('host_flag_ttl_' + message.session.id, (new Date().getTime() + 3000) + '');
+        sendPing();
     } else {
         let flagTtlStr = await redisGet('host_flag_ttl_' + message.session.id);
         let flagTtl = Number.parseInt(flagTtlStr) || 0;
@@ -49,6 +56,7 @@ let handleHostPing = async (io: IoBatch, message: HostPing, isHost: boolean, has
         if (new Date().getTime() > flagTtl) {
             console.warn(message.session.id, message.creds.id, 'flag acquired');
             setHostFlag(message.session.id, message.creds.id);
+            sendPing();
             let messagestring = await redishget('host_rejected_' + message.session.id, message.creds.id);
             if (messagestring) {
                 let message: Message = JSON.parse(messagestring);

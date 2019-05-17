@@ -102,7 +102,8 @@ let sendInit = (io, message, forceGlobal) => __awaiter(this, void 0, void 0, fun
         let c = yield resolveQueueEntry(qid.key, message.session.id);
         content.push(c);
     }
-    io.emit({ type: 'InitQueue', content, playing }, forceGlobal);
+    let hostPingTtl = yield redisUtil_1.redisGet('host_latest_ttl_' + message.session.id);
+    io.emit({ type: 'InitQueue', content, playing, hostPingTtl }, forceGlobal);
 });
 let handleAdd = (io, message) => __awaiter(this, void 0, void 0, function* () {
     // save content

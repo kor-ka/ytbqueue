@@ -100,7 +100,8 @@ let sendInit = async (io: IoBatch, message: Init, forceGlobal?: boolean) => {
         let c = await resolveQueueEntry(qid.key, message.session.id);
         content.push(c);
     }
-    io.emit({ type: 'InitQueue', content, playing }, forceGlobal)
+    let hostPingTtl = await redisGet('host_latest_ttl_' + message.session.id);
+    io.emit({ type: 'InitQueue', content, playing, hostPingTtl }, forceGlobal)
 }
 
 

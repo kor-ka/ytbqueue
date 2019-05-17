@@ -3,7 +3,7 @@ import * as socketIo from 'socket.io-client';
 export const endpoint = window.location.hostname.indexOf('localhost') >= 0 ? 'http://localhost:5000' : '';
 
 import { QueueContent, Content, UserCreds } from './../../../server/src/model/entity'
-import { Event, InitQueue, AddQueueContent, RemoveQueueContent, Playing, UpdateQueueContent } from './../../../server/src/model/transport/event'
+import { Event, InitQueue, AddQueueContent, RemoveQueueContent, Playing, UpdateQueueContent, HostPing } from './../../../server/src/model/transport/event'
 import { Message } from './../../../server/src/model/transport/message'
 import * as Cookie from 'js-cookie';
 
@@ -33,6 +33,8 @@ export class QueueSession {
     io: Emitter;
     inited = false;
     isHost = false;
+    noHost = false;
+    noHostTimer?= undefined;
 
     constructor() {
         this.id = window.location.pathname.split('/').filter(s => s.length)[0];
@@ -107,6 +109,8 @@ export class QueueSession {
                 await this.handlePlaying(event);
             } else if (event.type === 'UpdateQueueContent') {
                 await this.handleUpdate(event);
+            } else if (event.type === 'host_ping') {
+                await this.handleHostPing(event);
             }
         }
         this.notifyAll();
@@ -146,6 +150,21 @@ export class QueueSession {
         }
         this.playing = event.playing;
         this.inited = true;
+        this.noHostTimer = window.setTimeout(this.hostPingTimeOut, 3000)
+        this.noHost = false;
+    }
+
+    handleHostPing = async (event: HostPing) => {
+        if (this.noHostTimer) {
+            window.clearTimeout(this.noHostTimer);
+        }
+        this.noHostTimer = window.setTimeout(this.hostPingTimeOut, 3000)
+        this.noHost = false;
+    }
+
+    hostPingTimeOut = () => {
+        this.noHost = true;
+        this.notifyNoHost();
     }
 
     //
@@ -153,6 +172,12 @@ export class QueueSession {
     //
     playingListeners = new Set<(playing?: QueueContent) => void>()
     queueListeners = new Set<(data: { queue: QueueContent[], inited: boolean }) => void>()
+    noHostListener = new Set<(noHost: boolean) => void>()
+
+    onNoHost = (callback: (noHost: boolean) => void) => {
+        this.noHostListener.add(callback);
+        callback(this.noHost);
+    }
 
     onPlayingChange = (callback: (playing: QueueContent) => void) => {
         this.playingListeners.add(callback);
@@ -170,6 +195,12 @@ export class QueueSession {
         }
     }
 
+    private notifyNoHost = () => {
+        for (let l of this.noHostListener) {
+            l(this.noHost);
+        }
+    }
+
     private notifyQueue = () => {
         let queue = [...this.queue.values()].sort((a, b) => b.score - a.score)
         if (this.playing) {
@@ -183,5 +214,6 @@ export class QueueSession {
     private notifyAll = async () => {
         this.notifyPlaying();
         this.notifyQueue();
+        this.notifyNoHost();
     }
 }

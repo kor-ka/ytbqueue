@@ -41,8 +41,14 @@ let guardHostMessage = (io, message, isHost, hasFlag) => __awaiter(this, void 0,
 });
 let handleHostPing = (io, message, isHost, hasFlag) => __awaiter(this, void 0, void 0, function* () {
     console.warn('handleHostPing', message.creds.id, hasFlag);
+    // track does session have any active host
+    yield redisUtil_1.redisSet('host_latest_ttl_' + message.session.id, (new Date().getTime() + 3000) + '');
+    let sendPing = () => {
+        io.emit({ type: 'host_ping' }, true);
+    };
     if (hasFlag) {
         yield redisUtil_1.redisSet('host_flag_ttl_' + message.session.id, (new Date().getTime() + 3000) + '');
+        sendPing();
     }
     else {
         let flagTtlStr = yield redisUtil_1.redisGet('host_flag_ttl_' + message.session.id);
@@ -51,6 +57,7 @@ let handleHostPing = (io, message, isHost, hasFlag) => __awaiter(this, void 0, v
         if (new Date().getTime() > flagTtl) {
             console.warn(message.session.id, message.creds.id, 'flag acquired');
             exports.setHostFlag(message.session.id, message.creds.id);
+            sendPing();
             let messagestring = yield redisUtil_1.redishget('host_rejected_' + message.session.id, message.creds.id);
             if (messagestring) {
                 let message = JSON.parse(messagestring);

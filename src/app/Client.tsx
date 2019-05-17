@@ -49,6 +49,49 @@ export class Client extends React.PureComponent<{}, { playing?: QueueContent, qu
     }
 }
 
+class NoHostPrompt extends React.PureComponent<{ session: QueueSession }, { copied: boolean, show: boolean }> {
+    input?: any;
+    timer?: any;
+
+    constructor(props: { session: QueueSession }) {
+        super(props);
+        props.session.onNoHost(nh => this.setState({ show: nh }))
+    }
+
+
+    copy = () => {
+        console.warn(this.input);
+        if (this.input) {
+            this.input.select();
+        }
+
+        document.execCommand('copy');
+        this.setState({
+            copied: true,
+        });
+
+        this.timer = setTimeout(() => {
+            this.setState({
+                copied: false,
+            });
+        }, 1500);
+    };
+
+    handleInputRef = (ref) => this.input = ref;
+
+    render() {
+
+        return !!this.state && this.state.show && <FlexLayout style={{ position: 'fixed', fontSize: '6vmin', width: '100%', backgroundColor: 'white', bottom: 0, padding: '4vmin', borderTop: '1px solid black', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start' }}>
+            <FlexLayout>To play this list open this link on PC </FlexLayout>
+            <FlexLayout style={{ flexDirection: 'row', flexGrow: 1, alignItems: 'center', alignSelf: 'stretch' }}>
+                <FlexLayout style={{ fontSize: '6vmin', marginBottom: '-0.6vmin', marginRight: '5vmin' }} >{window.location.host.replace('www.', '') + '/' + this.props.session.id.toLocaleLowerCase()}</FlexLayout>
+                <Input innerRef={this.handleInputRef} value={window.location.host.replace('www.', '') + '/' + this.props.session.id.toLocaleLowerCase()} style={{ position: 'absolute', bottom: -10000 }} />
+                <Button onClick={this.copy} style={{ fontSize: '6vmin', border: '1px solid black', width: '30vmin' }}>{this.state && this.state.copied ? 'Copied' : 'Copy link'}</Button>
+            </FlexLayout>
+        </FlexLayout>
+    }
+}
+
 export class QueuePage extends React.PureComponent<{ playing?: QueueContent, queue: QueueContent[], session: QueueSession, toSearch: () => void }> {
     toSearch = () => {
         this.props.toSearch();
@@ -73,6 +116,8 @@ export class QueuePage extends React.PureComponent<{ playing?: QueueContent, que
 
 
                     <QueueSearch queue={this.props.queue} session={this.props.session} />
+
+                    <NoHostPrompt session={this.props.session} />
 
                 </FlexLayout>
 

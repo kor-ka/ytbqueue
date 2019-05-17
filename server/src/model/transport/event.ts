@@ -8,7 +8,7 @@ interface IEvent {
     type: string;
 }
 
-export type Event = AddQueueContent | RemoveQueueContent | UpdateQueueContent | InitQueue | Playing | Error;
+export type Event = AddQueueContent | RemoveQueueContent | UpdateQueueContent | InitQueue | Playing | Error | HostPing;
 
 export interface AddQueueContent extends IEvent {
     type: 'AddQueueContent';
@@ -34,13 +34,18 @@ export interface UpdateQueueContent extends IEvent {
 export interface InitQueue extends IEvent {
     type: 'InitQueue';
     playing?: QueueContent;
-    content: QueueContent[]
+    content: QueueContent[];
+    hostPingTtl?: string;
 }
 
 export interface Error extends IEvent {
     type: 'error';
     message: string;
     source: Message;
+}
+
+export interface HostPing extends IEvent {
+    type: 'host_ping';
 }
 
 let sessionEmitters = new Map<string, Set<IoWrapper>>();
