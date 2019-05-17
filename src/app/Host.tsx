@@ -112,7 +112,7 @@ class Queue extends React.PureComponent<{ q: QueueContentLocal[], session: Queue
         return (
             <>
                 <FlexLayout style={{ flexDirection: 'column', backgroundColor: '#000', height: '100%' }} divider={0}>
-                    <FlexLayout divider={0} style={{ height: 'calc(100% - 100px)', transition: 'width 0.3s ease-in-out', position: 'relative', width: this.state.show ? 400 : 0, flexDirection: 'column', paddingTop: 80 }}>
+                    <FlexLayout divider={0} style={{ height: 'calc(100% - 100px)', transition: 'width 0.3s ease-in-out', position: 'relative', width: this.state.show ? 400 : 0.1, flexDirection: 'column', paddingTop: 80 }}>
                         <FlexLayout onClick={this.toggleShow} style={{ height: 50, width: 50, transition: 'transform 0.3s ease-in-out, opacity 0.3s ease-in-out', transform: this.state.show ? 'rotate(180deg) scale(1,1)' : 'rotate(0deg) scale(2,2)', opacity: this.state.show ? 1 : 0.3, position: 'fixed', top: 65, right: 20, zIndex: 1000, alignItems: 'center', justifyContent: 'center' }}>
                             <Arrow />
                         </FlexLayout>
