@@ -158,5 +158,6 @@ export const Input = Glamorous.input({
     fontSize: 16,
     minWidth: 50,
     lineHeight: 1.5,
+    appearance: 'none',
 });
 

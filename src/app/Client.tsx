@@ -39,7 +39,7 @@ export class Client extends React.PureComponent<{}, { playing?: QueueContent, qu
             <>
                 <div style={{ display: this.state.mode === 'queue' ? undefined : 'none' }}>
                     {this.state.inited && <QueuePage toSearch={this.toSearch} playing={this.state.playing} queue={this.state.queue} session={this.session} />}
-                    {!this.state.inited && <FlexLayout style={{ fontWeight: 900, fontSize: 30, width: '100%', height: '100%', color: '#fff', justifyContent: 'center', textAlign: 'center' }}>Connecting... 🙌</FlexLayout>}
+                    {!this.state.inited && <FlexLayout style={{ fontWeight: 300, fontSize: 30, width: '100%', height: '100%', color: '#000', justifyContent: 'center', textAlign: 'center' }}>Connecting... 🙌</FlexLayout>}
                 </div>
                 {this.state.mode === 'search' && <Searcher onClear={this.toQueue} session={this.session} />}
                 {/* <Searcher toQueue={this.toQueue} session={this.session} /> */}
@@ -81,12 +81,12 @@ class NoHostPrompt extends React.PureComponent<{ session: QueueSession }, { copi
 
     render() {
 
-        return !!this.state && this.state.show && <FlexLayout style={{ position: 'fixed', fontSize: '6vmin', width: '100%', backgroundColor: 'white', bottom: 0, padding: '4vmin', borderTop: '1px solid black', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start' }}>
+        return !!this.state && this.state.show && <FlexLayout style={{ position: 'fixed', zIndex: 300, fontSize: '5.9vmin', width: '100%', backgroundColor: 'white', bottom: 0, padding: '4vmin', borderTop: '1px solid black', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start' }}>
             <FlexLayout>To play this list open this link on PC </FlexLayout>
             <FlexLayout style={{ flexDirection: 'row', flexGrow: 1, alignItems: 'center', alignSelf: 'stretch' }}>
-                <FlexLayout style={{ fontSize: '6vmin', marginBottom: '-0.6vmin', marginRight: '5vmin' }} >{window.location.host.replace('www.', '') + '/' + this.props.session.id.toLocaleLowerCase()}</FlexLayout>
+                <FlexLayout style={{ fontSize: '5.9vmin', marginBottom: '-0.6vmin', marginRight: '5vmin' }} >{window.location.host.replace('www.', '') + '/' + this.props.session.id.toLocaleLowerCase()}</FlexLayout>
                 <Input innerRef={this.handleInputRef} value={window.location.host.replace('www.', '') + '/' + this.props.session.id.toLocaleLowerCase()} style={{ position: 'absolute', bottom: -10000 }} />
-                <Button onClick={this.copy} style={{ fontSize: '6vmin', border: '1px solid black', width: '30vmin' }}>{this.state && this.state.copied ? 'Copied' : 'Copy link'}</Button>
+                <Button onClick={this.copy} style={{ fontSize: '5.9vmin', border: '1px solid black', width: '30vmin' }}>{this.state && this.state.copied ? 'Copied' : 'Copy link'}</Button>
             </FlexLayout>
         </FlexLayout>
     }
@@ -104,23 +104,19 @@ export class QueuePage extends React.PureComponent<{ playing?: QueueContent, que
                     <Button onClick={this.toSearch} style={{ position: 'fixed', zIndex: 300, bottom: 0, left: 0, right: 0, borderRadius: 0, alignSelf: 'stretch', fontSize: 30, fontWeight: 200, color: "#000" }}>Add video</Button>
                 } */}
                 {/* <Searcher onClear={() => { }} session={this.props.session} /> */}
+                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', zIndex: 2000 }}>
+                    <Prompt />
+                </div>
+
+                <QueueSearch queue={this.props.queue} session={this.props.session} />
+                {/* {this.props.playing && <PlayingContent session={this.props.session} playing={this.props.playing} />} */}
+
+                {/* <FlexLayout divider={0} style={{ flexDirection: 'column', paddingBottom: 100, alignItems: 'stretch', marginTop: 0, width: '100%', overflowX: 'hidden' }}>
 
 
+                </FlexLayout> */}
 
-
-                <FlexLayout divider={0} style={{ flexDirection: 'column', paddingBottom: 100, alignItems: 'stretch', marginTop: 0, width: '100%', overflowX: 'hidden' }}>
-                    <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', zIndex: 2000 }}>
-                        <Prompt />
-                    </div>
-                    {/* {this.props.playing && <PlayingContent session={this.props.session} playing={this.props.playing} />} */}
-
-
-                    <QueueSearch queue={this.props.queue} session={this.props.session} />
-
-                    <NoHostPrompt session={this.props.session} />
-
-                </FlexLayout>
-
+                {this.props.queue.length !== 0 && <NoHostPrompt session={this.props.session} />}
             </>
         );
     }
@@ -130,7 +126,7 @@ interface Animation {
     from: Partial<CSSStyleDeclaration>;
     to: Partial<CSSStyleDeclaration>;
 }
-export class QueueSearch extends React.PureComponent<{ queue: QueueContentLocal[], session: QueueSession }, { q: string, results: Content[] }> {
+export class QueueSearch extends React.PureComponent<{ queue: QueueContentLocal[], session: QueueSession }, { q: string, results: Content[], searching: boolean }> {
 
     playingRef = React.createRef<QueueItem>();
     playingBackground = React.createRef<HTMLDivElement>();
@@ -142,14 +138,14 @@ export class QueueSearch extends React.PureComponent<{ queue: QueueContentLocal[
 
     constructor(props: any) {
         super(props);
-        this.state = { q: '', results: [] };
+        this.state = { q: '', results: [], searching: false };
     }
     generation = 0;
 
     onInputChange = (event: React.FormEvent<HTMLInputElement>) => {
         let q = event.currentTarget.value;
         if (q) {
-            this.setState({ q })
+            this.setState({ q, searching: true, results: [] })
 
             if (q.includes('youtu.be')) {
                 // direct link
@@ -178,7 +174,8 @@ export class QueueSearch extends React.PureComponent<{ queue: QueueContentLocal[
                                         height: r.thumbnail.height,
                                     }
                                     return ({ id, title: r.name, subtitle: r.description, thumb });
-                                })
+                                }),
+                                searching: false
                             })
                         } else {
 
@@ -252,17 +249,18 @@ export class QueueSearch extends React.PureComponent<{ queue: QueueContentLocal[
 
         let searchRes = (
             <>
-                {!!this.state.results.length && <div style={{ backgroundColor: '#fff', height: '100%', width: '100%', zIndex: 999, position: 'fixed' }} />}
-
-
-
                 <FlexLayout style={{ flexDirection: 'column', overflowY: 'scroll', height: '100%', paddingTop: 80, zIndex: 1000, backgroundColor: '#fff' }}>
                     {this.state.q && this.state.results.map(r => (
                         <FlexLayout onClick={() => this.onSelect(r)}>
                             <ContentItem content={{ id: r.id, title: r.title, thumb: r.thumb }} subtitle={r.subtitle} subtitleColor="dddddd" />
                         </FlexLayout>
                     ))}
+                    {this.state.searching && (
+                        <FlexLayout key={'placeholder'} style={{ opacity: 0.5, fontSize: 20, height: 100, alignItems: 'center', justifyContent: 'center' }}>
+                            <div>Searching...</div>
+                        </FlexLayout>)}
                 </FlexLayout>
+
             </>
         )
 
