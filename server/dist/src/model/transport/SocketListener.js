@@ -14,9 +14,12 @@ const hostRace_1 = require("../../../src/model/hostRace");
 const user_1 = require("../../../src/model/user");
 class SocketListener {
     constructor(socket) {
-        this.dispose = () => {
-            //
-        };
+        this.subscriptionDispose = undefined;
+        this.dispose = () => __awaiter(this, void 0, void 0, function* () {
+            if (this.subscriptionDispose) {
+                yield this.subscriptionDispose();
+            }
+        });
         this.socket = socket;
         let wrapper = new event_1.IoWrapper(socket);
         socket.on('message', (m) => __awaiter(this, void 0, void 0, function* () {
@@ -28,7 +31,7 @@ class SocketListener {
             if (message.session && message.session.id) {
                 message.session.id = message.session.id.toUpperCase();
             }
-            wrapper.bindSession(message.session.id);
+            this.subscriptionDispose = yield wrapper.bindSession(message.session.id);
             let batch = wrapper.batch();
             // todo: validate message
             let handlers = [];

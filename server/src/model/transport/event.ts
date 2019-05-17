@@ -54,12 +54,20 @@ export class IoWrapper {
     constructor(io: SocketIO.Socket) {
         this.io = io;
     }
+    unsubscribe?: () => void = undefined;
 
     bindSession = async (session: string) => {
-        this.session = session;
-        return redissub(session, (channel, message) => {
-            this.io.emit('event', message);
-        });
+        if (this.session !== session) {
+            this.session = session;
+            if (this.unsubscribe) {
+                this.unsubscribe();
+            }
+            this.unsubscribe = await redissub(session, (message) => {
+                this.io.emit('event', message);
+            });
+
+        }
+        return this.unsubscribe;
     }
 
     batch = () => {
@@ -93,6 +101,7 @@ export class IoBatch {
     }
 
     emit = (event: Event, global?: boolean) => {
+        console.warn('emit', event, global)
         this.events.push({ event, global });
     }
 

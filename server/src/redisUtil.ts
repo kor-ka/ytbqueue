@@ -1,6 +1,18 @@
 import * as redis from 'redis'
 
-var client = redis.createClient(process.env.REDIS_URL);
+const client = redis.createClient(process.env.REDIS_URL);
+
+const subClient = redis.createClient(process.env.REDIS_URL);
+const subscriptions = new Map<string, Set<(message: string) => void>>();
+subClient.on("message", (channel, message) => {
+    let subs = subscriptions.get(channel);
+    if (subs) {
+        for (let s of subs) {
+            s(message);
+        }
+    }
+});
+
 
 export let redisSet = (key: string, value: string | null, tsx?: redis.RedisClient) => {
     return new Promise<boolean>(async (resolve, error) => {
@@ -37,21 +49,36 @@ export let redispub = (key: string, value: string | null, tsx?: redis.RedisClien
     })
 }
 
-export let redissub = (key: string, callback: (channel: string, val: string) => void, tsx?: redis.RedisClient) => {
+let unsubscribe = async (key: string, callback: (val: string) => void) => {
+    let subs = subscriptions.get(key);
+    if (subs) {
+        subs.delete(callback);
+        if (subs.size === 0) {
+            await subClient.unsubscribe(key);
+        }
+    }
+}
+
+export let redissub = (key: string, callback: (val: string) => void, tsx?: redis.RedisClient) => {
     return new Promise<() => void>(async (resolve, error) => {
         try {
-            var sub = redis.createClient(process.env.REDIS_URL);
-            sub.on("message", callback);
-            await sub.subscribe(key, () => resolve(() => {
-                sub.unsubscribe();
-                sub.quit();
-            }));
+            let subs = subscriptions.get(key);
+            if (!subs) {
+                subs = new Set();
+                subscriptions.set(key, subs);
+
+                subs.add(callback);
+                await subClient.subscribe(key);
+            } else {
+                subs.add(callback);
+            }
+            resolve(async () => {
+                await unsubscribe(key, callback)
+            })
+
         } catch (e) {
-            sub.unsubscribe();
-            sub.quit();
             error(e);
         }
-
     })
 }
 
@@ -262,6 +289,9 @@ export let redisztop = (key: string, tsx?: redis.RedisClient) => {
     return new Promise<string | undefined>(async (resolve, error) => {
         try {
             await (tsx || client).zrevrangebyscore(key, Number.MAX_SAFE_INTEGER, 0, 'LIMIT', 0, 1, (res, s) => {
+                if (res) {
+                    console.error(res);
+                }
                 console.warn('top', s);
                 resolve(s[0])
             });

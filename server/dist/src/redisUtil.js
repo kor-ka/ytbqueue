@@ -9,7 +9,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const redis = require("redis");
-var client = redis.createClient(process.env.REDIS_URL);
+const client = redis.createClient(process.env.REDIS_URL);
+const subClient = redis.createClient(process.env.REDIS_URL);
+const subscriptions = new Map();
+subClient.on("message", (channel, message) => {
+    let subs = subscriptions.get(channel);
+    if (subs) {
+        for (let s of subs) {
+            s(message);
+        }
+    }
+});
 exports.redisSet = (key, value, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
@@ -43,19 +53,33 @@ exports.redispub = (key, value, tsx) => {
         }
     }));
 };
+let unsubscribe = (key, callback) => __awaiter(this, void 0, void 0, function* () {
+    let subs = subscriptions.get(key);
+    if (subs) {
+        subs.delete(callback);
+        if (subs.size === 0) {
+            yield subClient.unsubscribe(key);
+        }
+    }
+});
 exports.redissub = (key, callback, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
-            var sub = redis.createClient(process.env.REDIS_URL);
-            sub.on("message", callback);
-            yield sub.subscribe(key, () => resolve(() => {
-                sub.unsubscribe();
-                sub.quit();
+            let subs = subscriptions.get(key);
+            if (!subs) {
+                subs = new Set();
+                subscriptions.set(key, subs);
+                subs.add(callback);
+                yield subClient.subscribe(key);
+            }
+            else {
+                subs.add(callback);
+            }
+            resolve(() => __awaiter(this, void 0, void 0, function* () {
+                yield unsubscribe(key, callback);
             }));
         }
         catch (e) {
-            sub.unsubscribe();
-            sub.quit();
             error(e);
         }
     }));
@@ -269,6 +293,9 @@ exports.redisztop = (key, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
             yield (tsx || client).zrevrangebyscore(key, Number.MAX_SAFE_INTEGER, 0, 'LIMIT', 0, 1, (res, s) => {
+                if (res) {
+                    console.error(res);
+                }
                 console.warn('top', s);
                 resolve(s[0]);
             });

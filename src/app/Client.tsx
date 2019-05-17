@@ -62,7 +62,24 @@ class NoHostPrompt extends React.PureComponent<{ session: QueueSession }, { copi
     copy = () => {
         console.warn(this.input);
         if (this.input) {
-            this.input.select();
+            var oldContentEditable = this.input.contentEditable,
+                oldReadOnly = this.input.readOnly,
+                range = document.createRange();
+
+            this.input.contentEditable = true;
+            this.input.readOnly = false;
+            range.selectNodeContents(this.input);
+
+            var s = window.getSelection();
+            s.removeAllRanges();
+            s.addRange(range);
+
+            this.input.setSelectionRange(0, 999999); // A big number, to cover anything that could be inside the element.
+
+            this.input.contentEditable = oldContentEditable;
+            this.input.readOnly = oldReadOnly;
+
+            document.execCommand('copy');
         }
 
         document.execCommand('copy');

@@ -11,11 +11,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const redisUtil_1 = require("../../redisUtil");
 class IoWrapper {
     constructor(io) {
+        this.unsubscribe = undefined;
         this.bindSession = (session) => __awaiter(this, void 0, void 0, function* () {
-            this.session = session;
-            return redisUtil_1.redissub(session, (channel, message) => {
-                this.io.emit('event', message);
-            });
+            if (this.session !== session) {
+                this.session = session;
+                if (this.unsubscribe) {
+                    this.unsubscribe();
+                }
+                this.unsubscribe = yield redisUtil_1.redissub(session, (message) => {
+                    this.io.emit('event', message);
+                });
+            }
+            return this.unsubscribe;
         });
         this.batch = () => {
             return new IoBatch(this);
@@ -45,6 +52,7 @@ class IoBatch {
     constructor(io) {
         this.events = [];
         this.emit = (event, global) => {
+            console.warn('emit', event, global);
             this.events.push({ event, global });
         };
         this.commit = () => {

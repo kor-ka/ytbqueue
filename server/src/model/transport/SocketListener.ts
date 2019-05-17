@@ -7,6 +7,7 @@ import { handleMessageUser } from '../../../src/model/user';
 
 export class SocketListener {
     socket: socketIo.Socket
+    subscriptionDispose?: () => void = undefined;
     constructor(socket: socketIo.Socket) {
         this.socket = socket;
 
@@ -20,7 +21,8 @@ export class SocketListener {
             if (message.session && message.session.id) {
                 message.session.id = message.session.id.toUpperCase()
             }
-            wrapper.bindSession(message.session.id);
+            this.subscriptionDispose = await wrapper.bindSession(message.session.id);
+
             let batch = wrapper.batch();
             // todo: validate message
 
@@ -41,7 +43,9 @@ export class SocketListener {
         });
     }
 
-    dispose = () => {
-        //
+    dispose = async () => {
+        if (this.subscriptionDispose) {
+            await this.subscriptionDispose();
+        }
     }
 }
