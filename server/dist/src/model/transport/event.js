@@ -1,18 +1,22 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : new P(function (resolve) { resolve(result.value); }).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-let sessionEmitters = new Map();
+const redisUtil_1 = require("../../redisUtil");
 class IoWrapper {
     constructor(io) {
-        // todo ref using redis pub/sub
-        this.bindSession = (session) => {
+        this.bindSession = (session) => __awaiter(this, void 0, void 0, function* () {
             this.session = session;
-            let sessions = sessionEmitters.get(session);
-            if (!sessions) {
-                sessions = new Set();
-                sessionEmitters.set(session, sessions);
-            }
-            sessions.add(this);
-        };
+            return redisUtil_1.redissub(session, (channel, message) => {
+                this.io.emit('event', message);
+            });
+        });
         this.batch = () => {
             return new IoBatch(this);
         };
@@ -25,10 +29,8 @@ class IoWrapper {
             }
             let m = JSON.stringify({ events: event, session: this.session });
             if (global) {
-                for (let e of sessionEmitters.get(this.session).values()) {
-                    console.warn('emiting[g] to ', e.io.id, m);
-                    e.io.emit('event', m);
-                }
+                console.warn('emiting[g] to ', this.session, m);
+                redisUtil_1.redispub(this.session, m);
             }
             else {
                 console.warn('emiting to ', this.io.id, m);

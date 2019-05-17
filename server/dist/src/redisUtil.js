@@ -32,6 +32,34 @@ exports.redishset = (key, field, value, tsx) => {
         }
     }));
 };
+exports.redispub = (key, value, tsx) => {
+    return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
+        try {
+            console.log('redispub', key, value);
+            yield (tsx || client).publish(key, value || 'undefined', () => resolve(true));
+        }
+        catch (e) {
+            error(e);
+        }
+    }));
+};
+exports.redissub = (key, callback, tsx) => {
+    return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
+        try {
+            var sub = redis.createClient();
+            sub.on("message", callback);
+            yield sub.subscribe(key, () => resolve(() => {
+                sub.unsubscribe();
+                sub.quit();
+            }));
+        }
+        catch (e) {
+            sub.unsubscribe();
+            sub.quit();
+            error(e);
+        }
+    }));
+};
 exports.redishdel = (key, field, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {

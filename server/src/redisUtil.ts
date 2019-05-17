@@ -25,6 +25,36 @@ export let redishset = (key: string, field: string, value: string, tsx?: redis.R
     })
 }
 
+export let redispub = (key: string, value: string | null, tsx?: redis.RedisClient) => {
+    return new Promise<boolean>(async (resolve, error) => {
+        try {
+            console.log('redispub', key, value);
+            await (tsx || client).publish(key, value || 'undefined', () => resolve(true));
+        } catch (e) {
+            error(e);
+        }
+
+    })
+}
+
+export let redissub = (key: string, callback: (channel: string, val: string) => void, tsx?: redis.RedisClient) => {
+    return new Promise<() => void>(async (resolve, error) => {
+        try {
+            var sub = redis.createClient();
+            sub.on("message", callback);
+            await sub.subscribe(key, () => resolve(() => {
+                sub.unsubscribe();
+                sub.quit();
+            }));
+        } catch (e) {
+            sub.unsubscribe();
+            sub.quit();
+            error(e);
+        }
+
+    })
+}
+
 export let redishdel = (key: string, field: string, tsx?: redis.RedisClient) => {
     return new Promise<boolean>(async (resolve, error) => {
         try {

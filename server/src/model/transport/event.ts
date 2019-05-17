@@ -1,6 +1,6 @@
 import { User, Content, QueueContent as QueueContent } from "../entity";
 import { Message } from "./message";
-import { Server } from "socket.io";
+import { redissub, redispub } from "../../redisUtil";
 
 interface IEvent {
     session?: string;
@@ -48,8 +48,6 @@ export interface HostPing extends IEvent {
     type: 'host_ping';
 }
 
-let sessionEmitters = new Map<string, Set<IoWrapper>>();
-
 export class IoWrapper {
     io: SocketIO.Socket;
     session: string;
@@ -57,15 +55,11 @@ export class IoWrapper {
         this.io = io;
     }
 
-    // todo ref using redis pub/sub
-    bindSession = (session: string) => {
+    bindSession = async (session: string) => {
         this.session = session;
-        let sessions = sessionEmitters.get(session);
-        if (!sessions) {
-            sessions = new Set();
-            sessionEmitters.set(session, sessions);
-        }
-        sessions.add(this);
+        return redissub(session, (channel, message) => {
+            this.io.emit('event', message);
+        });
     }
 
     batch = () => {
@@ -81,10 +75,8 @@ export class IoWrapper {
         }
         let m = JSON.stringify({ events: event, session: this.session });
         if (global) {
-            for (let e of sessionEmitters.get(this.session).values()) {
-                console.warn('emiting[g] to ', e.io.id, m);
-                e.io.emit('event', m)
-            }
+            console.warn('emiting[g] to ', this.session, m);
+            redispub(this.session, m)
         } else {
             console.warn('emiting to ', this.io.id, m);
             this.io.emit('event', m)
