@@ -36,6 +36,15 @@ export class QueueSession {
     noHost = false;
     noHostTimer?= undefined;
 
+    createIo = (token: string, clientToken: string) => {
+        let socket = socketIo(endpoint, { transports: ['websocket'] });
+        socket.on('event', this.handleEvent);
+        let io = new Emitter(socket, { id: this.id, token }, { id: this.clientId, token: clientToken });
+        socket.on('connect', () => this.io.emit({ type: 'init' }));
+        socket.on('disconnect', socket.open)
+        return io;
+    }
+
     constructor() {
         this.id = window.location.pathname.split('/').filter(s => s.length)[0];
         let token = Cookie.get('azaza_app_host_' + (this.id ? this.id.toUpperCase() : ''));
@@ -45,12 +54,7 @@ export class QueueSession {
         let clientToken = client.split('-')[1];
 
         this.id = this.id ? this.id.toUpperCase() : this.id;
-
-        let socket = socketIo(endpoint, { transports: ['websocket'] });
-        socket.on('event', this.handleEvent);
-
-        this.io = new Emitter(socket, { id: this.id, token }, { id: this.clientId, token: clientToken });
-        socket.on('connect', () => this.io.emit({ type: 'init' }));
+        this.io = this.createIo(token, clientToken);
 
         if (!!token) {
             this.ping();
