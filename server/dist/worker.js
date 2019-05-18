@@ -5,10 +5,12 @@ const PORT = process.env.PORT || 5000;
 const http_1 = require("http");
 const socketIo = require("socket.io");
 const SocketListener_1 = require("./src/model/transport/SocketListener");
+const bodyParser = require("body-parser");
 //
 // Configure ws
 //
 let app = express();
+app.use(bodyParser.json());
 let server = http_1.createServer(app);
 let io = socketIo(server);
 io.on('connect', (socket) => {
