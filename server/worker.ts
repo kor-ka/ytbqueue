@@ -12,7 +12,7 @@ let app = express();
 app.use(bodyParser.json())
 
 let server = createServer(app);
-let io = socketIo(server);
+let io = socketIo(server, { transports: ['websocket'] });
 
 io.on('connect', (socket) => {
   console.log('Connected client on port %s.', PORT);

@@ -46,7 +46,7 @@ export class QueueSession {
 
         this.id = this.id ? this.id.toUpperCase() : this.id;
 
-        let socket = socketIo(endpoint);
+        let socket = socketIo(endpoint, { transports: ['websocket'] });
         socket.on('event', this.handleEvent);
 
         this.io = new Emitter(socket, { id: this.id, token }, { id: this.clientId, token: clientToken });
