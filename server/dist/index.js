@@ -15,8 +15,6 @@ const session_1 = require("./src/model/session");
 var path = require('path');
 const PORT = process.env.PORT || 5000;
 const http_1 = require("http");
-const socketIo = require("socket.io");
-const SocketListener_1 = require("./src/model/transport/SocketListener");
 const user_1 = require("./src/model/user");
 const MobileDetect = require("mobile-detect");
 const hostRace_1 = require("./src/model/hostRace");
@@ -88,12 +86,12 @@ app
 // Configure ws
 //
 let server = http_1.createServer(app);
-let io = socketIo(server);
-io.on('connect', (socket) => {
-    console.log('Connected client on port %s.', PORT);
-    let listener = new SocketListener_1.SocketListener(socket);
-    socket.on('disconnect', () => {
-        listener.dispose();
-    });
-});
+// let io = socketIo(server);
+// io.on('connect', (socket) => {
+//   console.log('Connected client on port %s.', PORT);
+//   let listener = new SocketListener(socket);
+//   socket.on('disconnect', () => {
+//     listener.dispose();
+//   });
+// });
 server.listen(PORT, () => console.log(`lll on ${PORT}`));
