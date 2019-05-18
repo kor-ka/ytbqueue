@@ -23,6 +23,7 @@ if (process.env.REDIS_URL) {
   let redsisUrlSplit = process.env.REDIS_URL.split(':');
   let port = redsisUrlSplit[redsisUrlSplit.length - 1];
   let host = process.env.REDIS_URL.substr(0, process.env.REDIS_URL.length - (port.length + 1))
+  console.warn('boom', host, port);
 
   io.adapter(redis({ host, port: Number.parseInt(port) }));
 }
