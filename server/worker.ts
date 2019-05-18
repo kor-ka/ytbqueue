@@ -25,7 +25,7 @@ if (process.env.REDIS_URL) {
   let host = process.env.REDIS_URL.substr(0, process.env.REDIS_URL.length - (port.length + 1))
   console.warn('boom', host, port);
 
-  io.adapter(redis({ host: host.replace('redis://', ''), port }));
+  io.adapter(redis({ host, port }));
 }
 
 io.on('connect', (socket) => {

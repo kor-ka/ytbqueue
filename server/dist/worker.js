@@ -19,7 +19,7 @@ if (process.env.REDIS_URL) {
     let port = redsisUrlSplit[redsisUrlSplit.length - 1];
     let host = process.env.REDIS_URL.substr(0, process.env.REDIS_URL.length - (port.length + 1));
     console.warn('boom', host, port);
-    io.adapter(redis({ host: host.replace('redis://', ''), port }));
+    io.adapter(redis({ host, port }));
 }
 io.on('connect', (socket) => {
     console.log('Connected client on port %s.', PORT);
