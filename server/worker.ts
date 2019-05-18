@@ -20,12 +20,7 @@ let io = socketIo(server, { transports: ['websocket'] });
 if (process.env.REDIS_URL) {
   var redis = require('socket.io-redis');
 
-  let redsisUrlSplit = process.env.REDIS_URL.split(':');
-  let port = redsisUrlSplit[redsisUrlSplit.length - 1];
-  let host = process.env.REDIS_URL.substr(0, process.env.REDIS_URL.length - (port.length + 1))
-  console.warn('boom', host, port);
-
-  io.adapter(redis({ host, port }));
+  io.adapter(redis({ host: process.env.REDIS_HOST, port: process.env.REDIS_POST, user: process.env.REDIS_USER, password: process.env.REDIS_PASSWORD }));
 }
 
 io.on('connect', (socket) => {
