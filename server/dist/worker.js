@@ -15,7 +15,7 @@ let server = http_1.createServer(app);
 let io = socketIo(server, { transports: ['websocket'] });
 if (process.env.REDIS_URL) {
     var redis = require('socket.io-redis');
-    io.adapter(redis({ host: process.env.REDIS_HOST, port: process.env.REDIS_POST, user: process.env.REDIS_USER, password: process.env.REDIS_PASSWORD }));
+    io.adapter(redis({ host: process.env.REDIS_HOST, port: process.env.REDIS_PORT, user: process.env.REDIS_USER, password: process.env.REDIS_PASSWORD }));
 }
 io.on('connect', (socket) => {
     console.log('Connected client on port %s.', PORT);
