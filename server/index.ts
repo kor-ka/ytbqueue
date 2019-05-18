@@ -89,17 +89,28 @@ app
 //
 // Configure ws
 //
+
 let server = createServer(app);
-// let io = socketIo(server, { transports: ['websocket'] });
+let io = socketIo(server, { transports: ['websocket'] });
 
-// io.on('connect', (socket) => {
-//   console.log('Connected client on port %s.', PORT);
-//   let listener = new SocketListener(socket);
+var redis = require('socket.io-redis');
 
-//   socket.on('disconnect', () => {
-//     listener.dispose();
-//   });
-// });
+let redsisUrlSplit = process.env.REDIS_URL.split(':');
+let port = redsisUrlSplit[redsisUrlSplit.length - 1];
+let host = process.env.REDIS_URL.substr(0, process.env.REDIS_URL.length - (port.length + 1))
+
+io.adapter(redis({ host, port: Number.parseInt(port) }));
+
+
+io.on('connect', (socket) => {
+  console.log('Connected client on port %s.', PORT);
+  // let listener = new SocketListener(socket);
+
+  socket.on('disconnect', () => {
+    // listener.dispose();
+  });
+});
+
 
 server.listen(PORT, () => console.log(`lll on ${PORT}`))
 
