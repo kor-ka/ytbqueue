@@ -5,6 +5,9 @@ import * as socketIo from 'socket.io';
 import { SocketListener } from './src/model/transport/SocketListener';
 import bodyParser = require('body-parser');
 
+
+
+
 //
 // Configure ws
 //
@@ -13,6 +16,15 @@ app.use(bodyParser.json())
 
 let server = createServer(app);
 let io = socketIo(server, { transports: ['websocket'] });
+
+var redis = require('socket.io-redis');
+
+let redsisUrlSplit = process.env.REDIS_URL.split(':');
+let port = redsisUrlSplit[redsisUrlSplit.length - 1];
+let host = process.env.REDIS_URL.substr(0, process.env.REDIS_URL.length - (port.length + 1))
+
+io.adapter(redis({ host, port: Number.parseInt(port) }));
+
 
 io.on('connect', (socket) => {
   console.log('Connected client on port %s.', PORT);
