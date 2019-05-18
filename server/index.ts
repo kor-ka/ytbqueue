@@ -90,16 +90,16 @@ app
 // Configure ws
 //
 let server = createServer(app);
-let io = socketIo(server);
+// let io = socketIo(server);
 
-io.on('connect', (socket) => {
-  console.log('Connected client on port %s.', PORT);
-  let listener = new SocketListener(socket);
+// io.on('connect', (socket) => {
+//   console.log('Connected client on port %s.', PORT);
+//   let listener = new SocketListener(socket);
 
-  socket.on('disconnect', () => {
-    listener.dispose();
-  });
-});
+//   socket.on('disconnect', () => {
+//     listener.dispose();
+//   });
+// });
 
 server.listen(PORT, () => console.log(`lll on ${PORT}`))
 
