@@ -2,17 +2,25 @@ import * as redis from 'redis'
 
 const client = redis.createClient(process.env.REDIS_URL);
 
-const subClient = redis.createClient(process.env.REDIS_URL);
 const subscriptions = new Map<string, Set<(message: string) => void>>();
-subClient.on("message", (channel, message) => {
-    let subs = subscriptions.get(channel);
-    if (subs) {
-        for (let s of subs) {
-            s(message);
-        }
-    }
-});
 
+let subClient: redis.RedisClient;
+const createSubCLient = () => {
+    let res = redis.createClient(process.env.REDIS_URL);
+    res.on("message", (channel, message) => {
+        let subs = subscriptions.get(channel);
+        if (subs) {
+            for (let s of subs) {
+                s(message);
+            }
+        }
+    });
+    res.on('error', () => {
+        subClient = createSubCLient();
+    })
+    return res;
+}
+subClient = createSubCLient();
 
 export let redisSet = (key: string, value: string | null, tsx?: redis.RedisClient) => {
     return new Promise<boolean>(async (resolve, error) => {

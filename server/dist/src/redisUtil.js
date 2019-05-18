@@ -10,16 +10,24 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const redis = require("redis");
 const client = redis.createClient(process.env.REDIS_URL);
-const subClient = redis.createClient(process.env.REDIS_URL);
 const subscriptions = new Map();
-subClient.on("message", (channel, message) => {
-    let subs = subscriptions.get(channel);
-    if (subs) {
-        for (let s of subs) {
-            s(message);
+let subClient;
+const createSubCLient = () => {
+    let res = redis.createClient(process.env.REDIS_URL);
+    res.on("message", (channel, message) => {
+        let subs = subscriptions.get(channel);
+        if (subs) {
+            for (let s of subs) {
+                s(message);
+            }
         }
-    }
-});
+    });
+    res.on('error', () => {
+        subClient = createSubCLient();
+    });
+    return res;
+};
+subClient = createSubCLient();
 exports.redisSet = (key, value, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
