@@ -55,7 +55,10 @@ app
 
 
   })
-
+  .get('/new', async (req, res) => {
+    let target = await pickSession();
+    res.redirect('/' + target)
+  })
   .use(express.static(path.resolve(__dirname + '/../../public')))
   .use("/build", express.static(__dirname + '/../../public/build'))
   .get('/:id', async (req, res) => {

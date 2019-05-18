@@ -57,6 +57,10 @@ app
         res.sendFile(path.resolve(__dirname + '/../../public/index.html'));
     }
 }))
+    .get('/new', (req, res) => __awaiter(this, void 0, void 0, function* () {
+    let target = yield session_1.pickSession();
+    res.redirect('/' + target);
+}))
     .use(express.static(path.resolve(__dirname + '/../../public')))
     .use("/build", express.static(__dirname + '/../../public/build'))
     .get('/:id', (req, res) => __awaiter(this, void 0, void 0, function* () {
