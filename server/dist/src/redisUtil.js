@@ -68,6 +68,7 @@ let unsubscribe = (key, callback) => __awaiter(this, void 0, void 0, function* (
         if (subs.size === 0) {
             yield subClient.unsubscribe(key);
         }
+        subscriptions.delete(key);
     }
 });
 exports.redissub = (key, callback, tsx) => {
