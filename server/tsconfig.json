@@ -17,6 +17,7 @@
   },
   "include": [
     "src/**/*",
-    "./index.ts"
+    "./index.ts",
+    "./worker.ts"
   ],
 }

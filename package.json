@@ -12,6 +12,7 @@
   "main": "index.js",
   "scripts": {
     "startServer": "node server/dist/index.js",
+    "startWorker": "node server/dist/worker.js",
     "buildServer": "tsc --p server",
     "buildFront": "webpack -p",
     "localFront": "webpack-dev-server -d --content-base ./public --history-api-fallback ",
