@@ -140,10 +140,10 @@ let handleAdd = async (io: IoBatch, message: Add) => {
 }
 
 let handleAddHistorical = async (io: IoBatch, sessionId: string, source: QueueContent) => {
-    source.progress = undefined;
     // create queue entry
     let queueId = source.queueId + '-h';
-    let entry: QueueContentStored = { queueId, contentId: source.id, userId: source.user.id };
+    let entry: QueueContentStored = { queueId, contentId: source.id, userId: source.user.id, progress: '0', current: '0' };
+
     await redishsetobj('queue-entry-' + queueId, entry);
     let score = scoreShift / 2 - new Date().getTime();
     await rediszadd('queue-' + sessionId, queueId, score);
@@ -246,8 +246,6 @@ let handleSkip = async (io: IoBatch, message: Skip | Remove) => {
 
     let owner = await redishget('queue-entry-' + orgQueueId, 'userId');
     if (message.type === 'remove' && owner !== message.creds.id) {
-
-        //TODO owner can be null here, wtf
         throw new Error('only owner can remove contnet from queue currentUser: ' + message.creds.id + ' owner: ' + owner);
     }
 
@@ -282,8 +280,6 @@ let handleProgress = async (io: IoBatch, message: Progress) => {
 let handleNext = async (io: IoBatch, message: Next) => {
     await redisSet('queue-playing-' + message.session.id, null);
     await rediszrem('queue-' + message.session.id, message.queueId);
-    await redishset('queue-entry-' + message.queueId, 'progress', '0');
-    await redishset('queue-entry-' + message.queueId, 'current', '0');
     io.emit({ type: 'RemoveQueueContent', queueId: message.queueId }, true)
     await checkQueue(io, message);
 }

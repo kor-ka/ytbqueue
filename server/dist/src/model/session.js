@@ -136,10 +136,9 @@ let handleAdd = (io, message) => __awaiter(this, void 0, void 0, function* () {
     yield checkQueue(io, message);
 });
 let handleAddHistorical = (io, sessionId, source) => __awaiter(this, void 0, void 0, function* () {
-    source.progress = undefined;
     // create queue entry
     let queueId = source.queueId + '-h';
-    let entry = { queueId, contentId: source.id, userId: source.user.id };
+    let entry = { queueId, contentId: source.id, userId: source.user.id, progress: '0', current: '0' };
     yield redisUtil_1.redishsetobj('queue-entry-' + queueId, entry);
     let score = scoreShift / 2 - new Date().getTime();
     yield redisUtil_1.rediszadd('queue-' + sessionId, queueId, score);
@@ -229,7 +228,6 @@ let handleSkip = (io, message) => __awaiter(this, void 0, void 0, function* () {
     let orgQueueId = message.queueId.replace('-h', '');
     let owner = yield redisUtil_1.redishget('queue-entry-' + orgQueueId, 'userId');
     if (message.type === 'remove' && owner !== message.creds.id) {
-        //TODO owner can be null here, wtf
         throw new Error('only owner can remove contnet from queue currentUser: ' + message.creds.id + ' owner: ' + owner);
     }
     let votes = yield getVotes(orgQueueId);
@@ -260,8 +258,6 @@ let handleProgress = (io, message) => __awaiter(this, void 0, void 0, function* 
 let handleNext = (io, message) => __awaiter(this, void 0, void 0, function* () {
     yield redisUtil_1.redisSet('queue-playing-' + message.session.id, null);
     yield redisUtil_1.rediszrem('queue-' + message.session.id, message.queueId);
-    yield redisUtil_1.redishset('queue-entry-' + message.queueId, 'progress', '0');
-    yield redisUtil_1.redishset('queue-entry-' + message.queueId, 'current', '0');
     io.emit({ type: 'RemoveQueueContent', queueId: message.queueId }, true);
     yield checkQueue(io, message);
 });
