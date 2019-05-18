@@ -93,21 +93,21 @@ app
 let server = createServer(app);
 let io = socketIo(server, { transports: ['websocket'] });
 
-var redis = require('socket.io-redis');
 
-let redsisUrlSplit = process.env.REDIS_URL.split(':');
-let port = redsisUrlSplit[redsisUrlSplit.length - 1];
-let host = process.env.REDIS_URL.substr(0, process.env.REDIS_URL.length - (port.length + 1))
-
-io.adapter(redis({ host, port: Number.parseInt(port) }));
-
+if (process.env.REDIS_URL) {
+  var redis = require('socket.io-redis');
+  let redsisUrlSplit = process.env.REDIS_URL.split(':');
+  let port = redsisUrlSplit[redsisUrlSplit.length - 1];
+  let host = process.env.REDIS_URL.substr(0, process.env.REDIS_URL.length - (port.length + 1))
+  io.adapter(redis({ host, port: Number.parseInt(port) }));
+}
 
 io.on('connect', (socket) => {
   console.log('Connected client on port %s.', PORT);
-  // let listener = new SocketListener(socket);
+  let listener = new SocketListener(socket);
 
   socket.on('disconnect', () => {
-    // listener.dispose();
+    listener.dispose();
   });
 });
 
