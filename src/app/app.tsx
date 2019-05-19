@@ -13,7 +13,7 @@ export class Root extends React.PureComponent {
     id = window.location.pathname.split('/').filter(s => s.length)[0];
     token = Cookie.get('azaza_app_host_' + (this.id ? this.id.toUpperCase() : ''));
     clientId = Cookie.get('azaza_app_client');
-    mobile = Cookie.get('azaza_app_mobile');
+    mobile = Cookie.get('azaza_app_mobile') === 'true';
 
     constructor(props: any) {
         super(props);

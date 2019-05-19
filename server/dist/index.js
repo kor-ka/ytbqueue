@@ -70,7 +70,7 @@ app
     // if (token.new) {
     //// authorize non mobile as host
     let md = new MobileDetect(req.headers['user-agent']);
-    res.cookie('azaza_app_mobile', md.mobile());
+    res.cookie('azaza_app_mobile', md.mobile() ? 'true' : 'false');
     if (!md.mobile()) {
         res.cookie('azaza_app_host_' + sessionId, token.token, { expires: notSoSoon });
     }
