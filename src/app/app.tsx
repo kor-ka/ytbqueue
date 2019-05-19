@@ -22,8 +22,8 @@ export class Root extends React.PureComponent {
     render() {
         return (
             <>
-                {this.id && this.token && <Hab />}
-                {this.id && !this.token && this.clientId && <Client />}
+                {this.id && this.clientId && <Client />}
+                {this.id && !this.clientId && this.token && <Hab />}
                 {this.id && !this.token && !this.clientId && 'what are you?'}
                 {!this.id && <Lendos />}
             </>
