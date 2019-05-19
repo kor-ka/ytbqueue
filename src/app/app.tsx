@@ -13,6 +13,7 @@ export class Root extends React.PureComponent {
     id = window.location.pathname.split('/').filter(s => s.length)[0];
     token = Cookie.get('azaza_app_host_' + (this.id ? this.id.toUpperCase() : ''));
     clientId = Cookie.get('azaza_app_client');
+    mobile = Cookie.get('azaza_app_mobile');
 
     constructor(props: any) {
         super(props);
@@ -20,12 +21,22 @@ export class Root extends React.PureComponent {
 
     }
     render() {
+        let type: 'host' | 'client' | 'lendos' | 'wtf' = 'wtf';
+        if (this.id) {
+            if (this.token && this.clientId && !this.mobile) {
+                type = 'host'
+            } else if (this.clientId && this.mobile) {
+                type = 'client'
+            }
+        } else {
+            type = 'lendos';
+        }
         return (
             <>
-                {this.id && this.token && <Hab />}
-                {this.id && !this.token && this.clientId && <Client />}
-                {this.id && !this.token && !this.clientId && 'what are you?'}
-                {!this.id && <Lendos />}
+                {type === 'host' && <Hab />}
+                {type === 'client' && <Client />}
+                {type === 'lendos' && <Lendos />}
+                {type === 'wtf' && 'what are you?'}
             </>
         );
     }
