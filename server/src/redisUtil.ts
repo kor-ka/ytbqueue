@@ -63,8 +63,8 @@ let unsubscribe = async (key: string, callback: (val: string) => void) => {
         subs.delete(callback);
         if (subs.size === 0) {
             await subClient.unsubscribe(key);
+            subscriptions.delete(key);
         }
-        subscriptions.delete(key);
     }
 }
 
