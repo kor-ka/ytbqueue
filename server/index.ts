@@ -61,6 +61,11 @@ app
   })
   .use(express.static(path.resolve(__dirname + '/../../public')))
   .use("/build", express.static(__dirname + '/../../public/build'))
+  .post('/test', async (req, res) => {
+    console.warn(req);
+    console.warn(req.body);
+    console.warn(req.headers);
+  })
   .get('/:id', async (req, res) => {
     let sessionId = req.params.id.toUpperCase();
     let token = await getTokenFroSession(sessionId);
