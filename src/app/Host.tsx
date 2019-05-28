@@ -121,9 +121,26 @@ class Queue extends React.PureComponent<{ q: QueueContentLocal[], session: Queue
                         <FlexLayout style={{ height: 'calc(100% - 20px)', overflowY: 'hidden' }} divider={0}>
                             <FlexLayout style={{ marginTop: 17 }} />
                             <FlipMove leaveAnimation={this.leaveAnimation}>
-                                {this.props.q.map(c => {
-                                    return <QueueItem maxWidth={'280px'} key={c.queueId} content={c} session={this.props.session} style={{ progress1: '#111', progress2: '#222', textColor: 'white' }} />
+                                {this.props.q.reduce((res, content, i, data) => {
+                                    let prev = data[i - 1];
+                                    if (prev && !prev.historical && content.historical) {
+                                        res.push('Next up')
+                                    }
+                                    res.push(content);
+                                    return res;
+                                }, [] as (QueueContentLocal | string)[]).map(c => {
+                                    if (typeof c === 'string') {
+
+                                        return <FlexLayout key="separetor" style={{ flexGrow: 1, color: '#fff', justifyContent: 'center', alignItems: 'center', opacity: 0.5, fontSize: 20, height: 100 }}>
+                                            <div>{c}</div>
+                                        </FlexLayout>
+
+                                    } else {
+                                        return <QueueItem maxWidth={'280px'} key={c.queueId} content={c} session={this.props.session} style={{ progress1: '#111', progress2: '#222', textColor: 'white' }} />
+
+                                    }
                                 })}
+
                             </FlipMove>
                         </FlexLayout>
                     </FlexLayout>
