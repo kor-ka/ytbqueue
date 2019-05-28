@@ -49,7 +49,7 @@ const ButtonInner = Glamorous.div<{ type?: 'danger' }>((props) => ({
     whiteSpace: 'pre-wrap',
     fontSize: '16px',
     backgroundColor: props.type === 'danger' ? 'rgba(250, 200, 200, 0.6)' : 'rgba(250, 250, 250, 0.6)',
-    padding: 10,
+    padding: 1,
     paddingTop: 11,
     paddingBottom: 9,
     display: 'flex',

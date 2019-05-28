@@ -335,14 +335,31 @@ export class QueueItem extends React.PureComponent<{ content: QueueContentLocal,
         let color = colors[Math.abs(hashCode(userId)) % colors.length];
         let name = color.name + ' ' + geners[Math.abs(hashCode(userId)) % geners.length] + (isYou ? ' (You)' : '');
         let mine = this.props.content.user.id === this.props.session.clientId;
+
+        let up = <Button onClick={this.onVoteUp} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><span style={{ color: meUp ? 'green' : this.props.content.playing ? '#000' : 'black', fontWeight: 300, transition: 'color 0.2s', marginTop: 1 }}>{ups ? ups : ''}</span>🤘</Button>;
+        let down = <Button onClick={this.onVoteDown} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><span style={{ color: meDown ? 'red' : this.props.content.playing ? '#000' : 'black', fontWeight: 300, transition: 'color 0.2s', marginTop: 1 }}>{downs ? downs : ''}</span>👎</Button>;
+        let del = <Button onClick={this.onRemove} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}>🗑</Button>;
+        let skip = <Button onClick={this.onSkip} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><Skip /></Button>;
         return (
             <FlexLayout innerRef={this.props.innerRef} id={this.props.content.queueId} style={{ position: 'relative', flexDirection: 'row', opacity: this.props.content.historical && !this.props.content.playing ? 0.6 : undefined }}>
                 <ContentItem style={this.props.style} maxWidth={this.props.maxWidth} content={this.props.content} playing={this.props.content.playing} progress={this.props.content.progress} subtitle={name} subtitleColor={color.color} />
                 {!this.props.session.isHost && <FlexLayout style={{ flexDirection: 'column', zIndex: 100, position: 'absolute', top: 4, right: 7 }} divider={4}>
-                    {!mine && !this.props.content.historical && <Button onClick={this.onVoteUp} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><span style={{ color: meUp ? 'green' : this.props.content.playing ? '#000' : 'black', fontWeight: 300, transition: 'color 0.2s', marginTop: 1 }}>{ups ? ups : ''}</span>🤘</Button>}
-                    {!mine && !this.props.content.canSkip && <Button onClick={this.onVoteDown} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><span style={{ color: meDown ? 'red' : this.props.content.playing ? '#000' : 'black', fontWeight: 300, transition: 'color 0.2s', marginTop: 1 }}>{downs ? downs : ''}</span>👎</Button>}
-                    {this.props.content.canSkip && <Button onClick={this.onSkip} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><Skip /></Button>}
-                    {mine && <Button onClick={this.onRemove} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}>🗑</Button>}
+                    {
+                        mine ?
+                            <>
+                                {mine && del}
+                                <FlexLayout style={{ flexDirection: 'row' }} divider={0}>
+                                    {!this.props.content.historical && up}
+                                    {!this.props.content.canSkip && down}
+                                </FlexLayout>
+
+                            </> :
+                            <>
+                                {!this.props.content.historical && up}
+                                {!this.props.content.canSkip && down}
+                            </>
+                    }
+                    {this.props.content.canSkip && (!mine || this.props.content.historical) && skip}
                 </FlexLayout>}
             </FlexLayout>
         );
