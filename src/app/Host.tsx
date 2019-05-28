@@ -114,7 +114,7 @@ class Queue extends React.PureComponent<{ q: QueueContentLocal[], session: Queue
                 <FlexLayout style={{ flexDirection: 'column', backgroundColor: '#000', height: '100%', overflowX: 'hidden' }} divider={0}>
                     <FlexLayout divider={0} style={{ height: 'calc(100% - 100px)', transition: 'width 0.3s ease-in-out', width: this.state.show ? 400 : 0.1, flexDirection: 'column', paddingTop: 80 }}>
                         <FlexLayout style={{ flexDirection: 'row', color: 'rgba(255,255,255, 0.5)', borderBottom: '1px solid rgba(255,255,255, 0.4)', paddingLeft: 17, fontSize: 22, paddingBottom: 11 }}>
-                            <FlexLayout >Queue</FlexLayout>
+                            <FlexLayout >Playlist</FlexLayout>
                             <a href={'/new'} style={{ color: 'rgba(255,255,255, 0.5)', textDecoration: 'none', marginLeft: 4, marginBottom: -2, fontSize: 15, border: '1px solid rgba(255,255,255, 0.5)', borderRadius: 10, paddingTop: 4, paddingLeft: 7, paddingRight: 8, fontWeight: 300 }}>+ New </a>
                         </FlexLayout>
 
