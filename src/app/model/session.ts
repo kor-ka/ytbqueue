@@ -183,7 +183,6 @@ export class QueueSession {
 
     hostPingTimeOut = () => {
         if(!this.connected){
-            this.handleHostPing();
             return;
         }
         this.noHost = true;
