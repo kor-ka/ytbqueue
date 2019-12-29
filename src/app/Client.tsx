@@ -293,7 +293,9 @@ export class QueueSearch extends React.PureComponent<{ queue: QueueContentLocal[
             <>
                 {input}
                 {this.state.q ? searchRes : queue}
-                <PreviewModal id={this.state.preview} close={() => this.setPreview(undefined)} show={!!this.state.preview} />
+                {ReactDOM.createPortal((
+                    <PreviewModal id={this.state.preview} close={() => this.setPreview(undefined)} show={!!this.state.preview} />
+                ), document.body)}
             </>
         );
     }
