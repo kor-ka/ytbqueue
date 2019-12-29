@@ -143,7 +143,21 @@ interface Animation {
     from: Partial<CSSStyleDeclaration>;
     to: Partial<CSSStyleDeclaration>;
 }
-export class QueueSearch extends React.PureComponent<{ queue: QueueContentLocal[], session: QueueSession }, { q: string, results: Content[], searching: boolean }> {
+
+
+export class PreviewModal extends React.PureComponent<{ id: string, close: () => void, show?: boolean }>{
+    render() {
+        return <FlexLayout style={{ position: 'absolute', top: 0, bottom: 0, background: 'black', width: '100%', zIndex: 1001, justifyContent: 'center', display: this.props.show ? 'flex' : 'none' }} onClick={this.props.close}>
+            <FlexLayout style={{ top: 15, right: 15, position: 'absolute' }} ><Clear color="#999" /></FlexLayout>
+            <FlexLayout style={{ height: 200, position: 'relative' }} >
+                <FlexLayout style={{ position: 'absolute', color: 'white', justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}> <div>Loading...</div> </FlexLayout>
+                <Player id={this.props.id} height={200} width="100%" />
+            </FlexLayout>
+        </FlexLayout>
+    }
+}
+
+export class QueueSearch extends React.PureComponent<{ queue: QueueContentLocal[], session: QueueSession }, { q: string, results: Content[], searching: boolean, preview?: string }> {
 
     playingRef = React.createRef<QueueItem>();
     playingBackground = React.createRef<HTMLDivElement>();
@@ -178,7 +192,7 @@ export class QueueSearch extends React.PureComponent<{ queue: QueueContentLocal[
                         return;
                     }
                     let endpoint = 'https://api.cognitive.microsoft.com/bing/v7.0/videos/search?';
-                    let query = 'q=' + encodeURIComponent(q + '+site:youtube.com') + '&embedded=player' + '&market=en-us';
+                    let query = 'q=' + q.replace(' ', '+').trim() + '+site:youtube.com' + '&count=100' + '&embedded=player' + '&market=ru-ru';
                     fetch(endpoint + query, { headers: [['Ocp-Apim-Subscription-Key', 'e56b32ef31084eadbc238947215b1d53']] }).then(async res => {
                         if (g === this.generation) {
                             this.setState({
@@ -216,6 +230,10 @@ export class QueueSearch extends React.PureComponent<{ queue: QueueContentLocal[
         this.setState({ q: '', results: [] })
     }
 
+    setPreview = (preview: string) => {
+        this.setState({ preview });
+    }
+
     render() {
         let input = (
             <FlexLayout style={{ flexDirection: 'row', width: '100%', position: 'fixed', zIndex: 1001 }}>
@@ -229,9 +247,6 @@ export class QueueSearch extends React.PureComponent<{ queue: QueueContentLocal[
 
         let queue = (
             <FlexLayout divider={0} style={{ flexGrow: 1, position: 'relative', flexDirection: 'column', paddingTop: 80 }}>
-
-
-
                 <FlipMove leaveAnimation={this.leaveAnimation}>
                     {this.props.queue.reduce((res, content, i, data) => {
                         let prev = data[i - 1];
@@ -242,14 +257,11 @@ export class QueueSearch extends React.PureComponent<{ queue: QueueContentLocal[
                         return res;
                     }, [] as (QueueContentLocal | string)[]).map(c => {
                         if (typeof c === 'string') {
-
                             return <FlexLayout key="separetor" style={{ flexGrow: 1, justifyContent: 'center', alignItems: 'center', opacity: 0.5, fontSize: 20, height: 100 }}>
                                 <div>{c}</div>
                             </FlexLayout>
-
                         } else {
-                            return <QueueItem innerRef={c.playing ? this.playingRef : undefined} key={c.queueId} content={c} session={this.props.session} />
-
+                            return <QueueItem onTumbItemClick={(e: React.MouseEvent<HTMLImageElement>) => this.setPreview(c.id)} innerRef={c.playing ? this.playingRef : undefined} key={c.queueId} content={c} session={this.props.session} />
                         }
                     })}
                     {this.props.queue.length === 0 &&
@@ -257,10 +269,6 @@ export class QueueSearch extends React.PureComponent<{ queue: QueueContentLocal[
                             <div>To start add some videos</div>
                         </FlexLayout>}
                 </FlipMove>
-
-
-
-
             </FlexLayout>
         )
 
@@ -269,7 +277,7 @@ export class QueueSearch extends React.PureComponent<{ queue: QueueContentLocal[
                 <FlexLayout style={{ flexDirection: 'column', overflowY: 'scroll', height: '100%', paddingTop: 80, zIndex: 1000, backgroundColor: '#fff' }}>
                     {this.state.q && this.state.results.map(r => (
                         <FlexLayout onClick={() => this.onSelect(r)}>
-                            <ContentItem content={{ id: r.id, title: r.title, thumb: r.thumb }} subtitle={r.subtitle} subtitleColor="dddddd" />
+                            <ContentItem onTumbItemClick={(e: React.MouseEvent<HTMLImageElement>) => this.setPreview(r.id)} content={{ id: r.id, title: r.title, thumb: r.thumb }} subtitle={r.subtitle} subtitleColor="dddddd" />
                         </FlexLayout>
                     ))}
                     {this.state.searching && (
@@ -285,6 +293,7 @@ export class QueueSearch extends React.PureComponent<{ queue: QueueContentLocal[
             <>
                 {input}
                 {this.state.q ? searchRes : queue}
+                <PreviewModal id={this.state.preview} close={() => this.setPreview(undefined)} show={!!this.state.preview} />
             </>
         );
     }
@@ -302,7 +311,16 @@ let colors = [
     { name: 'Yellow', color: '#FFDC00' },
     { name: 'Olive', color: '#3D9970' },
 ]
-export class QueueItem extends React.PureComponent<{ content: QueueContentLocal, session: QueueSession, innerRef?: any, style?: ContentItemSrtyle, maxWidth?: string }>{
+
+interface QueueItemProps {
+    content: QueueContentLocal,
+    session: QueueSession,
+    innerRef?: any,
+    style?: ContentItemSrtyle,
+    maxWidth?: string,
+    onTumbItemClick?: (e: React.MouseEvent<HTMLImageElement>) => void
+}
+export class QueueItem extends React.PureComponent<QueueItemProps>{
     onVoteUp = () => {
         this.props.session.vote(this.props.content.queueId, true);
     }
@@ -342,7 +360,7 @@ export class QueueItem extends React.PureComponent<{ content: QueueContentLocal,
         let skip = <Button onClick={this.onSkip} style={{ backgroundColor: 'transparent', height: 10, textAlign: 'right' }}><Skip /></Button>;
         return (
             <FlexLayout innerRef={this.props.innerRef} id={this.props.content.queueId} style={{ position: 'relative', flexDirection: 'row', opacity: this.props.content.historical && !this.props.content.playing ? 0.6 : undefined }}>
-                <ContentItem style={this.props.style} maxWidth={this.props.maxWidth} content={this.props.content} playing={this.props.content.playing} progress={this.props.content.progress} subtitle={name} subtitleColor={color.color} />
+                <ContentItem onTumbItemClick={this.props.onTumbItemClick} style={this.props.style} maxWidth={this.props.maxWidth} content={this.props.content} playing={this.props.content.playing} progress={this.props.content.progress} subtitle={name} subtitleColor={color.color} />
                 {!this.props.session.isHost && <FlexLayout style={{ flexDirection: 'column', zIndex: 100, position: 'absolute', top: 4, right: 7 }} divider={4}>
                     {
                         mine ?
@@ -385,8 +403,18 @@ interface ContentItemProps {
     subtitleCallback?: () => void;
     style?: ContentItemSrtyle,
     maxWidth?: string,
+    onTumbItemClick?: (e: React.MouseEvent<HTMLImageElement>) => void
 }
 export class ContentItem extends React.PureComponent<ContentItemProps>{
+
+    onTumbItemClick = (e: React.MouseEvent<HTMLImageElement>) => {
+        if (this.props.onTumbItemClick) {
+            e.stopPropagation();
+            e.preventDefault();
+            this.props.onTumbItemClick(e);
+        }
+    }
+
     render() {
         let scale = 1;
         let width = 80;
@@ -422,7 +450,7 @@ export class ContentItem extends React.PureComponent<ContentItemProps>{
                     marginRight: -20
                 }} />}
                 <FlexLayout style={{ zIndex: 1 }}>
-                    {this.props.content.thumb && <img src={this.props.content.thumb.url} width={width} height={height} style={{ margin: this.props.playing ? 0 : undefined, justifyContent: 'center', alignItems: 'center', transition: 'width 0.2s' }} />}
+                    {this.props.content.thumb && <img onClick={this.onTumbItemClick} src={this.props.content.thumb.url} width={width} height={height} style={{ margin: this.props.playing ? 0 : undefined, justifyContent: 'center', alignItems: 'center', transition: 'width 0.2s' }} />}
                 </FlexLayout>
                 <FlexLayout style={{ flexGrow: 1, zIndex: 1, maxWidth: '100%', flexDirection: 'column' }} divider={0}>
                     <FlexLayout>
