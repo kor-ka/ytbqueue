@@ -36,16 +36,21 @@ export class QueueSession {
     noHost = false;
     noHostTimer?= undefined;
 
+    connected = false;
+
     createIo = (token: string, clientToken: string) => {
         let socket = socketIo(endpoint, { transports: ['websocket'], forceNew: true });
         socket.on('event', this.handleEvent);
         let io = new Emitter(socket, { id: this.id, token }, { id: this.clientId, token: clientToken });
         socket.on('connect', () => {
+            this.onStatusChange(true);
             this.io.emit({ type: 'init' })
         });
         socket.on('reconnect', () => {
+            this.onStatusChange(true);
             this.io.emit({ type: 'init' })
         });
+        socket.on('reconnecting', () => this.onStatusChange(false));
         return io;
     }
 
@@ -64,6 +69,11 @@ export class QueueSession {
         if (!!token) {
             this.ping();
         }
+    }
+
+    onStatusChange = (connected: boolean) => {
+        this.connected = connected;
+        this.notifyConnected();
     }
 
     ping = () => {
@@ -119,7 +129,7 @@ export class QueueSession {
             } else if (event.type === 'UpdateQueueContent') {
                 await this.handleUpdate(event);
             } else if (event.type === 'host_ping') {
-                await this.handleHostPing(event);
+                await this.handleHostPing();
             }
         }
         this.notifyAll();
@@ -163,7 +173,7 @@ export class QueueSession {
         this.noHost = false;
     }
 
-    handleHostPing = async (event: HostPing) => {
+    handleHostPing = async () => {
         if (this.noHostTimer) {
             window.clearTimeout(this.noHostTimer);
         }
@@ -172,6 +182,10 @@ export class QueueSession {
     }
 
     hostPingTimeOut = () => {
+        if(!this.connected){
+            this.handleHostPing();
+            return;
+        }
         this.noHost = true;
         this.notifyNoHost();
     }
@@ -179,9 +193,10 @@ export class QueueSession {
     //
     // Subscriptoins
     //
-    playingListeners = new Set<(playing?: QueueContent) => void>()
-    queueListeners = new Set<(data: { queue: QueueContent[], inited: boolean }) => void>()
-    noHostListener = new Set<(noHost: boolean) => void>()
+    playingListeners = new Set<(playing?: QueueContent) => void>();
+    queueListeners = new Set<(data: { queue: QueueContent[], inited: boolean }) => void>();
+    noHostListener = new Set<(noHost: boolean) => void>();
+    connectedListeners = new Set<(connected: boolean) => void>();
 
     onNoHost = (callback: (noHost: boolean) => void) => {
         this.noHostListener.add(callback);
@@ -193,6 +208,11 @@ export class QueueSession {
         callback(this.playing);
     }
 
+    onConnectedChange = (callback: (connected: boolean) => void) => {
+        this.connectedListeners.add(callback);
+        callback(this.connected);
+    }
+
     onQueueChange = (callback: (data: { queue: QueueContentLocal[], inited: boolean }) => void) => {
         this.queueListeners.add(callback);
         callback({ queue: [...this.queue.values()].sort((a, b) => b.score - a.score), inited: this.inited });
@@ -201,6 +221,12 @@ export class QueueSession {
     private notifyPlaying = () => {
         for (let l of this.playingListeners) {
             l(this.playing);
+        }
+    }
+
+    private notifyConnected = () => {
+        for (let l of this.connectedListeners) {
+            l(this.connected);
         }
     }
 

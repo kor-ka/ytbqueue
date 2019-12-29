@@ -109,6 +109,20 @@ class NoHostPrompt extends React.PureComponent<{ session: QueueSession }, { copi
     }
 }
 
+export class ConnectingPrompt extends React.PureComponent<{ session: QueueSession }, { show: boolean }> {
+    constructor(props: { session: QueueSession }) {
+        super(props);
+        this.state = { show: false };
+        props.session.onConnectedChange(connected => this.setState({ show: !connected }))
+    }
+
+    render() {
+        return this.state.show && <FlexLayout style={{ position: 'fixed', zIndex: 300, fontSize: '5.9vmin', width: '100%', backgroundColor: 'white', bottom: 0, padding: '4vmin', borderTop: '1px solid black', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'flex-start' }}>
+            <FlexLayout> Connecting... </FlexLayout>
+        </FlexLayout>
+    }
+}
+
 export class QueuePage extends React.PureComponent<{ playing?: QueueContent, queue: QueueContent[], session: QueueSession, toSearch: () => void }> {
     toSearch = () => {
         this.props.toSearch();
@@ -134,6 +148,7 @@ export class QueuePage extends React.PureComponent<{ playing?: QueueContent, que
                 </FlexLayout> */}
 
                 {this.props.queue.length !== 0 && <NoHostPrompt session={this.props.session} />}
+                <ConnectingPrompt session={this.props.session} />
             </>
         );
     }
