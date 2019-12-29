@@ -273,20 +273,18 @@ export class QueueSearch extends React.PureComponent<{ queue: QueueContentLocal[
         )
 
         let searchRes = (
-            <>
-                <FlexLayout style={{ flexDirection: 'column', overflowY: 'scroll', height: '100%', paddingTop: 80, zIndex: 1000, backgroundColor: '#fff' }}>
-                    {this.state.q && this.state.results.map(r => (
-                        <FlexLayout onClick={() => this.onSelect(r)}>
-                            <ContentItem onTumbItemClick={(e: React.MouseEvent<HTMLImageElement>) => this.setPreview(r.id)} content={{ id: r.id, title: r.title, thumb: r.thumb }} subtitle={r.subtitle} subtitleColor="dddddd" />
-                        </FlexLayout>
-                    ))}
-                    {this.state.searching && (
-                        <FlexLayout key={'placeholder'} style={{ opacity: 0.5, fontSize: 20, height: 100, alignItems: 'center', justifyContent: 'center' }}>
-                            <div>Searching...</div>
-                        </FlexLayout>)}
-                </FlexLayout>
+            <FlexLayout divider={0} style={{ flexGrow: 1, position: 'relative', flexDirection: 'column', paddingTop: 80 }}>
+                {this.state.q && this.state.results.map(r => (
+                    <FlexLayout onClick={() => this.onSelect(r)}>
+                        <ContentItem onTumbItemClick={(e: React.MouseEvent<HTMLImageElement>) => this.setPreview(r.id)} content={{ id: r.id, title: r.title, thumb: r.thumb }} subtitle={r.subtitle} subtitleColor="dddddd" />
+                    </FlexLayout>
+                ))}
+                {this.state.searching && (
+                    <FlexLayout key={'placeholder'} style={{ opacity: 0.5, fontSize: 20, height: 100, alignItems: 'center', justifyContent: 'center' }}>
+                        <div>Searching...</div>
+                    </FlexLayout>)}
+            </FlexLayout>
 
-            </>
         )
 
         return (
