@@ -41,7 +41,7 @@ export class QueueSession {
         socket.on('event', this.handleEvent);
         let io = new Emitter(socket, { id: this.id, token }, { id: this.clientId, token: clientToken });
         socket.on('connect', () => this.io.emit({ type: 'init' }));
-        socket.on('disconnect', socket.open)
+        socket.on('disconnect', socket.connect)
         return io;
     }
 
