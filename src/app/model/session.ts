@@ -37,17 +37,15 @@ export class QueueSession {
     noHostTimer?= undefined;
 
     createIo = (token: string, clientToken: string) => {
-        let socket = socketIo(endpoint, { transports: ['websocket'] });
+        let socket = socketIo(endpoint, { transports: ['websocket'], forceNew: true });
         socket.on('event', this.handleEvent);
         let io = new Emitter(socket, { id: this.id, token }, { id: this.clientId, token: clientToken });
         socket.on('connect', () => {
-            console.warn('boom', 'connect')
             this.io.emit({ type: 'init' })
         });
-        socket.on('disconnect', () => {
-            console.warn('boom', 'disconnect')
-            socket.connect();
-        })
+        socket.on('reconnect', () => {
+            this.io.emit({ type: 'init' })
+        });
         return io;
     }
 
