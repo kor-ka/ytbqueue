@@ -147,7 +147,7 @@ interface Animation {
 
 export class PreviewModal extends React.PureComponent<{ id: string, close: () => void, show?: boolean }>{
     render() {
-        return <FlexLayout style={{ position: 'absolute', top: 0, bottom: 0, background: 'black', width: '100%', zIndex: 1001, justifyContent: 'center', display: this.props.show ? 'flex' : 'none' }} onClick={this.props.close}>
+        return <FlexLayout style={{ position: 'fixed', top: 0, bottom: 0, background: 'black', width: '100%', zIndex: 1001, justifyContent: 'center', display: this.props.show ? 'flex' : 'none' }} onClick={this.props.close}>
             <FlexLayout style={{ top: 15, right: 15, position: 'absolute' }} ><Clear color="#999" /></FlexLayout>
             <FlexLayout style={{ height: 200, position: 'relative' }} >
                 <FlexLayout style={{ position: 'absolute', color: 'white', justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}> <div>Loading...</div> </FlexLayout>
