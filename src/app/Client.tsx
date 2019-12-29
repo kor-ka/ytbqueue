@@ -158,7 +158,7 @@ export class PreviewModal extends React.PureComponent<{ id: string, close: () =>
                 justifyContent: 'center',
                 pointerEvents: this.props.show ? undefined : 'none',
                 opacity: this.props.show ? 1 : 0,
-                transition: 'opacity .1s ease-in-out'
+                transition: 'opacity .15s ease-in-out'
             }}
             onClick={this.props.close}
         >
