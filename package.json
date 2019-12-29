@@ -40,7 +40,7 @@
     "js-cookie": "^2.2.0",
     "mobile-detect": "^1.4.3",
     "react": "16.4.1",
-    "react-dom": "16.4.1",
+    "react-dom": "16.4.2",
     "react-flip-move": "^3.0.3",
     "react-router-dom": "^4.3.1",
     "react-twemoji": "^0.1.0",
