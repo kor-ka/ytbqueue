@@ -40,8 +40,14 @@ export class QueueSession {
         let socket = socketIo(endpoint, { transports: ['websocket'] });
         socket.on('event', this.handleEvent);
         let io = new Emitter(socket, { id: this.id, token }, { id: this.clientId, token: clientToken });
-        socket.on('connect', () => this.io.emit({ type: 'init' }));
-        socket.on('disconnect', socket.connect)
+        socket.on('connect', () => {
+            console.warn('boom', 'connect')
+            this.io.emit({ type: 'init' })
+        });
+        socket.on('disconnect', () => {
+            console.warn('boom', 'disconnect')
+            socket.connect();
+        })
         return io;
     }
 
