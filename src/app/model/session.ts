@@ -129,7 +129,7 @@ export class QueueSession {
             } else if (event.type === 'UpdateQueueContent') {
                 await this.handleUpdate(event);
             } else if (event.type === 'host_ping') {
-                await this.handleHostPing();
+                await this.scheduleNoHost();
             }
         }
         this.notifyAll();
@@ -169,11 +169,11 @@ export class QueueSession {
         }
         this.playing = event.playing;
         this.inited = true;
-        this.noHostTimer = window.setTimeout(this.hostPingTimeOut, 3000)
+        this.scheduleNoHost();
         this.noHost = false;
     }
 
-    handleHostPing = async () => {
+    scheduleNoHost = async () => {
         if (this.noHostTimer) {
             window.clearTimeout(this.noHostTimer);
         }
