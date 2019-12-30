@@ -253,7 +253,9 @@ let handleProgress = (io, message) => __awaiter(this, void 0, void 0, function* 
     yield redisUtil_1.redishset('queue-entry-' + message.queueId, 'progress', message.current / message.duration + '');
     yield redisUtil_1.redishset('queue-entry-' + message.queueId, 'current', message.current + '');
     yield redisUtil_1.redishset('queue-entry-' + message.queueId, 'duration', message.duration + '');
-    yield io.emit({ type: 'UpdateQueueContent', queueId: message.queueId, content: yield resolveQueueEntry(message.queueId, message.session.id) }, true);
+    let entry = yield redisUtil_1.redishgetall('queue-entry-' + message.queueId);
+    let progress = entry.progress ? Number.parseFloat(entry.progress) || 0 : 0;
+    yield io.emit({ type: 'UpdateQueueContent', queueId: message.queueId, content: { progress } }, true);
 });
 let handleNext = (io, message) => __awaiter(this, void 0, void 0, function* () {
     yield redisUtil_1.redisSet('queue-playing-' + message.session.id, null);

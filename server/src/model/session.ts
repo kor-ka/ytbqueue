@@ -274,7 +274,10 @@ let handleProgress = async (io: IoBatch, message: Progress) => {
     await redishset('queue-entry-' + message.queueId, 'current', message.current + '');
     await redishset('queue-entry-' + message.queueId, 'duration', message.duration + '');
 
-    await io.emit({ type: 'UpdateQueueContent', queueId: message.queueId, content: await resolveQueueEntry(message.queueId, message.session.id) }, true);
+    let entry: QueueContentStored = await redishgetall('queue-entry-' + message.queueId) as any;
+    let progress = entry.progress ? Number.parseFloat(entry.progress) || 0 : 0;
+
+    await io.emit({ type: 'UpdateQueueContent', queueId: message.queueId, content: { progress } }, true);
 }
 
 let handleNext = async (io: IoBatch, message: Next) => {

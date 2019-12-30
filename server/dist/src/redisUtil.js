@@ -13,6 +13,7 @@ const client = redis.createClient(process.env.REDIS_URL);
 const subscriptions = new Map();
 let subClient;
 const createSubCLient = () => {
+    console.log('createSubCLient');
     let res = redis.createClient(process.env.REDIS_URL);
     res.on("message", (channel, message) => {
         let subs = subscriptions.get(channel);
@@ -79,6 +80,7 @@ exports.redissub = (key, callback, tsx) => {
                 subs = new Set();
                 subscriptions.set(key, subs);
                 subs.add(callback);
+                console.log('subClient.subscribe');
                 yield subClient.subscribe(key);
             }
             else {
