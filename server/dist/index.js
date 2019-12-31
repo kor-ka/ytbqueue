@@ -106,8 +106,8 @@ io.on('connect', (socket) => {
         listener.dispose();
     });
 });
-setInterval(() => {
-    const used = process.memoryUsage().heapUsed / 1024 / 1024;
-    console.log(`The script uses approximately ${Math.round(used * 100) / 100} MB`);
-}, 500);
+// setInterval(() => {
+//   const used = process.memoryUsage().heapUsed / 1024 / 1024;
+//   console.log(`The script uses approximately ${Math.round(used * 100) / 100} MB`);
+// }, 500)
 server.listen(PORT, () => console.log(`lll on ${PORT}`));
