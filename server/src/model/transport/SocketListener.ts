@@ -13,7 +13,6 @@ export class SocketListener {
 
         let wrapper = new IoWrapper(socket);
         socket.on('message', async (m: string) => {
-            console.log('[server](message): %s', m);
             if (!m) {
                 return;
             }

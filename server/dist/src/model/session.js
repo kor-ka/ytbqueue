@@ -147,14 +147,11 @@ let handleAddHistorical = (io, sessionId, source) => __awaiter(this, void 0, voi
     io.emit({ type: 'AddQueueContent', content: res }, true);
 });
 let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
-    console.warn('checkQueue');
     // add top from history if nothing to play
     let size = yield redisUtil_1.rediszcard('queue-' + source.session.id);
-    console.warn('checkQueue current size ', size);
     let minHistoryLength = 12;
     if (size < minHistoryLength) {
         let histroyTop = yield redisUtil_1.rediszrangebyscore('queue-history-' + source.session.id, 100000);
-        console.warn('checkQueue add ', histroyTop);
         let historyAddCount = minHistoryLength - size;
         for (let t of histroyTop) {
             yield handleAddHistorical(io, source.session.id, yield resolveQueueEntry(t, source.session.id));
@@ -173,7 +170,6 @@ let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
                 // pretty much content, add bit of random
                 score = middle.score - Math.round(Math.random() * (middle.score - bottom.score + 1000));
             }
-            console.warn('checkQueue', 'rotate history', 'new score', score);
             yield redisUtil_1.rediszadd('queue-history-' + source.session.id, t, score, 'XX');
             if (!--historyAddCount) {
                 break;
@@ -183,7 +179,6 @@ let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
     let playing = yield redisUtil_1.redisGet('queue-playing-' + source.session.id);
     if (!playing) {
         let top = yield redisUtil_1.redisztop('queue-' + source.session.id);
-        console.warn('top - ' + top);
         if (top) {
             playing = top;
             // save playing
@@ -211,7 +206,6 @@ let handleVote = (io, message) => __awaiter(this, void 0, void 0, function* () {
             yield redisUtil_1.redishdel('queue-entry-vote-' + message.queueId, message.creds.id);
         }
         else if (voteStored) {
-            console.warn('stored -x2', voteStored);
             // have saved vote and new is diffirent - x2 for reset and increment new
             increment *= 2;
         }
@@ -276,7 +270,6 @@ let getVotes = (queueId) => __awaiter(this, void 0, void 0, function* () {
     return allVotesRes;
 });
 let resolveQueueEntry = (queueId, sessionId) => __awaiter(this, void 0, void 0, function* () {
-    console.warn('resolveQueueEntry');
     let historical = queueId.endsWith('-h');
     let orgQueueId = queueId.replace('-h', '');
     let entry = yield redisUtil_1.redishgetall('queue-entry-' + queueId);

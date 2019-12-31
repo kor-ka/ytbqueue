@@ -11,7 +11,7 @@
   },
   "main": "index.js",
   "scripts": {
-    "startServer": "node server/dist/index.js",
+    "startServer": "node --inspect server/dist/index.js",
     "buildServer": "tsc --p server",
     "buildFront": "webpack -p",
     "localFront": "webpack-dev-server -d --content-base ./public --history-api-fallback ",

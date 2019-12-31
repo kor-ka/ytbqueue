@@ -31,7 +31,6 @@ subClient = createSubCLient();
 exports.redisSet = (key, value, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log('redisSet', key, value);
             yield (tsx || client).set(key, value || 'undefined', () => resolve(true));
         }
         catch (e) {
@@ -42,7 +41,6 @@ exports.redisSet = (key, value, tsx) => {
 exports.redishset = (key, field, value, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log('redishset', key, field, value);
             yield (tsx || client).hset(key, field, value, () => resolve(true));
         }
         catch (e) {
@@ -53,7 +51,6 @@ exports.redishset = (key, field, value, tsx) => {
 exports.redispub = (key, value, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log('redispub', key, value);
             yield (tsx || client).publish(key, value || 'undefined', () => resolve(true));
         }
         catch (e) {
@@ -96,7 +93,6 @@ exports.redissub = (key, callback, tsx) => {
 exports.redishdel = (key, field, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log('redishdel', key, field);
             yield (tsx || client).hdel(key, field, () => resolve(true));
         }
         catch (e) {
@@ -107,7 +103,6 @@ exports.redishdel = (key, field, tsx) => {
 exports.redishsetobj = (key, obj, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log('redishsetobj', key);
             for (let k of Object.keys(obj)) {
                 let val = obj[k];
                 if (typeof val === 'object') {
@@ -126,9 +121,7 @@ exports.redishsetobj = (key, obj, tsx) => {
 exports.redishget = (key, field, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log('redishget', key);
             yield (tsx || client).hget(key, field, (e, s) => {
-                console.warn('redishget', key, field, s);
                 resolve((s !== 'undefined' && s !== 'null') ? s : undefined);
             });
         }
@@ -140,7 +133,6 @@ exports.redishget = (key, field, tsx) => {
 exports.redishgetall = (key, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log('redishgetall', key);
             yield (tsx || client).hgetall(key, (e, val) => {
                 let res = {};
                 if (!val) {
@@ -170,7 +162,6 @@ exports.redishgetall = (key, tsx) => {
 exports.redisGet = (key, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log('redisGet', key);
             // await client.get(key, (res, s) => resolve(s));
             yield (tsx || client).get(key, (e, s) => resolve((s !== 'undefined' && s !== 'null') ? s : undefined));
         }
@@ -182,7 +173,6 @@ exports.redisGet = (key, tsx) => {
 exports.rediszadd = (key, val, score, mode, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log('rediszadd', key, val, score);
             if (mode) {
                 yield (tsx || client).zadd(key, mode, score, val, (res, s) => resolve(true));
             }
@@ -198,7 +188,6 @@ exports.rediszadd = (key, val, score, mode, tsx) => {
 exports.rediszrem = (key, val, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log('rediszrem', key);
             yield (tsx || client).zrem(key, val, (res, s) => resolve(true));
         }
         catch (e) {
@@ -209,7 +198,6 @@ exports.rediszrem = (key, val, tsx) => {
 exports.rediszincr = (key, val, score, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log('rediszinct', key);
             yield (tsx || client).zincrby(key, score, val, (res, s) => resolve(Number.parseFloat(s)));
         }
         catch (e) {
@@ -220,7 +208,6 @@ exports.rediszincr = (key, val, score, tsx) => {
 exports.rediszexists = (key, val, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log('rediszexists', key);
             yield (tsx || client).zscore(key, val, (res, s) => !!s);
         }
         catch (e) {
@@ -231,7 +218,6 @@ exports.rediszexists = (key, val, tsx) => {
 exports.redisincr = (key, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log('redisincr', key);
             yield (tsx || client).incr(key, (res, s) => resolve(s));
         }
         catch (e) {
@@ -242,7 +228,6 @@ exports.redisincr = (key, tsx) => {
 exports.rediszscore = (key, val, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log('rediszscore', key);
             yield (tsx || client).zscore(key, val, (res, s) => resolve(Number.parseFloat(s)));
         }
         catch (e) {
@@ -254,7 +239,6 @@ exports.rediszcard = (key, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
             yield (tsx || client).zcard(key, (res, s) => {
-                console.log('rediszcard', key, s);
                 resolve(s);
             });
         }
@@ -266,7 +250,6 @@ exports.rediszcard = (key, tsx) => {
 exports.rediszrange = (key, start, stop, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log('rediszrange', key);
             yield (tsx || client).zrevrange(key, start !== undefined ? start : 0, stop !== undefined ? stop : -1, 'WITHSCORES', (res, s) => {
                 resolve(s.reduce((prev, current, i, a) => {
                     if (i % 2 === 0) {
@@ -287,9 +270,7 @@ exports.rediszrange = (key, start, stop, tsx) => {
 exports.rediszrangebyscore = (key, count, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
-            console.log('rediszrangebyscore', key, yield exports.rediszrange(key));
             yield (tsx || client).zrevrangebyscore(key, Number.MAX_SAFE_INTEGER, 0, 'LIMIT', 0, count, (res, s) => {
-                console.warn('rediszrangebyscore', s);
                 resolve(s);
             });
         }
@@ -302,10 +283,6 @@ exports.redisztop = (key, tsx) => {
     return new Promise((resolve, error) => __awaiter(this, void 0, void 0, function* () {
         try {
             yield (tsx || client).zrevrangebyscore(key, Number.MAX_SAFE_INTEGER, 0, 'LIMIT', 0, 1, (res, s) => {
-                if (res) {
-                    console.error(res);
-                }
-                console.warn('top', s);
                 resolve(s[0]);
             });
         }

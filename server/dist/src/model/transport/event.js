@@ -36,11 +36,9 @@ class IoWrapper {
             }
             let m = JSON.stringify({ events: event, session: this.session });
             if (global) {
-                console.warn('emiting[g] to ', this.session, m);
                 redisUtil_1.redispub(this.session, m);
             }
             else {
-                console.warn('emiting to ', this.io.id, m);
                 this.io.emit('event', m);
             }
         };
@@ -52,7 +50,6 @@ class IoBatch {
     constructor(io) {
         this.events = [];
         this.emit = (event, global) => {
-            console.warn('emit', event, global);
             this.events.push({ event, global });
         };
         this.commit = () => {

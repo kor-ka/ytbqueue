@@ -23,7 +23,6 @@ class SocketListener {
         this.socket = socket;
         let wrapper = new event_1.IoWrapper(socket);
         socket.on('message', (m) => __awaiter(this, void 0, void 0, function* () {
-            console.log('[server](message): %s', m);
             if (!m) {
                 return;
             }

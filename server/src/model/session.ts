@@ -154,14 +154,11 @@ let handleAddHistorical = async (io: IoBatch, sessionId: string, source: QueueCo
 
 
 let checkQueue = async (io: IoBatch, source: Message) => {
-    console.warn('checkQueue')
     // add top from history if nothing to play
     let size = await rediszcard('queue-' + source.session.id);
-    console.warn('checkQueue current size ', size);
     let minHistoryLength = 12;
     if (size < minHistoryLength) {
         let histroyTop = await rediszrangebyscore('queue-history-' + source.session.id, 100000);
-        console.warn('checkQueue add ', histroyTop);
         let historyAddCount = minHistoryLength - size;
         for (let t of histroyTop) {
             await handleAddHistorical(io, source.session.id, await resolveQueueEntry(t, source.session.id));
@@ -179,7 +176,6 @@ let checkQueue = async (io: IoBatch, source: Message) => {
                 // pretty much content, add bit of random
                 score = middle.score - Math.round(Math.random() * (middle.score - bottom.score + 1000));
             }
-            console.warn('checkQueue', 'rotate history', 'new score', score);
 
             await rediszadd('queue-history-' + source.session.id, t, score, 'XX');
             if (!--historyAddCount) {
@@ -191,7 +187,6 @@ let checkQueue = async (io: IoBatch, source: Message) => {
     let playing = await redisGet('queue-playing-' + source.session.id);
     if (!playing) {
         let top = await redisztop('queue-' + source.session.id);
-        console.warn('top - ' + top);
         if (top) {
             playing = top;
             // save playing
@@ -225,7 +220,6 @@ let handleVote = async (io: IoBatch, message: Vote) => {
             await redishdel('queue-entry-vote-' + message.queueId, message.creds.id);
 
         } else if (voteStored) {
-            console.warn('stored -x2', voteStored);
             // have saved vote and new is diffirent - x2 for reset and increment new
             increment *= 2;
         }
@@ -303,7 +297,6 @@ let getVotes = async (queueId: string) => {
 }
 
 let resolveQueueEntry = async (queueId: string, sessionId: string) => {
-    console.warn('resolveQueueEntry')
     let historical = queueId.endsWith('-h');
     let orgQueueId = queueId.replace('-h', '');
 

@@ -83,10 +83,8 @@ export class IoWrapper {
         }
         let m = JSON.stringify({ events: event, session: this.session });
         if (global) {
-            console.warn('emiting[g] to ', this.session, m);
             redispub(this.session, m)
         } else {
-            console.warn('emiting to ', this.io.id, m);
             this.io.emit('event', m)
         }
     }
@@ -101,7 +99,6 @@ export class IoBatch {
     }
 
     emit = (event: Event, global?: boolean) => {
-        console.warn('emit', event, global)
         this.events.push({ event, global });
     }
 
