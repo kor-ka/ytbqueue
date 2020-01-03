@@ -63,7 +63,7 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
 
                 {this.state.playing &&
                     <FlexLayout style={{ flexDirection: 'row', height: '100%', justifyContent: 'stretch', alignItems: 'stretch', backgroundColor: 'black' }} divider={0}>
-                        <Player key={this.state.playing.queueId} onEnd={this.onEnd} current={this.state.playing ? this.state.playing.current : undefined} onProgress={this.onProgress} id={this.state.playing.id} autoplay={true} width="100%" height="100%" />
+                        <Player onEnd={this.onEnd} current={this.state.playing ? this.state.playing.current : undefined} onProgress={this.onProgress} id={this.state.playing.id} autoplay={true} width="100%" height="100%" />
                         <Queue q={this.state.q.queue || []} session={this.session} />
                     </FlexLayout>
                 }
@@ -271,7 +271,7 @@ export class Player extends React.PureComponent<{ id: string, current?: number, 
             <div style={{ width: this.props.width || window.innerWidth, height: this.props.height, position: 'relative', flexGrow: 1 }}>
                 {/* <iframe frameBorder={0} style={{ position: 'absolute', width: '100%', height: '100%' }} src={`https://www.youtube.com/embed/${this.props.id}?showinfo=0&rel=0&controls=1&mute=0&autoplay=0&enablejsapi=1&origin=http%3A%2F%2Flocalhost%3A8080&widgetid=1`} /> */}
                 <YouTube
-                
+                    id={"ytb_frame"}
                     onReady={this._onReady}
                     videoId={this.props.id}
                     onStateChange={this.onChange}
