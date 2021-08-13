@@ -260,11 +260,9 @@ export class Player extends React.PureComponent<{ id: string, queueId?: string, 
             if (this.playerInner && this.props.onProgress) {
                 this.props.onProgress(this.playerInner.getCurrentTime(), this.playerInner.getDuration())
             }
-            window.setTimeout(() => {
-                if(this.playerInner.getCurrentTime() - this.playerInner.getDuration() <= 5000){
-                    this.onEnd();
-                }
-            }, 5000);
+            if(this.playerInner.getPlayerState() === 0){
+                this.onEnd()
+            }
             this.timeout = undefined;
             this.checkTime();
         }, 5000)

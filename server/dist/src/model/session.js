@@ -151,9 +151,10 @@ let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
     let size = yield redisUtil_1.rediszcard('queue-' + source.session.id);
     let minHistoryLength = 12;
     if (size < minHistoryLength) {
-        let histroyTop = yield redisUtil_1.rediszrangebyscore('queue-history-' + source.session.id, 100000);
+        let histroyTop = yield redisUtil_1.rediszrangebyscore('queue-history-' + source.session.id, minHistoryLength - size);
         let historyAddCount = minHistoryLength - size;
-        for (let t of histroyTop) {
+        for (let [i, t] of histroyTop.entries()) {
+            let res = yield resolveQueueEntry(t, source.session.id);
             yield handleAddHistorical(io, source.session.id, yield resolveQueueEntry(t, source.session.id));
             // lower score to pick other content later
             let count = yield redisUtil_1.rediszcard('queue-history-' + source.session.id);
@@ -162,14 +163,17 @@ let checkQueue = (io, source) => __awaiter(this, void 0, void 0, function* () {
             let bottom = (yield redisUtil_1.rediszrange('queue-history-' + source.session.id, -1, -1))[0];
             let score;
             // todo? use votes to affect random part 
-            if (count < 3) {
+            if (count < 5) {
                 // no too much content, just send to bottom
-                score = bottom.score - 1000;
+                if (i === 0) {
+                    score = bottom.score - 1000;
+                }
             }
             else {
                 // pretty much content, add bit of random
-                score = middle.score - Math.round(Math.random() * (middle.score - bottom.score + 1000));
+                score = Math.floor(Math.random() * (middle.score - bottom.score + 1) + bottom.score);
             }
+            console.log(res.title, score);
             yield redisUtil_1.rediszadd('queue-history-' + source.session.id, t, score, 'XX');
             if (!--historyAddCount) {
                 break;
@@ -288,3 +292,9 @@ let resolveQueueEntry = (queueId, sessionId) => __awaiter(this, void 0, void 0, 
 });
 // let handle = async (io: IoWrapper, message: Message) => {
 // }
+3998371138731906;
+3998371138728906;
+3998371138725906;
+3998371138722906;
+3998371138719906;
+3998371138716906;
