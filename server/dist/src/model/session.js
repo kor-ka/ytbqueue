@@ -252,10 +252,12 @@ let handleProgress = (io, message) => __awaiter(this, void 0, void 0, function* 
     yield io.emit({ type: 'UpdateQueueContent', queueId: message.queueId, content: { progress } }, true);
 });
 let handleNext = (io, message) => __awaiter(this, void 0, void 0, function* () {
-    yield redisUtil_1.redisSet('queue-playing-' + message.session.id, null);
-    yield redisUtil_1.rediszrem('queue-' + message.session.id, message.queueId);
-    io.emit({ type: 'RemoveQueueContent', queueId: message.queueId }, true);
-    yield checkQueue(io, message);
+    if ((yield redisUtil_1.redisGet('queue-playing-' + message.session.id)) === message.queueId) {
+        yield redisUtil_1.redisSet('queue-playing-' + message.session.id, null);
+        yield redisUtil_1.rediszrem('queue-' + message.session.id, message.queueId);
+        io.emit({ type: 'RemoveQueueContent', queueId: message.queueId }, true);
+        yield checkQueue(io, message);
+    }
 });
 //
 // resolvers

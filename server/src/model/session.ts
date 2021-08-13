@@ -275,10 +275,12 @@ let handleProgress = async (io: IoBatch, message: Progress) => {
 }
 
 let handleNext = async (io: IoBatch, message: Next) => {
-    await redisSet('queue-playing-' + message.session.id, null);
-    await rediszrem('queue-' + message.session.id, message.queueId);
-    io.emit({ type: 'RemoveQueueContent', queueId: message.queueId }, true)
-    await checkQueue(io, message);
+    if(await redisGet('queue-playing-' + message.session.id) === message.queueId){
+        await redisSet('queue-playing-' + message.session.id, null);
+        await rediszrem('queue-' + message.session.id, message.queueId);
+        io.emit({ type: 'RemoveQueueContent', queueId: message.queueId }, true)
+        await checkQueue(io, message);
+    }
 }
 
 //

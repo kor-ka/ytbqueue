@@ -26,9 +26,9 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
         // fetch(endpoint + '/next/' + this.id, { method: 'POST' }).then();
     }
 
-    onEnd = () => {
+    onEnd = (queueId: string) => {
         if (this.state.playing) {
-            this.session.next(this.state.playing.queueId);
+            this.session.next(queueId);
         }
     }
 
@@ -63,7 +63,7 @@ export class Host extends React.PureComponent<{}, { playing?: QueueContent, q?: 
 
                 {this.state.playing &&
                     <FlexLayout style={{ flexDirection: 'row', height: '100%', justifyContent: 'stretch', alignItems: 'stretch', backgroundColor: 'black' }} divider={0}>
-                        <Player onEnd={this.onEnd} current={this.state.playing ? this.state.playing.current : undefined} onProgress={this.onProgress} id={this.state.playing.id} autoplay={true} width="100%" height="100%" />
+                        <Player onEnd={this.onEnd} current={this.state.playing ? this.state.playing.current : undefined} onProgress={this.onProgress} id={this.state.playing.id} queueId={this.state.playing.queueId} autoplay={true} width="100%" height="100%" />
                         <Queue q={this.state.q.queue || []} session={this.session} />
                     </FlexLayout>
                 }
@@ -213,7 +213,7 @@ class Link extends React.PureComponent<{ sessionId: string, queueShown: boolean 
     }
 }
 
-export class Player extends React.PureComponent<{ id: string, current?: number, width?: number | string, height?: number | string, onEnd?: () => void, onProgress?: (current: number, durarion: number) => void, autoplay?: boolean, mute?: boolean }, { width: number | string, height: number | string }>{
+export class Player extends React.PureComponent<{ id: string, queueId?: string, current?: number, width?: number | string, height?: number | string, onEnd?: (queueId: string) => void, onProgress?: (current: number, durarion: number) => void, autoplay?: boolean, mute?: boolean }, { width: number | string, height: number | string }>{
     constructor(props: any) {
         super(props);
         this.state = { width: 1, height: 2 };
@@ -250,6 +250,9 @@ export class Player extends React.PureComponent<{ id: string, current?: number, 
         this.checkTime();
     }
     checkTime = () => {
+        if(this.timeout){
+            return;
+        }
         this.timeout = window.setTimeout(() => {
             if (!this.mounted) {
                 return;
@@ -257,13 +260,19 @@ export class Player extends React.PureComponent<{ id: string, current?: number, 
             if (this.playerInner && this.props.onProgress) {
                 this.props.onProgress(this.playerInner.getCurrentTime(), this.playerInner.getDuration())
             }
+            window.setTimeout(() => {
+                if(this.playerInner.getCurrentTime() - this.playerInner.getDuration() <= 5000){
+                    this.onEnd();
+                }
+            }, 5000);
+            this.timeout = undefined;
             this.checkTime();
         }, 5000)
 
     }
     onEnd = () => {
-        if (this.props.onEnd) {
-            this.props.onEnd();
+        if (this.props.onEnd && this.props.queueId) {
+            this.props.onEnd(this.props.queueId);
         }
     }
     render() {
